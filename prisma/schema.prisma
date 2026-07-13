@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String          @id @default(uuid())
+  username       String          @unique
+  passwordHash   String
+  role           String          // "ADMIN" | "TECHNICIAN"
+  fullName       String?
+  phone          String?
+  employeeNumber String?         @unique // Unique Employee ID/Number
+  email          String?         // Employee Email ID
+  isActive       Boolean         @default(true)
+  assignments    JobAssignment[]
+  history        JobHistory[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  companyName   String?
+  contactPerson String
+  phone         String
+  phone2        String?  // Contact No 2
+  email         String?
+  address       String?
+  jobs          Job[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Job {
+  id               String            @id @default(uuid())
+  jobNumber        String            @unique // Configurable format, e.g., FE-2026-0001
+  customerId       String?
+  customer         Customer?         @relation(fields: [customerId], references: [id])
+  currentStage     String            // "ENQUIRY" | "REFILLING" | "SERVICES" | "COMPLETED"
+  currentStatus    String            // "PENDING" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED"
+  
+  // Core Fire Extinguisher Fields (for future stages)
+  itemDescription  String?
+  serialNumber     String?           // Unique Cylinder Number
+  capacity         String?           // e.g. "2 Kg", "4.5 Kg", "9 Kg"
+  extinguisherType String?           // e.g. "CO2", "DCP", "Water", "Foam"
+  
+  // Enquiry Dashboard Fields
+  requirementCategory String?        // "CCTV" | "New Fire Extinguisher" | "Refilling" etc.
+  enquirySource       String?        // "Existing Customers" | "Social Media" etc.
+  requirementDetails  String?        // Requirement description
+  
+  // Enquiry Status & Dates
+  requestedDeliveryDate DateTime?
+  followUpDate         DateTime?
+  latestFollowUpNotes  String?
+  followUps            EnquiryFollowUp[]
+  
+  // Delivery & AMC Tab (Visible only when status is "Order Delivered")
+  deliveredDate        DateTime?
+  amcYears             Int?          // 1 to 10 years
+  amcDate              DateTime?     // calculated as deliveredDate + amcYears
+  
+  // Technician Assignment Fields (Active when status is "Order Confirmed")
+  visitDate            DateTime?
+  adminInstructions    String?
+  technicianInstructions String?
+  customerLocation     String?
+  assignFor            String?       @default("DELIVERY")
+  
+  // Dynamic JSON block to hold stage-specific fields defined in developer config
+  stageData        String?           // Serialized JSON for dynamic fields
+  
+  assignments      JobAssignment[]
+  history          JobHistory[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model EnquiryFollowUp {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  remarks   String
+  createdAt DateTime @default(now())
+}
+
+model JobAssignment {
+  id           String    @id @default(uuid())
+  jobId        String
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  technicianId String
+  technician   User      @relation(fields: [technicianId], references: [id])
+  assignedAt   DateTime  @default(now())
+  completedAt  DateTime?
+  status       String    // "ASSIGNED" | "COMPLETED"
+  notes        String?
+  deletedAt    DateTime?
+
+  @@unique([jobId, technicianId]) // A technician can only be assigned to a job once
+}
+
+model JobHistory {
+  id          String   @id @default(uuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  changedById String
+  changedBy   User     @relation(fields: [changedById], references: [id])
+  fromStage   String?
+  toStage     String?
+  fromStatus  String?
+  toStatus    String?
+  remarks     String?
+  createdAt   DateTime @default(now())
+}

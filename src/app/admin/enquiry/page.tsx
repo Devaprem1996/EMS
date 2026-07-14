@@ -14,7 +14,12 @@ import {
   MapPin,
   Clock,
   UserCheck,
-  Upload
+  Upload,
+  ArrowRightCircle,
+  Download,
+  Info,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 interface Customer {
@@ -137,6 +142,14 @@ export default function EnquiryDashboardPage() {
   const [isTransitionModalOpen, setIsTransitionModalOpen] = useState(false);
   const [bulkTransitionStage, setBulkTransitionStage] = useState("REFILLING");
 
+  // Flow 2: Single-ticket transition state
+  const [isSingleTransitionModalOpen, setIsSingleTransitionModalOpen] = useState(false);
+  const [singleTransitionEnquiry, setSingleTransitionEnquiry] = useState<Enquiry | null>(null);
+  const [singleTransitionLoading, setSingleTransitionLoading] = useState(false);
+
+  // Bulk import instructions panel
+  const [showImportGuide, setShowImportGuide] = useState(false);
+
   // Fetch all data
   const fetchData = async () => {
     setSelectedJobIds([]);
@@ -222,10 +235,25 @@ export default function EnquiryDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create enquiry");
 
-      setSuccessMsg("Enquiry registered successfully!");
+      // Flow 3: Auto-Route — if category is "Refilling", immediately move the new ticket to REFILLING stage.
+      if (requirementCategory === "Refilling" && data.id) {
+        await fetch("/api/jobs/bulk-transition", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jobIds: [data.id],
+            toStage: "REFILLING",
+            skipStatusCheck: true, // bypass Order Confirmed guard since ticket was just created
+          }),
+        });
+        setSuccessMsg("Refilling enquiry auto-routed to Refilling Dashboard!");
+      } else {
+        setSuccessMsg("Enquiry registered successfully!");
+      }
+
       setIsAddModalOpen(false);
       fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
+      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setErrorMsg(err.message);
       setTimeout(() => setErrorMsg(null), 4000);
@@ -411,13 +439,52 @@ export default function EnquiryDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to transition enquiries");
 
-      setSuccessMsg(`Successfully transitioned ${selectedJobIds.length} enquiries to ${bulkTransitionStage}!`);
+      // Flow 1: Show how many were transitioned vs skipped
+      if (data.skipped > 0) {
+        setSuccessMsg(`Transitioned ${data.transitioned} enquiries. Skipped ${data.skipped} (not "Order Confirmed"): ${data.skippedTickets.join(", ")}`);
+      } else {
+        setSuccessMsg(`Successfully transitioned ${data.transitioned} enquiries to ${bulkTransitionStage}!`);
+      }
       setIsTransitionModalOpen(false);
       fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
+      setTimeout(() => setSuccessMsg(null), 5000);
     } catch (err: any) {
       setErrorMsg(err.message);
       setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
+
+  // Flow 2: Open single-ticket transition confirm modal
+  const handleSingleTransitionOpen = (enq: Enquiry) => {
+    setSingleTransitionEnquiry(enq);
+    setIsSingleTransitionModalOpen(true);
+  };
+
+  // Flow 2: Submit single-ticket transition
+  const handleSingleTransitionSubmit = async () => {
+    if (!singleTransitionEnquiry) return;
+    setSingleTransitionLoading(true);
+    try {
+      const res = await fetch("/api/jobs/bulk-transition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobIds: [singleTransitionEnquiry.id],
+          toStage: "REFILLING",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to transition enquiry");
+      setSuccessMsg(`${singleTransitionEnquiry.jobNumber} moved to Refilling Dashboard!`);
+      setIsSingleTransitionModalOpen(false);
+      setSingleTransitionEnquiry(null);
+      fetchData();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setErrorMsg(err.message);
+      setTimeout(() => setErrorMsg(null), 4000);
+    } finally {
+      setSingleTransitionLoading(false);
     }
   };
 
@@ -440,6 +507,75 @@ export default function EnquiryDashboardPage() {
     setSelectedTechIds(prev => 
       prev.includes(techId) ? prev.filter(id => id !== techId) : [...prev, techId]
     );
+  };
+
+  // Download CSV Template for bulk import
+  const downloadTemplate = () => {
+    const headers = [
+      "Customer Name",
+      "Contact Person Name",
+      "Mobile",
+      "Mobile 2",
+      "Email",
+      "Address",
+      "Cylinder S/N",
+      "Weight",
+      "Type",
+      "Description",
+      "Enquiry Source",
+      "Requirement Category",
+      "Enquiry Date",
+      "Requested Delivery Date",
+      "Enquiry Status",
+      "Follow Up Date",
+      "Follow Up Remarks",
+      "Visit Date",
+      "Admin Instructions",
+      "Technician Instructions",
+      "Customer Location",
+      "Delivered Date",
+      "AMC Years",
+      "Assigned Technicians",
+    ];
+    const exampleRow = [
+      "KH Chemicals",
+      "Karamad Begum",
+      "9840135355",
+      "9840135356",
+      "karamad@khchem.com",
+      "Tambaram, Chennai",
+      "CYL-001",
+      "9 Kg",
+      "DCP",
+      "Annual refilling service",
+      "Existing Customers",
+      "Refilling",
+      "14/07/2026",
+      "20/07/2026",
+      "Order Confirmed",
+      "16/07/2026",
+      "Customer confirmed order",
+      "18/07/2026",
+      "Handle with care",
+      "Check valve before refill",
+      "",
+      "",
+      "",
+      "Ravi Kumar",
+    ];
+    const csvContent = [
+      headers.join(","),
+      exampleRow.map(v => `"${v}"`).join(","),
+    ].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "safeway_bulk_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -607,7 +743,169 @@ export default function EnquiryDashboardPage() {
             disabled={importing}
           />
         </label>
+
+        {/* Download Template Button */}
+        <button
+          onClick={downloadTemplate}
+          title="Download CSV template for bulk import"
+          style={{
+            padding: "10px 15px",
+            background: "rgba(59, 130, 246, 0.15)",
+            border: "1px solid rgba(59, 130, 246, 0.4)",
+            borderRadius: "8px",
+            color: "#60a5fa",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "14px",
+            fontWeight: "500",
+          }}
+        >
+          <Download size={16} />
+          Template
+        </button>
+
+        {/* Instructions Toggle Button */}
+        <button
+          onClick={() => setShowImportGuide(prev => !prev)}
+          title="How to use Bulk Import"
+          style={{
+            padding: "10px 12px",
+            background: "rgba(245, 158, 11, 0.12)",
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            borderRadius: "8px",
+            color: "#f59e0b",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            fontSize: "13px",
+            fontWeight: "500",
+          }}
+        >
+          <Info size={15} />
+          Guide
+          {showImportGuide ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
       </div>
+
+      {/* ── Bulk Import Instructions Panel ── */}
+      {showImportGuide && (
+        <div style={{
+          background: "#13131c",
+          border: "1px solid rgba(245, 158, 11, 0.3)",
+          borderRadius: "10px",
+          padding: "20px",
+          marginBottom: "15px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "18px" }}>📤</span>
+              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#f59e0b" }}>Bulk Import Guide</h3>
+            </div>
+            <button onClick={() => setShowImportGuide(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={18} /></button>
+          </div>
+
+          {/* Steps */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+            {[
+              { step: "1", icon: "⬇️", title: "Download Template", desc: "Click the blue 'Template' button to get the CSV file with correct column names and an example row." },
+              { step: "2", icon: "📝", title: "Fill Your Data", desc: "Open in Excel or Google Sheets. Fill one row per ticket. Date format: DD/MM/YYYY or YYYY-MM-DD." },
+              { step: "3", icon: "💾", title: "Save as CSV", desc: "File → Save As → CSV (Comma delimited). Do NOT save as .xlsx — only .csv is accepted." },
+              { step: "4", icon: "📤", title: "Click Bulk Import", desc: "Click the blue 'Bulk Import' button, select your file. Results show Created / Updated / Failed counts." },
+            ].map(s => (
+              <div key={s.step} style={{ background: "#1a1a24", borderRadius: "8px", padding: "12px", display: "flex", gap: "10px" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(245, 158, 11, 0.15)", border: "1px solid #f59e0b", color: "#f59e0b", fontSize: "12px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.step}</div>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#e2e8f0", marginBottom: "4px" }}>{s.icon} {s.title}</div>
+                  <div style={{ fontSize: "11px", color: "#718096", lineHeight: "1.5" }}>{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Column Reference Table */}
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#a0aec0", marginBottom: "8px" }}>📋 Column Reference</div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                <thead>
+                  <tr style={{ background: "#1a1a24" }}>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a", whiteSpace: "nowrap" }}>Column Name</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a" }}>Required?</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a" }}>Description</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a", whiteSpace: "nowrap" }}>Example</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Customer Name",           "✅ Required",  "Company or client name",                                      "KH Chemicals"],
+                    ["Contact Person Name",     "Optional",    "Name of the contact person at client",                        "Karamad Begum"],
+                    ["Mobile",                  "Optional",    "Primary phone number (used to match existing customer)",       "9840135355"],
+                    ["Mobile 2",                "Optional",    "Secondary phone number",                                      "9840135356"],
+                    ["Email",                   "Optional",    "Customer email address",                                      "test@abc.com"],
+                    ["Address",                 "Optional",    "Customer site / delivery address",                            "Tambaram, Chennai"],
+                    ["Cylinder S/N",            "Optional",    "Serial number of the fire extinguisher cylinder",             "CYL-001"],
+                    ["Weight",                  "Optional",    "Cylinder capacity / weight",                                  "9 Kg"],
+                    ["Type",                    "Optional",    "Extinguisher medium type",                                    "DCP / CO2 / Water"],
+                    ["Description",             "Optional",    "Item or requirement description / notes",                     "Annual refilling"],
+                    ["Enquiry Source",          "Optional",    "How enquiry came in",                                         "Existing Customers"],
+                    ["Requirement Category",    "Optional",    "Type of service needed",                                      "Refilling / CCTV"],
+                    ["Enquiry Date",            "Optional",    "Date enquiry was made (DD/MM/YYYY or YYYY-MM-DD)",            "14/07/2026"],
+                    ["Requested Delivery Date", "Optional",    "Customer's preferred delivery date",                          "20/07/2026"],
+                    ["Enquiry Status",          "Optional",    "Starting status. Default: Enquiry Registered",                "Order Confirmed"],
+                    ["Follow Up Date",          "Optional",    "Next follow-up date",                                         "16/07/2026"],
+                    ["Follow Up Remarks",       "Optional",    "Follow-up notes / comments",                                  "Customer confirmed"],
+                    ["Visit Date",             "Optional",    "Scheduled technician visit date",                             "18/07/2026"],
+                    ["Admin Instructions",      "Optional",    "Internal notes for admin",                                    "Handle with care"],
+                    ["Technician Instructions", "Optional",    "Instructions for the field technician",                       "Check valve first"],
+                    ["Customer Location",       "Optional",    "Google Maps URL or GPS coordinates",                          "https://maps.google.com/..."],
+                    ["Delivered Date",          "Optional",    "Date item was delivered to customer",                         "22/07/2026"],
+                    ["AMC Years",               "Optional",    "AMC contract duration in years (1–10)",                      "1"],
+                    ["Assigned Technicians",    "Optional",    "Technician full name or phone (comma-separated for multiple)", "Ravi Kumar, Suresh"],
+                  ].map(([col, req, desc, ex]) => (
+                    <tr key={col} style={{ borderBottom: "1px solid #1a1a24" }}>
+                      <td style={{ padding: "7px 12px", color: "#93c5fd", fontFamily: "monospace", whiteSpace: "nowrap" }}>{col}</td>
+                      <td style={{ padding: "7px 12px", color: req === "✅ Required" ? "#f87171" : "#718096", whiteSpace: "nowrap" }}>{req}</td>
+                      <td style={{ padding: "7px 12px", color: "#a0aec0" }}>{desc}</td>
+                      <td style={{ padding: "7px 12px", color: "#6ee7b7", fontFamily: "monospace", whiteSpace: "nowrap" }}>{ex}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Rules & Tips */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "8px", padding: "12px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "700", color: "#f87171", marginBottom: "6px" }}>⚠️ Rules</div>
+              <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
+                <li><b style={{ color: "#e2e8f0" }}>Customer Name</b> is the only required column</li>
+                <li>File must be saved as <b style={{ color: "#e2e8f0" }}>.csv</b> (not .xlsx)</li>
+                <li>Dates must be <b style={{ color: "#e2e8f0" }}>DD/MM/YYYY</b> or <b style={{ color: "#e2e8f0" }}>YYYY-MM-DD</b></li>
+                <li>Delivery Date cannot be <b style={{ color: "#e2e8f0" }}>before</b> Enquiry Date</li>
+                <li>Duplicate (same Serial + Customer) = <b style={{ color: "#e2e8f0" }}>UPDATE</b> not create</li>
+              </ul>
+            </div>
+            <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "8px", padding: "12px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "700", color: "#6ee7b7", marginBottom: "6px" }}>💡 Tips</div>
+              <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
+                <li>Column names are <b style={{ color: "#e2e8f0" }}>case-insensitive</b> ("mobile" = "Mobile")</li>
+                <li>You can upload <b style={{ color: "#e2e8f0" }}>multiple times</b> — existing records are updated</li>
+                <li>Assign multiple techs: <b style={{ color: "#e2e8f0" }}>"Ravi, Suresh"</b></li>
+                <li>Set status <b style={{ color: "#e2e8f0" }}>"Order Confirmed"</b> to enable transition buttons</li>
+                <li>Leave optional columns <b style={{ color: "#e2e8f0" }}>blank</b> — they won't overwrite existing data</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedJobIds.length > 0 && (
         <div style={{
@@ -620,9 +918,26 @@ export default function EnquiryDashboardPage() {
           borderRadius: "8px",
           marginBottom: "15px",
         }}>
-          <span style={{ fontWeight: "600", color: "#60a5fa" }}>
-            {selectedJobIds.length} row(s) selected
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span style={{ fontWeight: "600", color: "#60a5fa" }}>
+              {selectedJobIds.length} row(s) selected
+            </span>
+            {/* Flow 1: Show warning if any selected ticket is not Order Confirmed */}
+            {(() => {
+              const notConfirmed = enquiries
+                .filter(e => selectedJobIds.includes(e.id) && e.currentStatus !== "Order Confirmed")
+                .map(e => e.jobNumber);
+              return notConfirmed.length > 0 ? (
+                <span style={{ fontSize: "11px", color: "#f59e0b" }}>
+                  ⚠️ {notConfirmed.join(", ")} not yet "Order Confirmed" — will be skipped on Refilling transition
+                </span>
+              ) : (
+                <span style={{ fontSize: "11px", color: "#10b981" }}>
+                  ✅ All selected are "Order Confirmed" — ready to transition
+                </span>
+              );
+            })()}
+          </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <button
               onClick={handleOpenBulkAssign}
@@ -639,6 +954,7 @@ export default function EnquiryDashboardPage() {
             >
               Bulk Assign Technicians
             </button>
+            {/* Flow 1: Bulk Transition button — always clickable, API handles skipping */}
             <button
               onClick={() => {
                 setBulkTransitionStage("REFILLING");
@@ -753,6 +1069,29 @@ export default function EnquiryDashboardPage() {
                           <UserPlus size={14} />
                         </button>
                       )}
+
+                      {/* Flow 2: Individual → Refilling button — only visible on Order Confirmed tickets */}
+                      {enq.currentStatus === "Order Confirmed" && (
+                        <button
+                          onClick={() => handleSingleTransitionOpen(enq)}
+                          style={{
+                            background: "rgba(16, 185, 129, 0.15)",
+                            border: "1px solid #10b981",
+                            color: "#10b981",
+                            padding: "5px 8px",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                          }}
+                          title="Move to Refilling Dashboard"
+                        >
+                          <ArrowRightCircle size={13} /> Refilling
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -845,6 +1184,25 @@ export default function EnquiryDashboardPage() {
                       <option value="New Fire Extinguisher">New Fire Extinguisher</option>
                       <option value="Refilling">Refilling</option>
                     </select>
+                    {/* Flow 3: Auto-route banner */}
+                    {requirementCategory === "Refilling" && (
+                      <div style={{
+                        marginTop: "6px",
+                        padding: "8px 10px",
+                        background: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.4)",
+                        borderRadius: "6px",
+                        color: "#f59e0b",
+                        fontSize: "11px",
+                        lineHeight: "1.5",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "6px",
+                      }}>
+                        <span style={{ marginTop: "1px" }}>⚡</span>
+                        <span><b>Auto-Route Active:</b> This ticket will be sent directly to the <b>Refilling Dashboard</b> after registration.</span>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Source of Enquiry</label>
@@ -1206,6 +1564,19 @@ export default function EnquiryDashboardPage() {
                   ℹ️ You are moving <b>{selectedJobIds.length}</b> selected enquiries to the selected stage.
                 </div>
 
+                {/* Flow 1: Show skippable tickets warning */}
+                {(() => {
+                  const notConfirmed = enquiries
+                    .filter(e => selectedJobIds.includes(e.id) && e.currentStatus !== "Order Confirmed")
+                    .map(e => e.jobNumber);
+                  return notConfirmed.length > 0 && bulkTransitionStage === "REFILLING" ? (
+                    <div style={{ background: "rgba(245, 158, 11, 0.12)", padding: "10px 12px", borderRadius: "6px", border: "1px solid rgba(245, 158, 11, 0.4)", color: "#f59e0b", fontSize: "12px", lineHeight: "1.5" }}>
+                      ⚠️ <b>The following tickets will be skipped</b> because they are not yet "Order Confirmed":<br />
+                      <span style={{ fontFamily: "monospace", fontSize: "11px" }}>{notConfirmed.join(", ")}</span>
+                    </div>
+                  ) : null;
+                })()}
+
                 <div>
                   <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Select Destination Stage *</label>
                   <select 
@@ -1226,6 +1597,64 @@ export default function EnquiryDashboardPage() {
                 <button type="submit" style={{ padding: "8px 16px", background: "#10b981", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Transition</button>
               </div>
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Flow 2: Single-Ticket Transition Confirm Modal */}
+      {isSingleTransitionModalOpen && singleTransitionEnquiry && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 110, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
+          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "420px", overflow: "hidden" }}>
+
+            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ fontSize: "17px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                <ArrowRightCircle size={18} color="#10b981" /> Move to Refilling
+              </h2>
+              <button onClick={() => { setIsSingleTransitionModalOpen(false); setSingleTransitionEnquiry(null); }} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.4)", borderRadius: "8px", padding: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ fontSize: "12px", color: "#a0aec0" }}>Ticket</div>
+                <div style={{ fontFamily: "monospace", fontWeight: "bold", fontSize: "16px", color: "#10b981" }}>{singleTransitionEnquiry.jobNumber}</div>
+                <div style={{ fontSize: "13px", color: "#e2e8f0" }}>{singleTransitionEnquiry.customer?.companyName || singleTransitionEnquiry.customer?.contactPerson}</div>
+              </div>
+              <p style={{ margin: 0, color: "#a0aec0", fontSize: "13px", lineHeight: "1.6" }}>
+                This ticket will be moved from <b style={{ color: "#fff" }}>Enquiry Dashboard</b> to the <b style={{ color: "#10b981" }}>Refilling Dashboard</b> with status <b style={{ color: "#fff" }}>"Refilling Order Received"</b>.
+              </p>
+              <p style={{ margin: 0, color: "#718096", fontSize: "12px" }}>
+                This action is logged in the ticket history and cannot be auto-reversed.
+              </p>
+            </div>
+
+            <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+              <button
+                onClick={() => { setIsSingleTransitionModalOpen(false); setSingleTransitionEnquiry(null); }}
+                style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSingleTransitionSubmit}
+                disabled={singleTransitionLoading}
+                style={{
+                  padding: "8px 18px",
+                  background: singleTransitionLoading ? "#065f46" : "#10b981",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: "#fff",
+                  cursor: singleTransitionLoading ? "not-allowed" : "pointer",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <ArrowRightCircle size={14} />
+                {singleTransitionLoading ? "Moving..." : "Confirm & Move"}
+              </button>
+            </div>
 
           </div>
         </div>

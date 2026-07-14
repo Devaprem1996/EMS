@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
 
 // POST /api/jobs/bulk-transition - Bulk transition jobs to a new stage
+// Flow 1: Only "Order Confirmed" tickets are eligible to transition to REFILLING.
+// Tickets that are not "Order Confirmed" are skipped and reported back to the caller.
 export async function POST(req: NextRequest) {
   try {
     const session = getAuthSession(req);
@@ -11,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { jobIds, toStage, toStatus } = body;
+    const { jobIds, toStage, toStatus, skipStatusCheck } = body;
 
     if (!Array.isArray(jobIds) || jobIds.length === 0) {
       return NextResponse.json({ error: "jobIds must be a non-empty array" }, { status: 400 });
@@ -20,6 +22,9 @@ export async function POST(req: NextRequest) {
     if (!toStage) {
       return NextResponse.json({ error: "toStage is required" }, { status: 400 });
     }
+
+    let transitioned = 0;
+    const skippedTickets: string[] = [];
 
     // Perform transaction
     await prisma.$transaction(async (tx) => {
@@ -30,7 +35,20 @@ export async function POST(req: NextRequest) {
         });
         if (!job) continue;
 
-        const nextStatus = toStatus || (toStage === "REFILLING" ? "Refilling Order Received" : toStage === "SERVICES" ? "Pending" : "Completed");
+        // Flow 1 Guard: For REFILLING transitions, only allow "Order Confirmed" tickets.
+        // skipStatusCheck=true is used by auto-route (Flow 3) which creates and immediately routes.
+        if (toStage === "REFILLING" && !skipStatusCheck && job.currentStatus !== "Order Confirmed") {
+          skippedTickets.push(job.ticketNumber);
+          continue;
+        }
+
+        const nextStatus =
+          toStatus ||
+          (toStage === "REFILLING"
+            ? "Refilling Order Received"
+            : toStage === "SERVICES"
+            ? "Pending"
+            : "Completed");
 
         // 2. Update stage and status
         await tx.ticket.update({
@@ -50,13 +68,20 @@ export async function POST(req: NextRequest) {
             toStage: toStage,
             fromStatus: job.currentStatus,
             toStatus: nextStatus,
-            remarks: `Bulk transitioned stage from ${job.currentStage} to ${toStage}`,
+            remarks: `Transitioned stage from ${job.currentStage} to ${toStage}`,
           },
         });
+
+        transitioned++;
       }
     });
 
-    return NextResponse.json({ success: true, count: jobIds.length });
+    return NextResponse.json({
+      success: true,
+      transitioned,
+      skipped: skippedTickets.length,
+      skippedTickets,
+    });
   } catch (error) {
     console.error("[Bulk Transition API] Error:", error);
     return NextResponse.json({ error: "Failed to perform bulk transition" }, { status: 500 });

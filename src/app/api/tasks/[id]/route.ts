@@ -26,11 +26,11 @@ export async function PUT(
 
     const asgWhere: any = { id, deletedAt: null };
     if (session.role === "TECHNICIAN") {
-      asgWhere.technicianId = session.userId;
+      asgWhere.employeeId = session.userId;
     }
 
     // 1. Fetch assignment
-    const assignment = await prisma.jobAssignment.findFirst({
+    const assignment = await prisma.ticketAssignment.findFirst({
       where: asgWhere,
     });
 
@@ -40,8 +40,8 @@ export async function PUT(
 
     // 2. Perform updates in a transaction
     const updatedAssignment = await prisma.$transaction(async (tx) => {
-      // Update JobAssignment record
-      const updatedAsg = await tx.jobAssignment.update({
+      // Update TicketAssignment record
+      const updatedAsg = await tx.ticketAssignment.update({
         where: { id },
         data: {
           status: status !== undefined ? status : undefined,
@@ -49,21 +49,50 @@ export async function PUT(
         },
       });
 
-      // Update related Job fields
-      await tx.job.update({
-        where: { id: assignment.jobId },
-        data: {
-          visitDate: visitDate !== undefined ? (visitDate ? new Date(visitDate) : null) : undefined,
-          adminInstructions: adminInstructions !== undefined ? adminInstructions : undefined,
-          technicianInstructions: technicianInstructions !== undefined ? technicianInstructions : undefined,
-          customerLocation: customerLocation !== undefined ? customerLocation : undefined,
-        },
+      // Build ticket update payload
+      const ticketUpdateData: any = {
+        scheduledVisitDate: visitDate !== undefined ? (visitDate ? new Date(visitDate) : null) : undefined,
+        adminNotes: adminInstructions !== undefined ? adminInstructions : undefined,
+        technicianNotes: technicianInstructions !== undefined ? technicianInstructions : undefined,
+        locationCoordinates: customerLocation !== undefined ? customerLocation : undefined,
+      };
+
+      // AUTO-TRANSITION: "Assign For Service" → move ticket from REFILLING to SERVICES stage
+      if (status === "Assign For Service") {
+        const ticket = await tx.ticket.findUnique({
+          where: { id: assignment.ticketId },
+          select: { currentStage: true },
+        });
+        if (ticket?.currentStage === "REFILLING") {
+          ticketUpdateData.currentStage = "SERVICES";
+          // Log the stage transition in TicketHistory
+          await tx.ticketHistory.create({
+            data: {
+              ticketId: assignment.ticketId,
+              changedById: assignment.employeeId,
+              fromStage: "REFILLING",
+              toStage: "SERVICES",
+              remarks: "Auto-transitioned: Technician set status to 'Assign For Service'",
+            },
+          });
+        }
+      }
+
+      // Update related Ticket fields
+      await tx.ticket.update({
+        where: { id: assignment.ticketId },
+        data: ticketUpdateData,
       });
 
       return updatedAsg;
     });
 
-    return NextResponse.json(updatedAssignment);
+    const mappedAsg = {
+      ...updatedAssignment,
+      technicianId: updatedAssignment.employeeId,
+    };
+
+    return NextResponse.json(mappedAsg);
   } catch (error) {
     console.error("[Tasks PUT API] Error:", error);
     return NextResponse.json({ error: "Failed to update task details" }, { status: 500 });
@@ -88,7 +117,7 @@ export async function DELETE(
     const { id } = await params;
 
     // 1. Fetch assignment
-    const assignment = await prisma.jobAssignment.findFirst({
+    const assignment = await prisma.ticketAssignment.findFirst({
       where: { id, deletedAt: null },
     });
 
@@ -97,7 +126,7 @@ export async function DELETE(
     }
 
     // 2. Soft-delete
-    const deletedAsg = await prisma.jobAssignment.update({
+    const deletedAsg = await prisma.ticketAssignment.update({
       where: { id },
       data: {
         deletedAt: new Date(),

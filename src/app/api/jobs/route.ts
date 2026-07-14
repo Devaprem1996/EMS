@@ -25,21 +25,21 @@ export async function GET(req: NextRequest) {
 
     if (search) {
       whereClause.OR = [
-        { jobNumber: { contains: search } },
+        { ticketNumber: { contains: search } },
         { requirementCategory: { contains: search } },
         {
           customer: {
             OR: [
               { companyName: { contains: search } },
-              { contactPerson: { contains: search } },
-              { phone: { contains: search } },
+              { contactName: { contains: search } },
+              { primaryPhone: { contains: search } },
             ],
           },
         },
       ];
     }
 
-    const jobs = await prisma.job.findMany({
+    const jobs = await prisma.ticket.findMany({
       where: whereClause,
       include: {
         customer: true,
@@ -48,11 +48,11 @@ export async function GET(req: NextRequest) {
             deletedAt: null,
           },
           include: {
-            technician: {
+            employee: {
               select: {
                 id: true,
                 fullName: true,
-                phone: true,
+                contactPhone: true,
               },
             },
           },
@@ -68,7 +68,32 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(jobs);
+    const mappedJobs = jobs.map(job => ({
+      ...job,
+      jobNumber: job.ticketNumber,
+      visitDate: job.scheduledVisitDate,
+      adminInstructions: job.adminNotes,
+      technicianInstructions: job.technicianNotes,
+      customerLocation: job.locationCoordinates,
+      assignFor: job.assignmentType,
+      customer: job.customer ? {
+        ...job.customer,
+        contactPerson: job.customer.contactName,
+        phone: job.customer.primaryPhone,
+        phone2: job.customer.secondaryPhone,
+      } : null,
+      assignments: job.assignments.map(a => ({
+        id: a.id,
+        technicianId: a.employeeId,
+        technician: a.employee ? {
+          id: a.employee.id,
+          fullName: a.employee.fullName,
+          phone: a.employee.contactPhone,
+        } : null,
+      })),
+    }));
+
+    return NextResponse.json(mappedJobs);
   } catch (error) {
     console.error("[Jobs GET API] Error:", error);
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });
@@ -86,9 +111,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { 
       companyName, 
-      contactPerson, 
-      phone, 
-      phone2, 
+      contactPerson, // will map to contactName
+      phone, // will map to primaryPhone
+      phone2, // will map to secondaryPhone
       email, 
       address,
       requirementCategory,
@@ -115,7 +140,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Resolve or Create Customer by Primary Phone
     let customer = await prisma.customer.findFirst({
-      where: { phone },
+      where: { primaryPhone: phone },
     });
 
     if (customer) {
@@ -124,8 +149,8 @@ export async function POST(req: NextRequest) {
         where: { id: customer.id },
         data: {
           companyName: companyName || customer.companyName,
-          contactPerson: contactPerson || customer.contactPerson,
-          phone2: phone2 || customer.phone2,
+          contactName: contactPerson || customer.contactName,
+          secondaryPhone: phone2 || customer.secondaryPhone,
           email: email || customer.email,
           address: address || customer.address,
         },
@@ -135,41 +160,40 @@ export async function POST(req: NextRequest) {
       customer = await prisma.customer.create({
         data: {
           companyName: companyName || null,
-          contactPerson,
-          phone,
-          phone2: phone2 || null,
+          contactName: contactPerson,
+          primaryPhone: phone,
+          secondaryPhone: phone2 || null,
           email: email || null,
           address: address || null,
         },
       });
     }
 
-    // 2. Generate unique Job Number / Enquiry ID (e.g. EQ006)
-    // Find all jobs that start with "EQ"
-    const lastJob = await prisma.job.findFirst({
+    // 2. Generate unique Ticket Number / Enquiry ID (e.g. EQ006)
+    const lastTicket = await prisma.ticket.findFirst({
       where: {
-        jobNumber: {
+        ticketNumber: {
           startsWith: "EQ",
         },
       },
       orderBy: {
-        jobNumber: "desc",
+        ticketNumber: "desc",
       },
     });
 
-    let nextJobNumber = "EQ001";
-    if (lastJob) {
-      const match = lastJob.jobNumber.match(/EQ(\d+)/);
+    let nextTicketNumber = "EQ001";
+    if (lastTicket) {
+      const match = lastTicket.ticketNumber.match(/EQ(\d+)/);
       if (match) {
         const lastNum = parseInt(match[1], 10);
-        nextJobNumber = `EQ${String(lastNum + 1).padStart(3, "0")}`;
+        nextTicketNumber = `EQ${String(lastNum + 1).padStart(3, "0")}`;
       }
     }
 
-    // 3. Create Job
-    const newJob = await prisma.job.create({
+    // 3. Create Ticket
+    const newJob = await prisma.ticket.create({
       data: {
-        jobNumber: nextJobNumber,
+        ticketNumber: nextTicketNumber,
         customerId: customer.id,
         currentStage: "ENQUIRY",
         currentStatus: currentStatus || "Enquiry Registered",
@@ -184,7 +208,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(newJob, { status: 201 });
+    const mappedJob = {
+      ...newJob,
+      jobNumber: newJob.ticketNumber,
+      visitDate: newJob.scheduledVisitDate,
+      adminInstructions: newJob.adminNotes,
+      technicianInstructions: newJob.technicianNotes,
+      customerLocation: newJob.locationCoordinates,
+      assignFor: newJob.assignmentType,
+      customer: newJob.customer ? {
+        ...newJob.customer,
+        contactPerson: newJob.customer.contactName,
+        phone: newJob.customer.primaryPhone,
+        phone2: newJob.customer.secondaryPhone,
+      } : null,
+      assignments: [],
+    };
+
+    return NextResponse.json(mappedJob, { status: 201 });
   } catch (error) {
     console.error("[Jobs POST API] Error:", error);
     return NextResponse.json({ error: "Failed to create enquiry" }, { status: 500 });

@@ -18,7 +18,7 @@ export async function PUT(
     const { fullName, employeeNumber, phone, email, password, role, isActive } = body;
 
     // Find existing employee
-    const existingEmployee = await prisma.user.findUnique({
+    const existingEmployee = await prisma.employee.findUnique({
       where: { id },
     });
 
@@ -41,10 +41,10 @@ export async function PUT(
     }
 
     // Check contact number uniqueness if changing
-    if (phone !== undefined && phone !== existingEmployee.phone) {
-      const phoneTaken = await prisma.user.findFirst({
+    if (phone !== undefined && phone !== existingEmployee.contactPhone) {
+      const phoneTaken = await prisma.employee.findFirst({
         where: {
-          username: phone,
+          mobileNumber: phone,
           id: { not: id },
         },
       });
@@ -54,13 +54,13 @@ export async function PUT(
           { status: 400 }
         );
       }
-      updateData.phone = phone;
-      updateData.username = phone; // username must sync with phone
+      updateData.contactPhone = phone;
+      updateData.mobileNumber = phone; // mobileNumber must sync with phone
     }
 
     // Check employee number uniqueness if changing
     if (employeeNumber !== undefined && employeeNumber !== existingEmployee.employeeNumber) {
-      const empNoTaken = await prisma.user.findFirst({
+      const empNoTaken = await prisma.employee.findFirst({
         where: {
           employeeNumber,
           id: { not: id },
@@ -81,15 +81,15 @@ export async function PUT(
     }
 
     // Perform database update
-    const updatedEmployee = await prisma.user.update({
+    const updatedEmployee = await prisma.employee.update({
       where: { id },
       data: updateData,
       select: {
         id: true,
-        username: true,
+        mobileNumber: true,
         role: true,
         fullName: true,
-        phone: true,
+        contactPhone: true,
         employeeNumber: true,
         email: true,
         isActive: true,
@@ -97,7 +97,13 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedEmployee);
+    const mapped = {
+      ...updatedEmployee,
+      username: updatedEmployee.mobileNumber,
+      phone: updatedEmployee.contactPhone,
+    };
+
+    return NextResponse.json(mapped);
   } catch (error) {
     console.error("[Employee PUT API] Error:", error);
     return NextResponse.json({ error: "Failed to update employee details" }, { status: 500 });

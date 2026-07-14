@@ -45,34 +45,39 @@ graph TD
 
 ## 2. Database Schema Design (Prisma 7)
 
-The database schema utilizes Prisma ORM with the LibSQL driver adapter. SQLite is utilized locally, but the schema translates directly to PostgreSQL or MySQL.
+The database schema utilizes Prisma ORM with the LibSQL driver adapter. SQLite is utilized locally, but the schema translates directly to PostgreSQL or MySQL. Every table incorporates a `deletedAt` field to support soft-deletes natively.
 
 ```mermaid
 erDiagram
-    USER {
+    EMPLOYEE {
         String id PK
-        String username UK
+        String mobileNumber UK
         String passwordHash
         String role
         String fullName
-        String phone
+        String contactPhone
+        String employeeNumber UK
+        String email
         Boolean isActive
         DateTime createdAt
         DateTime updatedAt
+        DateTime deletedAt
     }
     CUSTOMER {
         String id PK
         String companyName
-        String contactPerson
-        String phone
+        String contactName
+        String primaryPhone
+        String secondaryPhone
         String email
         String address
         DateTime createdAt
         DateTime updatedAt
+        DateTime deletedAt
     }
-    JOB {
+    TICKET {
         String id PK
-        String jobNumber UK
+        String ticketNumber UK
         String customerId FK
         String currentStage
         String currentStatus
@@ -83,19 +88,21 @@ erDiagram
         String stageData
         DateTime createdAt
         DateTime updatedAt
+        DateTime deletedAt
     }
-    JOB_ASSIGNMENT {
+    TICKET_ASSIGNMENT {
         String id PK
-        String jobId FK
-        String technicianId FK
+        String ticketId FK
+        String employeeId FK
         DateTime assignedAt
         DateTime completedAt
         String status
         String notes
+        DateTime deletedAt
     }
-    JOB_HISTORY {
+    TICKET_HISTORY {
         String id PK
-        String jobId FK
+        String ticketId FK
         String changedById FK
         String fromStage
         String toStage
@@ -103,63 +110,70 @@ erDiagram
         String toStatus
         String remarks
         DateTime createdAt
+        DateTime deletedAt
     }
 
-    USER ||--o{ JOB_ASSIGNMENT : "receives"
-    USER ||--o{ JOB_HISTORY : "performs"
-    CUSTOMER ||--o{ JOB : "places"
-    JOB ||--o{ JOB_ASSIGNMENT : "has"
-    JOB ||--o{ JOB_HISTORY : "tracks"
+    EMPLOYEE ||--o{ TICKET_ASSIGNMENT : "allocated"
+    EMPLOYEE ||--o{ TICKET_HISTORY : "initiates"
+    CUSTOMER ||--o{ TICKET : "creates"
+    TICKET ||--o{ TICKET_ASSIGNMENT : "has"
+    TICKET ||--o{ TICKET_HISTORY : "tracks"
 ```
 
 ### Table Specifications
 
-#### 1. `User`
-Manages system access accounts. Role-Based Access Control (RBAC) relies on the `role` column.
+#### 1. `Employee`
+Manages system access accounts and profiles. Role-Based Access Control (RBAC) relies on the `role` column.
 - `id` (UUID, Primary Key)
-- `username` (VARCHAR, Unique, serves as login credentials)
+- `mobileNumber` (VARCHAR, Unique, serves as login credentials)
 - `passwordHash` (VARCHAR, hashed via `bcryptjs` with salt rounds = 10)
 - `role` (VARCHAR, constrained to `"ADMIN"` or `"TECHNICIAN"`)
-- `fullName` & `phone` (VARCHAR, optional contact info)
+- `fullName` & `contactPhone` (VARCHAR, optional contact info)
+- `employeeNumber` & `email` (VARCHAR, optional employee info)
 - `isActive` (BOOLEAN, default `true` - facilitates instant account suspension)
+- `deletedAt` (DateTime, nullable for soft deletes)
 
 #### 2. `Customer`
 Stores primary client metadata.
 - `id` (UUID, Primary Key)
 - `companyName` (VARCHAR, nullable for direct individual consumers)
-- `contactPerson`, `phone` (VARCHAR, required)
-- `email`, `address` (VARCHAR/TEXT, optional)
+- `contactName`, `primaryPhone` (VARCHAR, required)
+- `secondaryPhone`, `email`, `address` (VARCHAR/TEXT, optional)
+- `deletedAt` (DateTime, nullable for soft deletes)
 
-#### 3. `Job`
-The central transaction table tracking cylinders through lifecycle stages.
+#### 3. `Ticket`
+The central transaction table tracking enquiries through lifecycle stages.
 - `id` (UUID, Primary Key)
-- `jobNumber` (VARCHAR, Unique, formatted dynamically)
+- `ticketNumber` (VARCHAR, Unique, formatted dynamically)
 - `customerId` (UUID, Foreign Key referencing `Customer`)
 - `currentStage` (VARCHAR, constrained to `"ENQUIRY"`, `"REFILLING"`, `"SERVICES"`, `"COMPLETED"`)
 - `currentStatus` (VARCHAR, constrained to `"PENDING"`, `"ASSIGNED"`, `"IN_PROGRESS"`, `"COMPLETED"`)
-- **Core Cylinder Specs**: `serialNumber` (unique barcoded ID), `extinguisherType` (DCP, CO2, etc.), `capacity` (size/weight), `itemDescription` (brand/color/details).
+- **Core Cylinder Specs**: `serialNumber` (unique cylinders), `extinguisherType`, `capacity`, `itemDescription`.
 - `stageData` (TEXT, serialized JSON object containing client-specific values).
+- `deletedAt` (DateTime, nullable for soft deletes)
 
-#### 4. `JobAssignment`
-Mapping table resolving many-to-many relationship between `Jobs` and `Users` (technicians).
+#### 4. `TicketAssignment`
+Mapping table resolving many-to-many relationship between `Tickets` and `Employees` (technicians).
 - `id` (UUID, Primary Key)
-- `jobId` (UUID, Foreign Key referencing `Job`, cascade deletes enabled)
-- `technicianId` (UUID, Foreign Key referencing `User`)
+- `ticketId` (UUID, Foreign Key referencing `Ticket`, cascade deletes enabled)
+- `employeeId` (UUID, Foreign Key referencing `Employee`)
 - `assignedAt` (DateTime, default `now()`)
 - `completedAt` (DateTime, updated by Technician upon completion)
 - `status` (VARCHAR, constrained to `"ASSIGNED"` or `"COMPLETED"`)
 - `notes` (TEXT, technician completion reports)
-- *Unique Constraint*: `[jobId, technicianId]` ensures a technician is assigned to a job only once.
+- `deletedAt` (DateTime, nullable for soft deletes)
+- *Unique Constraint*: `[ticketId, employeeId]` ensures an employee is assigned to a ticket only once.
 
-#### 5. `JobHistory`
+#### 5. `TicketHistory`
 Audit logs capturing all state transitions.
 - `id` (UUID, Primary Key)
-- `jobId` (UUID, Foreign Key referencing `Job`, cascade deletes enabled)
-- `changedById` (UUID, Foreign Key referencing `User` who made the change)
+- `ticketId` (UUID, Foreign Key referencing `Ticket`, cascade deletes enabled)
+- `changedById` (UUID, Foreign Key referencing `Employee` who made the change)
 - `fromStage` / `toStage` (VARCHAR, tracks stage progression)
 - `fromStatus` / `toStatus` (VARCHAR, tracks status changes)
 - `remarks` (TEXT, manual notes for transition reason)
 - `createdAt` (DateTime, default `now()`)
+- `deletedAt` (DateTime, nullable for soft deletes)
 
 ---
 
@@ -318,3 +332,34 @@ import { PrismaClient } from "@prisma/client";
 export const prisma = new PrismaClient();
 ```
 *(No need for `@prisma/adapter-libsql` or `@libsql/client` when running on full relational engines like PostgreSQL or MySQL that do not require cloud/edge serverless compilation adapters).*
+
+---
+
+## 8. Quality Assurance & Testing Suite
+
+To support production-level reliability and validation, the following tools are configured in [package.json](file:///c:/Users/Guvi/Desktop/PW/EMS/package.json):
+
+### A. Input Schema Validation (`zod`)
+* **Zod** is used for strict runtime validation of requests on backend API endpoints (e.g. bulk transitions, user additions) and client-side form submissions.
+* Ensures validation constraints (e.g., matching length, formats, email formats, and number bounds) are enforced cleanly before query execution.
+
+### B. Unit & Database Testing (`vitest` + `@testing-library/react`)
+* **Vitest** serves as the test runner for fast, native unit testing of utilities, hooks, API routes, and DB helper scripts.
+* Database testing relies on running test suites against an isolated SQLite memory database or setting a specific `DATABASE_URL` environment variable for testing.
+* `@testing-library/react` and `jsdom` are integrated to support component-level rendering and event testing.
+
+### C. End-to-End & UI Testing (`@playwright/test`)
+* **Playwright** is configured for comprehensive E2E testing. It spins up browser instances to simulate client usage flows (login, register enquiry, assignment, technician logging, transition, soft delete validations).
+* Target folder and test specs reside in tests directories or files ending in `.spec.ts` or `.test.ts`.
+
+### Running Tests
+```bash
+# Run unit and API tests
+npm run test
+
+# Run Vitest in interactive watch mode
+npm run test:watch
+
+# Run UI/E2E tests using Playwright
+npm run test:e2e
+```

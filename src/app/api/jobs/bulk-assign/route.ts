@@ -32,44 +32,44 @@ export async function POST(req: NextRequest) {
     // Perform transaction
     await prisma.$transaction(async (tx) => {
       for (const id of jobIds) {
-        // 1. Find job
-        const job = await tx.job.findUnique({
+        // 1. Find ticket
+        const job = await tx.ticket.findUnique({
           where: { id },
         });
         if (!job) continue;
 
         // 2. Delete existing assignments
-        await tx.jobAssignment.deleteMany({
-          where: { jobId: id },
+        await tx.ticketAssignment.deleteMany({
+          where: { ticketId: id },
         });
 
         // 3. Create new assignments
         if (technicianIds.length > 0) {
-          await tx.jobAssignment.createMany({
+          await tx.ticketAssignment.createMany({
             data: technicianIds.map((techId: string) => ({
-              jobId: id,
-              technicianId: techId,
+              ticketId: id,
+              employeeId: techId,
               status: "ASSIGNED",
             })),
           });
         }
 
-        // 4. Update job details
-        await tx.job.update({
+        // 4. Update ticket details
+        await tx.ticket.update({
           where: { id },
           data: {
-            visitDate: visitDate ? new Date(visitDate) : null,
-            adminInstructions: adminInstructions || null,
-            technicianInstructions: technicianInstructions || null,
-            customerLocation: customerLocation || null,
-            assignFor: assignFor || "DELIVERY",
+            scheduledVisitDate: visitDate ? new Date(visitDate) : null,
+            adminNotes: adminInstructions || null,
+            technicianNotes: technicianInstructions || null,
+            locationCoordinates: customerLocation || null,
+            assignmentType: assignFor || "DELIVERY",
           },
         });
 
         // 5. Add to history log
-        await tx.jobHistory.create({
+        await tx.ticketHistory.create({
           data: {
-            jobId: id,
+            ticketId: id,
             changedById: session.userId,
             fromStage: job.currentStage,
             toStage: job.currentStage,

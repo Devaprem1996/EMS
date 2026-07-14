@@ -30,8 +30,8 @@ export async function POST(
       return NextResponse.json({ error: "technicianIds must be an array" }, { status: 400 });
     }
 
-    // 1. Find job
-    const job = await prisma.job.findUnique({
+    // 1. Find ticket
+    const job = await prisma.ticket.findUnique({
       where: { id },
     });
 
@@ -39,22 +39,22 @@ export async function POST(
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    // 2. Perform Transaction to update assignments and job details
+    // 2. Perform Transaction to update assignments and ticket details
     const updatedJob = await prisma.$transaction(async (tx) => {
-      // Soft-delete existing assignments for this job
-      await tx.jobAssignment.updateMany({
-        where: { jobId: id, deletedAt: null },
+      // Soft-delete existing assignments for this ticket
+      await tx.ticketAssignment.updateMany({
+        where: { ticketId: id, deletedAt: null },
         data: { deletedAt: new Date() },
       });
 
       // Create or restore assignments
       for (const techId of technicianIds) {
-        const existing = await tx.jobAssignment.findFirst({
-          where: { jobId: id, technicianId: techId },
+        const existing = await tx.ticketAssignment.findFirst({
+          where: { ticketId: id, employeeId: techId },
         });
 
         if (existing) {
-          await tx.jobAssignment.update({
+          await tx.ticketAssignment.update({
             where: { id: existing.id },
             data: {
               deletedAt: null,
@@ -64,25 +64,25 @@ export async function POST(
             },
           });
         } else {
-          await tx.jobAssignment.create({
+          await tx.ticketAssignment.create({
             data: {
-              jobId: id,
-              technicianId: techId,
+              ticketId: id,
+              employeeId: techId,
               status: "ASSIGNED",
             },
           });
         }
       }
 
-      // Update job fields
-      const updated = await tx.job.update({
+      // Update ticket fields
+      const updated = await tx.ticket.update({
         where: { id },
         data: {
-          visitDate: visitDate ? new Date(visitDate) : null,
-          adminInstructions: adminInstructions || null,
-          technicianInstructions: technicianInstructions || null,
-          customerLocation: customerLocation || null,
-          assignFor: assignFor || "DELIVERY",
+          scheduledVisitDate: visitDate ? new Date(visitDate) : null,
+          adminNotes: adminInstructions || null,
+          technicianNotes: technicianInstructions || null,
+          locationCoordinates: customerLocation || null,
+          assignmentType: assignFor || "DELIVERY",
         },
         include: {
           customer: true,
@@ -91,7 +91,7 @@ export async function POST(
               deletedAt: null,
             },
             include: {
-              technician: {
+              employee: {
                 select: {
                   id: true,
                   fullName: true,
@@ -103,9 +103,9 @@ export async function POST(
       });
 
       // Add to history log
-      await tx.jobHistory.create({
+      await tx.ticketHistory.create({
         data: {
-          jobId: id,
+          ticketId: id,
           changedById: session.userId,
           fromStage: job.currentStage,
           toStage: job.currentStage,
@@ -118,7 +118,31 @@ export async function POST(
       return updated;
     });
 
-    return NextResponse.json(updatedJob);
+    const mappedJob = {
+      ...updatedJob,
+      jobNumber: updatedJob.ticketNumber,
+      visitDate: updatedJob.scheduledVisitDate,
+      adminInstructions: updatedJob.adminNotes,
+      technicianInstructions: updatedJob.technicianNotes,
+      customerLocation: updatedJob.locationCoordinates,
+      assignFor: updatedJob.assignmentType,
+      customer: updatedJob.customer ? {
+        ...updatedJob.customer,
+        contactPerson: updatedJob.customer.contactName,
+        phone: updatedJob.customer.primaryPhone,
+        phone2: updatedJob.customer.secondaryPhone,
+      } : null,
+      assignments: updatedJob.assignments.map(a => ({
+        id: a.id,
+        technicianId: a.employeeId,
+        technician: a.employee ? {
+          id: a.employee.id,
+          fullName: a.employee.fullName,
+        } : null,
+      })),
+    };
+
+    return NextResponse.json(mappedJob);
   } catch (error) {
     console.error("[Job Assignment API] Error:", error);
     return NextResponse.json({ error: "Failed to update technician assignment" }, { status: 500 });

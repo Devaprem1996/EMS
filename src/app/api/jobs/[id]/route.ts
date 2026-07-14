@@ -48,7 +48,8 @@ export async function PUT(
     } = body;
 
     // 1. Find existing Job
-    const existingJob = await prisma.job.findUnique({
+    // 1. Find existing Job (Ticket)
+    const existingJob = await prisma.ticket.findUnique({
       where: { id },
       include: { customer: true },
     });
@@ -63,9 +64,9 @@ export async function PUT(
         where: { id: existingJob.customerId },
         data: {
           companyName: companyName !== undefined ? companyName : undefined,
-          contactPerson: contactPerson !== undefined ? contactPerson : undefined,
-          phone: phone !== undefined ? phone : undefined,
-          phone2: phone2 !== undefined ? phone2 : undefined,
+          contactName: contactPerson !== undefined ? contactPerson : undefined,
+          primaryPhone: phone !== undefined ? phone : undefined,
+          secondaryPhone: phone2 !== undefined ? phone2 : undefined,
           email: email !== undefined ? email : undefined,
           address: address !== undefined ? address : undefined,
         },
@@ -105,9 +106,9 @@ export async function PUT(
     if (currentStatus !== undefined) {
       // Write history if status is changing
       if (currentStatus !== existingJob.currentStatus) {
-        await prisma.jobHistory.create({
+        await prisma.ticketHistory.create({
           data: {
-            jobId: id,
+            ticketId: id,
             changedById: session.userId,
             fromStage: existingJob.currentStage,
             toStage: existingJob.currentStage,
@@ -125,15 +126,15 @@ export async function PUT(
     }
 
     if (visitDate !== undefined) {
-      jobUpdateData.visitDate = visitDate ? new Date(visitDate) : null;
+      jobUpdateData.scheduledVisitDate = visitDate ? new Date(visitDate) : null;
     }
 
     // Handle Follow-up new remarks
     if (newRemarks && newRemarks.trim() !== "") {
       // Add follow-up history record
-      await prisma.enquiryFollowUp.create({
+      await prisma.ticketFollowUp.create({
         data: {
-          jobId: id,
+          ticketId: id,
           remarks: newRemarks,
         },
       });
@@ -162,7 +163,7 @@ export async function PUT(
     }
 
     // 4. Perform Update
-    const updatedJob = await prisma.job.update({
+    const updatedJob = await prisma.ticket.update({
       where: { id },
       data: jobUpdateData,
       include: {
@@ -172,7 +173,7 @@ export async function PUT(
             deletedAt: null,
           },
           include: {
-            technician: {
+            employee: {
               select: {
                 id: true,
                 fullName: true,
@@ -188,7 +189,31 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedJob);
+    const mappedJob = {
+      ...updatedJob,
+      jobNumber: updatedJob.ticketNumber,
+      visitDate: updatedJob.scheduledVisitDate,
+      adminInstructions: updatedJob.adminNotes,
+      technicianInstructions: updatedJob.technicianNotes,
+      customerLocation: updatedJob.locationCoordinates,
+      assignFor: updatedJob.assignmentType,
+      customer: updatedJob.customer ? {
+        ...updatedJob.customer,
+        contactPerson: updatedJob.customer.contactName,
+        phone: updatedJob.customer.primaryPhone,
+        phone2: updatedJob.customer.secondaryPhone,
+      } : null,
+      assignments: updatedJob.assignments.map(a => ({
+        id: a.id,
+        technicianId: a.employeeId,
+        technician: a.employee ? {
+          id: a.employee.id,
+          fullName: a.employee.fullName,
+        } : null,
+      })),
+    };
+
+    return NextResponse.json(mappedJob);
   } catch (error) {
     console.error("[Job PUT API] Error:", error);
     return NextResponse.json({ error: "Failed to update job details" }, { status: 500 });

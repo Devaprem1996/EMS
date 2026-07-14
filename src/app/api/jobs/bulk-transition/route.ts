@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
     // Perform transaction
     await prisma.$transaction(async (tx) => {
       for (const id of jobIds) {
-        // 1. Find job
-        const job = await tx.job.findUnique({
+        // 1. Find job (ticket)
+        const job = await tx.ticket.findUnique({
           where: { id },
         });
         if (!job) continue;
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         const nextStatus = toStatus || (toStage === "REFILLING" ? "Refilling Order Received" : toStage === "SERVICES" ? "Pending" : "Completed");
 
         // 2. Update stage and status
-        await tx.job.update({
+        await tx.ticket.update({
           where: { id },
           data: {
             currentStage: toStage,
@@ -42,9 +42,9 @@ export async function POST(req: NextRequest) {
         });
 
         // 3. Add history record
-        await tx.jobHistory.create({
+        await tx.ticketHistory.create({
           data: {
-            jobId: id,
+            ticketId: id,
             changedById: session.userId,
             fromStage: job.currentStage,
             toStage: toStage,

@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
       authenticated: true,
       user: {
         id: sessionData.userId,
-        username: sessionData.username,
+        username: sessionData.mobileNumber,
+        mobileNumber: sessionData.mobileNumber,
         fullName: sessionData.fullName,
         role: sessionData.role,
       },

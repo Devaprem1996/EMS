@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 export interface SessionData {
   userId: string;
   username: string;
+  mobileNumber: string;
   fullName: string;
   role: "ADMIN" | "TECHNICIAN";
 }

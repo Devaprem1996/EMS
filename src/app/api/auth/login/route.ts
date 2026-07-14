@@ -4,21 +4,21 @@ import * as bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    const { mobileNumber, password } = await req.json();
 
-    if (!username || !password) {
+    if (!mobileNumber || !password) {
       return NextResponse.json(
         { error: "Mobile number and password are required" },
         { status: 400 }
       );
     }
 
-    // Find the user in the database
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Find the employee in the database
+    const employee = await prisma.employee.findUnique({
+      where: { mobileNumber },
     });
 
-    if (!user || !user.isActive) {
+    if (!employee || !employee.isActive) {
       return NextResponse.json(
         { error: "Invalid mobile number or inactive account" },
         { status: 401 }
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify the password
-    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+    const passwordMatch = await bcrypt.compare(password, employee.passwordHash);
     if (!passwordMatch) {
       return NextResponse.json(
         { error: "Invalid password" },
@@ -36,20 +36,22 @@ export async function POST(req: NextRequest) {
 
     // Construct session data
     const sessionData = {
-      userId: user.id,
-      username: user.username,
-      fullName: user.fullName || user.username,
-      role: user.role,
+      userId: employee.id,
+      username: employee.mobileNumber,
+      mobileNumber: employee.mobileNumber,
+      fullName: employee.fullName || employee.mobileNumber,
+      role: employee.role,
     };
 
     // Create a response
     const response = NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        username: user.username,
-        fullName: user.fullName,
-        role: user.role,
+        id: employee.id,
+        username: employee.mobileNumber,
+        mobileNumber: employee.mobileNumber,
+        fullName: employee.fullName,
+        role: employee.role,
       },
     });
 

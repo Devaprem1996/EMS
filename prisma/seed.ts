@@ -2,25 +2,25 @@ import { prisma } from "../src/lib/db";
 import * as bcrypt from "bcryptjs";
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database with generic models...");
 
-  // Clear existing users
-  await prisma.user.deleteMany({});
+  // Clear existing records
+  await prisma.employee.deleteMany({});
   await prisma.customer.deleteMany({});
-  await prisma.job.deleteMany({});
+  await prisma.ticket.deleteMany({});
 
   // Hash passwords
   const adminPasswordHash = await bcrypt.hash("admin123", 10);
   const techPasswordHash = await bcrypt.hash("tech123", 10);
 
   // 1. Create Admins
-  const admin = await prisma.user.create({
+  const admin = await prisma.employee.create({
     data: {
-      username: "9876543210",
+      mobileNumber: "9876543210",
       passwordHash: adminPasswordHash,
       role: "ADMIN",
       fullName: "Super Admin",
-      phone: "9876543210",
+      contactPhone: "9876543210",
       employeeNumber: "E001",
       email: "admin@safeway.com",
       isActive: true,
@@ -28,26 +28,26 @@ async function main() {
   });
 
   // 2. Create Technicians
-  const tech1 = await prisma.user.create({
+  const tech1 = await prisma.employee.create({
     data: {
-      username: "9111111111",
+      mobileNumber: "9111111111",
       passwordHash: techPasswordHash,
       role: "TECHNICIAN",
       fullName: "John Doe (Lead Tech)",
-      phone: "9111111111",
+      contactPhone: "9111111111",
       employeeNumber: "E002",
       email: "john.doe@safeway.com",
       isActive: true,
     },
   });
 
-  const tech2 = await prisma.user.create({
+  const tech2 = await prisma.employee.create({
     data: {
-      username: "9222222222",
+      mobileNumber: "9222222222",
       passwordHash: techPasswordHash,
       role: "TECHNICIAN",
       fullName: "Jane Smith (Junior Tech)",
-      phone: "9222222222",
+      contactPhone: "9222222222",
       employeeNumber: "E003",
       email: "jane.smith@safeway.com",
       isActive: true,
@@ -58,9 +58,9 @@ async function main() {
   const customerA = await prisma.customer.create({
     data: {
       companyName: "KH Chemicals",
-      contactPerson: "Karamad Begum",
-      phone: "9840135355",
-      phone2: "9840135356",
+      contactName: "Karamad Begum",
+      primaryPhone: "9840135355",
+      secondaryPhone: "9840135356",
       email: "karamad@khchem.com",
       address: "Tambaram, Chennai",
     },
@@ -69,8 +69,8 @@ async function main() {
   const customerB = await prisma.customer.create({
     data: {
       companyName: "Siva Clinicals",
-      contactPerson: "Manikrishnan",
-      phone: "9944332106",
+      contactName: "Manikrishnan",
+      primaryPhone: "9944332106",
       email: "contact@sivaclinicals.com",
       address: "Adyar, Chennai",
     },
@@ -79,8 +79,8 @@ async function main() {
   const customerC = await prisma.customer.create({
     data: {
       companyName: "Leena Enterprises",
-      contactPerson: "Leena",
-      phone: "9003332197",
+      contactName: "Leena",
+      primaryPhone: "9003332197",
       email: "leena@leenaent.com",
       address: "Guindy, Chennai",
     },
@@ -89,8 +89,8 @@ async function main() {
   const customerD = await prisma.customer.create({
     data: {
       companyName: "Madhesh Trades",
-      contactPerson: "Madhesh",
-      phone: "9789077788",
+      contactName: "Madhesh",
+      primaryPhone: "9789077788",
       email: "madhesh@trades.com",
       address: "Velachery, Chennai",
     },
@@ -99,17 +99,17 @@ async function main() {
   const customerE = await prisma.customer.create({
     data: {
       companyName: "Kavitha Agency",
-      contactPerson: "Kavitha",
-      phone: "9032111222",
+      contactName: "Kavitha",
+      primaryPhone: "9032111222",
       email: "kavitha@agency.com",
       address: "T Nagar, Chennai",
     },
   });
 
-  // 4. Create Sample Enquiries (Jobs)
-  const job1 = await prisma.job.create({
+  // 4. Create Sample Tickets
+  const ticket1 = await prisma.ticket.create({
     data: {
-      jobNumber: "EQ001",
+      ticketNumber: "EQ001",
       customerId: customerE.id,
       currentStage: "ENQUIRY",
       currentStatus: "Order Delivered",
@@ -123,9 +123,9 @@ async function main() {
     },
   });
 
-  const job2 = await prisma.job.create({
+  const ticket2 = await prisma.ticket.create({
     data: {
-      jobNumber: "EQ002",
+      ticketNumber: "EQ002",
       customerId: customerD.id,
       currentStage: "ENQUIRY",
       currentStatus: "Order Delivered",
@@ -136,9 +136,9 @@ async function main() {
     },
   });
 
-  const job3 = await prisma.job.create({
+  const ticket3 = await prisma.ticket.create({
     data: {
-      jobNumber: "EQ003",
+      ticketNumber: "EQ003",
       customerId: customerC.id,
       currentStage: "ENQUIRY",
       currentStatus: "Order Delivered",
@@ -149,9 +149,9 @@ async function main() {
     },
   });
 
-  const job4 = await prisma.job.create({
+  const ticket4 = await prisma.ticket.create({
     data: {
-      jobNumber: "EQ004",
+      ticketNumber: "EQ004",
       customerId: customerB.id,
       currentStage: "ENQUIRY",
       currentStatus: "Order Delivered",
@@ -162,9 +162,9 @@ async function main() {
     },
   });
 
-  const job5 = await prisma.job.create({
+  const ticket5 = await prisma.ticket.create({
     data: {
-      jobNumber: "EQ005",
+      ticketNumber: "EQ005",
       customerId: customerA.id,
       currentStage: "ENQUIRY",
       currentStatus: "Order Delivered",
@@ -175,56 +175,56 @@ async function main() {
     },
   });
 
-  // 5. Create Assignments
-  await prisma.jobAssignment.create({
+  // 5. Create Ticket Assignments
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job5.id,
-      technicianId: tech1.id, // John Doe
+      ticketId: ticket5.id,
+      employeeId: tech1.id, // John Doe
       status: "ASSIGNED",
     },
   });
 
-  await prisma.jobAssignment.create({
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job5.id,
-      technicianId: tech2.id, // Jane Smith
+      ticketId: ticket5.id,
+      employeeId: tech2.id, // Jane Smith
       status: "ASSIGNED",
     },
   });
 
-  await prisma.jobAssignment.create({
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job4.id,
-      technicianId: tech1.id, // John Doe
+      ticketId: ticket4.id,
+      employeeId: tech1.id, // John Doe
       status: "ASSIGNED",
     },
   });
 
-  await prisma.jobAssignment.create({
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job3.id,
-      technicianId: tech1.id, // John Doe
+      ticketId: ticket3.id,
+      employeeId: tech1.id, // John Doe
       status: "ASSIGNED",
     },
   });
 
-  await prisma.jobAssignment.create({
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job2.id,
-      technicianId: tech2.id, // Jane Smith
+      ticketId: ticket2.id,
+      employeeId: tech2.id, // Jane Smith
       status: "ASSIGNED",
     },
   });
 
-  await prisma.jobAssignment.create({
+  await prisma.ticketAssignment.create({
     data: {
-      jobId: job1.id,
-      technicianId: tech2.id, // Jane Smith
+      ticketId: ticket1.id,
+      employeeId: tech2.id, // Jane Smith
       status: "ASSIGNED",
     },
   });
 
-  console.log("Seeding completed successfully!");
+  console.log("Seeding completed successfully with new database models!");
   console.log("---------------------------------");
   console.log("Default Admin: 9876543210 / admin123");
   console.log("Default Tech 1: 9111111111 / tech123");

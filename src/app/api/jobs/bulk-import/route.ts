@@ -33,7 +33,7 @@ async function resolveTechnicians(techNamesOrPhones: string | null | undefined):
   const items = techNamesOrPhones.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
   if (items.length === 0) return [];
 
-  const technicians = await prisma.user.findMany({
+  const technicians = await prisma.employee.findMany({
     where: { role: "TECHNICIAN" },
   });
 
@@ -41,8 +41,8 @@ async function resolveTechnicians(techNamesOrPhones: string | null | undefined):
   for (const item of items) {
     const match = technicians.find(t => 
       (t.fullName && t.fullName.toLowerCase().includes(item)) || 
-      (t.phone && t.phone.includes(item)) ||
-      t.username.toLowerCase() === item
+      (t.contactPhone && t.contactPhone.includes(item)) ||
+      t.mobileNumber.toLowerCase() === item
     );
     if (match) {
       matchedIds.push(match.id);
@@ -72,21 +72,21 @@ export async function POST(req: NextRequest) {
       errors: [] as string[],
     };
 
-    // Find the latest job number to start auto-incrementing
-    const lastJob = await prisma.job.findFirst({
+    // Find the latest ticket number to start auto-incrementing
+    const lastJob = await prisma.ticket.findFirst({
       where: {
-        jobNumber: {
+        ticketNumber: {
           startsWith: "EQ",
         },
       },
       orderBy: {
-        jobNumber: "desc",
+        ticketNumber: "desc",
       },
     });
 
     let lastNum = 0;
     if (lastJob) {
-      const match = lastJob.jobNumber.match(/EQ(\d+)/);
+      const match = lastJob.ticketNumber.match(/EQ(\d+)/);
       if (match) {
         lastNum = parseInt(match[1], 10);
       }
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         let customer = null;
         if (phone) {
           customer = await prisma.customer.findFirst({
-            where: { phone },
+            where: { primaryPhone: phone },
           });
         }
 
@@ -137,8 +137,8 @@ export async function POST(req: NextRequest) {
         if (customer) {
           // Update customer fields if provided
           const updateData: any = {};
-          if (mappedRow.contactPerson && mappedRow.contactPerson !== customer.contactPerson) updateData.contactPerson = mappedRow.contactPerson;
-          if (mappedRow.phone2 && mappedRow.phone2 !== customer.phone2) updateData.phone2 = mappedRow.phone2;
+          if (mappedRow.contactPerson && mappedRow.contactPerson !== customer.contactName) updateData.contactName = mappedRow.contactPerson;
+          if (mappedRow.phone2 && mappedRow.phone2 !== customer.secondaryPhone) updateData.secondaryPhone = mappedRow.phone2;
           if (mappedRow.email && mappedRow.email !== customer.email) updateData.email = mappedRow.email;
           if (mappedRow.address && mappedRow.address !== customer.address) updateData.address = mappedRow.address;
           
@@ -153,9 +153,9 @@ export async function POST(req: NextRequest) {
           customer = await prisma.customer.create({
             data: {
               companyName: customerName,
-              contactPerson: mappedRow.contactPerson || customerName,
-              phone: phone || `TEMP-${Date.now()}-${index}`,
-              phone2: mappedRow.phone2 || null,
+              contactName: mappedRow.contactPerson || customerName,
+              primaryPhone: phone || `TEMP-${Date.now()}-${index}`,
+              secondaryPhone: mappedRow.phone2 || null,
               email: mappedRow.email || null,
               address: mappedRow.address || null,
             },
@@ -185,10 +185,10 @@ export async function POST(req: NextRequest) {
         // Resolve Assigned Technicians
         const techIds = await resolveTechnicians(mappedRow.assignedTechnicians);
 
-        // Check if there is an existing job matching serialNumber + customerName combination
+        // Check if there is an existing ticket matching serialNumber + customerName combination
         let existingJob = null;
         if (serialNumber) {
-          existingJob = await prisma.job.findFirst({
+          existingJob = await prisma.ticket.findFirst({
             where: {
               serialNumber,
               customer: {
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (existingJob) {
-          // Update existing job details
+          // Update existing ticket details
           const jobUpdateData: any = {
             capacity: mappedRow.capacity || existingJob.capacity,
             extinguisherType: mappedRow.extinguisherType || existingJob.extinguisherType,
@@ -211,10 +211,10 @@ export async function POST(req: NextRequest) {
             requestedDeliveryDate: reqDelDate || existingJob.requestedDeliveryDate,
             followUpDate: valFollowUpDate || existingJob.followUpDate,
             latestFollowUpNotes: mappedRow.followUpRemarks || existingJob.latestFollowUpNotes,
-            visitDate: valVisitDate || existingJob.visitDate,
-            adminInstructions: mappedRow.adminInstructions || existingJob.adminInstructions,
-            technicianInstructions: mappedRow.technicianInstructions || existingJob.technicianInstructions,
-            customerLocation: mappedRow.customerLocation || existingJob.customerLocation,
+            scheduledVisitDate: valVisitDate || existingJob.scheduledVisitDate,
+            adminNotes: mappedRow.adminInstructions || existingJob.adminNotes,
+            technicianNotes: mappedRow.technicianInstructions || existingJob.technicianNotes,
+            locationCoordinates: mappedRow.customerLocation || existingJob.locationCoordinates,
           };
 
           if (mappedRow.enquiryStatus) {
@@ -231,18 +231,18 @@ export async function POST(req: NextRequest) {
             jobUpdateData.amcDate = calculatedAmcDate;
           }
 
-          const updatedJob = await prisma.job.update({
+          const updatedJob = await prisma.ticket.update({
             where: { id: existingJob.id },
             data: jobUpdateData,
           });
 
           // Update assignments if specified
           if (techIds.length > 0) {
-            await prisma.jobAssignment.deleteMany({ where: { jobId: updatedJob.id } });
-            await prisma.jobAssignment.createMany({
+            await prisma.ticketAssignment.deleteMany({ where: { ticketId: updatedJob.id } });
+            await prisma.ticketAssignment.createMany({
               data: techIds.map(techId => ({
-                jobId: updatedJob.id,
-                technicianId: techId,
+                ticketId: updatedJob.id,
+                employeeId: techId,
                 status: "ASSIGNED",
               })),
             });
@@ -250,18 +250,18 @@ export async function POST(req: NextRequest) {
 
           // Create follow-up history record if remarks provided
           if (mappedRow.followUpRemarks) {
-            await prisma.enquiryFollowUp.create({
+            await prisma.ticketFollowUp.create({
               data: {
-                jobId: updatedJob.id,
+                ticketId: updatedJob.id,
                 remarks: mappedRow.followUpRemarks,
               },
             });
           }
 
           // Log history
-          await prisma.jobHistory.create({
+          await prisma.ticketHistory.create({
             data: {
-              jobId: existingJob.id,
+              ticketId: existingJob.id,
               changedById: session.userId,
               fromStage: existingJob.currentStage,
               toStage: existingJob.currentStage,
@@ -273,14 +273,14 @@ export async function POST(req: NextRequest) {
 
           results.updated++;
         } else {
-          // Generate next Job Number
+          // Generate next Ticket Number
           lastNum++;
           const nextJobNumber = `EQ${String(lastNum).padStart(3, "0")}`;
 
-          // Create new job
-          const newJob = await prisma.job.create({
+          // Create new ticket
+          const newJob = await prisma.ticket.create({
             data: {
-              jobNumber: nextJobNumber,
+              ticketNumber: nextJobNumber,
               customerId: customer.id,
               currentStage: "ENQUIRY",
               currentStatus: mappedRow.enquiryStatus || "Enquiry Registered",
@@ -297,20 +297,20 @@ export async function POST(req: NextRequest) {
               deliveredDate: valDeliveredDate || null,
               amcYears: valAmcYears || null,
               amcDate: calculatedAmcDate || null,
-              visitDate: valVisitDate || null,
-              adminInstructions: mappedRow.adminInstructions || null,
-              technicianInstructions: mappedRow.technicianInstructions || null,
-              customerLocation: mappedRow.customerLocation || null,
+              scheduledVisitDate: valVisitDate || null,
+              adminNotes: mappedRow.adminInstructions || null,
+              technicianNotes: mappedRow.technicianInstructions || null,
+              locationCoordinates: mappedRow.customerLocation || null,
               createdAt: enqDate,
             },
           });
 
           // Add assignments if specified
           if (techIds.length > 0) {
-            await prisma.jobAssignment.createMany({
+            await prisma.ticketAssignment.createMany({
               data: techIds.map(techId => ({
-                jobId: newJob.id,
-                technicianId: techId,
+                ticketId: newJob.id,
+                employeeId: techId,
                 status: "ASSIGNED",
               })),
             });
@@ -318,18 +318,18 @@ export async function POST(req: NextRequest) {
 
           // Create follow-up history record if remarks provided
           if (mappedRow.followUpRemarks) {
-            await prisma.enquiryFollowUp.create({
+            await prisma.ticketFollowUp.create({
               data: {
-                jobId: newJob.id,
+                ticketId: newJob.id,
                 remarks: mappedRow.followUpRemarks,
               },
             });
           }
 
           // Log history
-          await prisma.jobHistory.create({
+          await prisma.ticketHistory.create({
             data: {
-              jobId: newJob.id,
+              ticketId: newJob.id,
               changedById: session.userId,
               fromStage: "ENQUIRY",
               toStage: "ENQUIRY",

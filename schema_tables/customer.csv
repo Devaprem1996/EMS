@@ -1,0 +1,11 @@
+Column,Type,Constraints / Attributes,Description,Example
+id,String,"Primary Key, Default: UUID",Unique identifier for the customer,f9b5c3e4-8a12-4d8b-b9f1-a75d3fcd84c2
+companyName,String,Optional,Name of the customer's company,KH Chemicals
+contactName,String,Required,Primary contact person's name,Karamad Begum
+primaryPhone,String,Required,Primary contact phone number,9840135355
+secondaryPhone,String,Optional,Secondary contact number,9840135356
+email,String,Optional,Customer's email address,karamad@khchem.com
+address,String,Optional,Customer's physical/site address,"Tambaram, Chennai"
+createdAt,DateTime,Default: now(),Timestamp of customer creation,2026-07-14T10:00:00Z
+updatedAt,DateTime,Automatic update,Timestamp of last update,2026-07-14T10:45:00Z
+deletedAt,DateTime,Optional,Timestamp for soft deletion,null

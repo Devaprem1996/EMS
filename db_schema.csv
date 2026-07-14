@@ -1,0 +1,73 @@
+Table Name,Column Name,Data Type,Constraints / Attributes,Description,Example Data
+Employee,id,String,"Primary Key, Default: UUID",Unique identifier for the employee account,d4b8e3a2-7f12-4c8d-b9ea-b65f3fcd84c6
+Employee,mobileNumber,String,"Unique, Required",Mobile number used as the login username,9876543210
+Employee,passwordHash,String,Required,Bcrypt hash of the employee's password,$2a$10$X7jX8L2...
+Employee,role,String,Required,Role of the user: ""ADMIN"" or ""TECHNICIAN"",ADMIN
+Employee,fullName,String,Optional,Full name of the employee,John Doe
+Employee,contactPhone,String,Optional,Contact telephone number of the employee,9111111111
+Employee,employeeNumber,String,"Unique, Optional",Unique identifier/code assigned to the employee,E001
+Employee,email,String,Optional,Email ID of the employee,john.doe@safeway.com
+Employee,isActive,Boolean,Default: true,Whether the account is active and can log in,true
+Employee,createdAt,DateTime,Default: now(),Timestamp when the employee account was created,2026-07-14T10:00:00Z
+Employee,updatedAt,DateTime,Automatic update,Timestamp when the account was last modified,2026-07-14T10:45:00Z
+Employee,deletedAt,DateTime,Optional,Soft-delete timestamp. If set the account is inactive.,null
+Customer,id,String,"Primary Key, Default: UUID",Unique identifier for the customer,f9b5c3e4-8a12-4d8b-b9f1-a75d3fcd84c2
+Customer,companyName,String,Optional,Name of the customer's company or business,KH Chemicals
+Customer,contactName,String,Required,Primary contact person's full name,Karamad Begum
+Customer,primaryPhone,String,Required,Primary phone number of the contact person,9840135355
+Customer,secondaryPhone,String,Optional,Secondary / alternate contact number,9840135356
+Customer,email,String,Optional,Email address of the customer,karamad@khchem.com
+Customer,address,String,Optional,Physical / site address of the customer,"Tambaram, Chennai"
+Customer,createdAt,DateTime,Default: now(),Timestamp when the customer record was created,2026-07-14T10:00:00Z
+Customer,updatedAt,DateTime,Automatic update,Timestamp when the record was last modified,2026-07-14T10:45:00Z
+Customer,deletedAt,DateTime,Optional,Soft-delete timestamp. If set the record is inactive.,null
+Ticket,id,String,"Primary Key, Default: UUID",Unique identifier for the ticket,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
+Ticket,ticketNumber,String,"Unique, Required",Auto-generated alphanumeric tracking code,EQ001
+Ticket,customerId,String,"Optional, Foreign Key → Customer.id",ID of the associated customer,f9b5c3e4-8a12-4d8b-b9f1-a75d3fcd84c2
+Ticket,currentStage,String,Required,Lifecycle stage: ""ENQUIRY"" | ""REFILLING"" | ""SERVICES"" | ""COMPLETED"",ENQUIRY
+Ticket,currentStatus,String,Required,"Status within the stage (e.g. ""Order Confirmed"", ""Refilling Order Received"")",Order Confirmed
+Ticket,itemDescription,String,Optional,Description of the fire extinguisher or equipment,ABC Fire Extinguisher 9kg
+Ticket,serialNumber,String,Optional,Unique cylinder serial / tag number,CYL-99823
+Ticket,capacity,String,Optional,"Cylinder gas capacity (e.g. ""2 Kg"", ""9 Kg"")",9 Kg
+Ticket,extinguisherType,String,Optional,"Type of extinguisher (""CO2"" | ""DCP"" | ""Water"" | ""Foam"")",DCP
+Ticket,requirementCategory,String,Optional,"Category of work (e.g. ""CCTV"", ""New Fire Extinguisher"", ""Refilling"")","New Fire Extinguisher"
+Ticket,enquirySource,String,Optional,"Enquiry origin (""Existing Customers"" | ""Social Media"" | ""Walk-in"" etc.)","Social Media"
+Ticket,requirementDetails,String,Optional,Detailed notes on what the customer requested,Refill 4 DCP cylinders
+Ticket,requestedDeliveryDate,DateTime,Optional,Delivery date requested by the customer,2026-07-20T10:00:00Z
+Ticket,followUpDate,DateTime,Optional,Next scheduled date for a follow-up call / meeting,2026-07-16T12:00:00Z
+Ticket,latestFollowUpNotes,String,Optional,Summary notes from the most recent follow-up,Client wants a discount
+Ticket,deliveredDate,DateTime,Optional,Actual date the equipment was delivered to the customer,2026-07-15T15:30:00Z
+Ticket,amcYears,Int,Optional,"AMC coverage years (1 to 10)",2
+Ticket,amcDate,DateTime,Optional,Calculated AMC renewal date (deliveredDate + amcYears),2028-07-15T15:30:00Z
+Ticket,scheduledVisitDate,DateTime,Optional,Date scheduled for the technician site visit,2026-07-15T09:00:00Z
+Ticket,adminNotes,String,Optional,Admin instructions for the task / technician,Check safety seal on-site
+Ticket,technicianNotes,String,Optional,Technician field notes from the visit,"Valve was jammed, replaced it"
+Ticket,locationCoordinates,String,Optional,Map URL or coordinates for the customer site,https://maps.google.com/?q=12.97,80.21
+Ticket,assignmentType,String,"Optional, Default: ""DELIVERY""","Assignment type: ""DELIVERY"" | ""REFILLING"" | ""SERVICE""",DELIVERY
+Ticket,stageData,String,Optional,Serialized JSON for dynamic stage-specific fields,"{""pressureTestPassed"":true,""refillMediumQty"":4.5}"
+Ticket,createdAt,DateTime,Default: now(),Timestamp when the ticket was created,2026-07-14T10:00:00Z
+Ticket,updatedAt,DateTime,Automatic update,Timestamp when the ticket was last modified,2026-07-14T10:45:00Z
+Ticket,deletedAt,DateTime,Optional,Soft-delete timestamp. If set the ticket is archived.,null
+TicketFollowUp,id,String,"Primary Key, Default: UUID",Unique identifier for the follow-up entry,c2b3a4d5-e6f7-7a8b-9c0d-1e2f3a4b5c6d
+TicketFollowUp,ticketId,String,"Required, Foreign Key → Ticket.id (Cascade delete)",Associated ticket ID,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
+TicketFollowUp,remarks,String,Required,Notes from the follow-up conversation,"Called client, they asked to call back tomorrow"
+TicketFollowUp,createdAt,DateTime,Default: now(),Timestamp when the follow-up record was created,2026-07-14T11:00:00Z
+TicketFollowUp,deletedAt,DateTime,Optional,Soft-delete timestamp.,null
+TicketAssignment,id,String,"Primary Key, Default: UUID",Unique identifier for the assignment record,z1y2x3w4-v5u6-7t8s-9r0q-1p2o3n4m5l6k
+TicketAssignment,ticketId,String,"Required, Foreign Key → Ticket.id (Cascade delete)",Associated ticket ID,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
+TicketAssignment,employeeId,String,"Required, Foreign Key → Employee.id",Assigned technician's employee ID,d4b8e3a2-7f12-4c8d-b9ea-b65f3fcd84c6
+TicketAssignment,assignedAt,DateTime,Default: now(),Timestamp when the technician was assigned,2026-07-14T10:15:00Z
+TicketAssignment,completedAt,DateTime,Optional,Timestamp when the technician marked the task complete,2026-07-14T14:30:00Z
+TicketAssignment,status,String,Required,"Technician's task status: ""Pending"" | ""Assign For Service"" | ""Completed"" (REFILLING only gets ""Assign For Service"")",Pending
+TicketAssignment,notes,String,Optional,Post-visit notes logged by the technician,"No one was at home, returned."
+TicketAssignment,deletedAt,DateTime,Optional,Soft-delete timestamp. If set the assignment is hidden.,null
+TicketHistory,id,String,"Primary Key, Default: UUID",Unique identifier for the audit log entry,h1i2j3k4-l5m6-7n8o-9p0q-1r2s3t4u5v6w
+TicketHistory,ticketId,String,"Required, Foreign Key → Ticket.id (Cascade delete)",Associated ticket ID,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
+TicketHistory,changedById,String,"Required, Foreign Key → Employee.id",ID of the employee who triggered the change,d4b8e3a2-7f12-4c8d-b9ea-b65f3fcd84c6
+TicketHistory,fromStage,String,Optional,Ticket stage before the change,ENQUIRY
+TicketHistory,toStage,String,Optional,Ticket stage after the change,REFILLING
+TicketHistory,fromStatus,String,Optional,Ticket status before the change,Order Delivered
+TicketHistory,toStatus,String,Optional,Ticket status after the change,Refilling Order Received
+TicketHistory,remarks,String,Optional,Notes explaining what changed and why,"Bulk transitioned from ENQUIRY to REFILLING"
+TicketHistory,createdAt,DateTime,Default: now(),Timestamp when the history entry was recorded,2026-07-14T10:45:00Z
+TicketHistory,deletedAt,DateTime,Optional,Soft-delete timestamp.,null

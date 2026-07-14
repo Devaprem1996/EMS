@@ -26,20 +26,21 @@ export async function GET(req: NextRequest) {
     if (search) {
       whereClause.OR = [
         { fullName: { contains: search } },
-        { phone: { contains: search } },
+        { contactPhone: { contains: search } },
+        { mobileNumber: { contains: search } },
         { employeeNumber: { contains: search } },
         { email: { contains: search } },
       ];
     }
 
-    const employees = await prisma.user.findMany({
+    const employees = await prisma.employee.findMany({
       where: whereClause,
       select: {
         id: true,
-        username: true,
+        mobileNumber: true,
         role: true,
         fullName: true,
-        phone: true,
+        contactPhone: true,
         employeeNumber: true,
         email: true,
         isActive: true,
@@ -50,7 +51,13 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(employees);
+    const mapped = employees.map(emp => ({
+      ...emp,
+      username: emp.mobileNumber,
+      phone: emp.contactPhone,
+    }));
+
+    return NextResponse.json(mapped);
   } catch (error) {
     console.error("[Employees API GET] Error:", error);
     return NextResponse.json({ error: "Failed to fetch employees" }, { status: 500 });
@@ -79,9 +86,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid role value" }, { status: 400 });
     }
 
-    // Check contact number (username) uniqueness
-    const existingPhone = await prisma.user.findUnique({
-      where: { username: phone },
+    // Check contact number (mobileNumber) uniqueness
+    const existingPhone = await prisma.employee.findUnique({
+      where: { mobileNumber: phone },
     });
     if (existingPhone) {
       return NextResponse.json(
@@ -91,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check employee number uniqueness
-    const existingEmpNo = await prisma.user.findUnique({
+    const existingEmpNo = await prisma.employee.findUnique({
       where: { employeeNumber },
     });
     if (existingEmpNo) {
@@ -104,24 +111,24 @@ export async function POST(req: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user record
-    const newEmployee = await prisma.user.create({
+    // Create employee record
+    const newEmployee = await prisma.employee.create({
       data: {
-        username: phone, // phone is used as username
+        mobileNumber: phone, // phone is used as mobileNumber (login)
         passwordHash,
         role,
         fullName,
-        phone,
+        contactPhone: phone,
         employeeNumber,
         email: email || null,
         isActive: isActive !== undefined ? isActive : true,
       },
       select: {
         id: true,
-        username: true,
+        mobileNumber: true,
         role: true,
         fullName: true,
-        phone: true,
+        contactPhone: true,
         employeeNumber: true,
         email: true,
         isActive: true,
@@ -129,7 +136,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(newEmployee, { status: 201 });
+    const mapped = {
+      ...newEmployee,
+      username: newEmployee.mobileNumber,
+      phone: newEmployee.contactPhone,
+    };
+
+    return NextResponse.json(mapped, { status: 201 });
   } catch (error) {
     console.error("[Employees API POST] Error:", error);
     return NextResponse.json({ error: "Failed to create employee" }, { status: 500 });

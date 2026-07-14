@@ -17,10 +17,10 @@ import { EMS_CONFIG } from "@/config/ems-config";
 
 interface Employee {
   id: string;
-  username: string;
+  mobileNumber: string;
   role: "ADMIN" | "TECHNICIAN";
   fullName: string;
-  phone: string;
+  contactPhone: string;
   employeeNumber: string;
   email: string | null;
   isActive: boolean;
@@ -97,7 +97,7 @@ export default function EmployeeMasterPage() {
     setEditingEmployee(emp);
     setFullName(emp.fullName || "");
     setEmployeeNumber(emp.employeeNumber || "");
-    setPhone(emp.phone || "");
+    setPhone(emp.contactPhone || "");
     setEmail(emp.email || "");
     setPassword(""); // Leave empty for edit
     setRole(emp.role);
@@ -235,7 +235,7 @@ export default function EmployeeMasterPage() {
                     <div style={{ fontWeight: "600", color: "#fff" }}>{emp.fullName}</div>
                     <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{emp.email || "No Email"}</div>
                   </td>
-                  <td>{emp.phone}</td>
+                  <td>{emp.contactPhone}</td>
                   <td>
                     <span 
                       className="badge" 

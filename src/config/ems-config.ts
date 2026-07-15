@@ -54,6 +54,7 @@ export interface EmsConfig {
     deliveredDate: string[];
     amcYears: string[];
     assignedTechnicians: string[];
+    targetDashboard: string[];
   };
 }
 
@@ -170,5 +171,6 @@ export const EMS_CONFIG: EmsConfig = {
     deliveredDate: ["delivered date", "delivered_date"],
     amcYears: ["amc years", "amc_years", "no of years", "no. of years"],
     assignedTechnicians: ["assigned technicians", "technicians", "assigned employees", "assigned_techs"],
+    targetDashboard: ["upload to", "target dashboard", "dashboard", "upload_to", "target", "route to", "send to"],
   },
 };

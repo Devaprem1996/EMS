@@ -277,13 +277,30 @@ export async function POST(req: NextRequest) {
           lastNum++;
           const nextJobNumber = `EQ${String(lastNum).padStart(3, "0")}`;
 
-          // Create new ticket
+          // --- Auto-Routing: Determine the correct stage using the dedicated "Upload To" column ---
+          // "Upload To" column is the explicit routing control.
+          // If left blank → ticket goes to Enquiry (default).
+          const uploadTo = (mappedRow.targetDashboard || "").trim().toLowerCase();
+
+          let finalStage = "ENQUIRY";
+          let finalStatus = mappedRow.enquiryStatus || "Enquiry Registered";
+
+          if (["refilling", "refill", "r"].includes(uploadTo)) {
+            finalStage = "REFILLING";
+            finalStatus = "Refilling Order Received";
+          } else if (["service", "services", "s"].includes(uploadTo)) {
+            finalStage = "SERVICES";
+            finalStatus = "Pending";
+          }
+          // If "Upload To" is blank or "enquiry"/"e", stays in ENQUIRY (default)
+
+          // Create new ticket with the resolved stage
           const newJob = await prisma.ticket.create({
             data: {
               ticketNumber: nextJobNumber,
               customerId: customer.id,
-              currentStage: "ENQUIRY",
-              currentStatus: mappedRow.enquiryStatus || "Enquiry Registered",
+              currentStage: finalStage,
+              currentStatus: finalStatus,
               serialNumber: serialNumber || null,
               capacity: mappedRow.capacity || null,
               extinguisherType: mappedRow.extinguisherType || null,
@@ -312,6 +329,7 @@ export async function POST(req: NextRequest) {
                 ticketId: newJob.id,
                 employeeId: techId,
                 status: "ASSIGNED",
+                assignFor: finalStage === "SERVICES" ? "SERVICE" : finalStage === "REFILLING" ? "REFILLING" : null,
               })),
             });
           }
@@ -326,16 +344,18 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // Log history
+          // Log history — reflect the actual final stage the ticket lands in
           await prisma.ticketHistory.create({
             data: {
               ticketId: newJob.id,
               changedById: session.userId,
               fromStage: "ENQUIRY",
-              toStage: "ENQUIRY",
+              toStage: finalStage,
               fromStatus: "Enquiry Registered",
-              toStatus: newJob.currentStatus,
-              remarks: "Job created via Bulk Import",
+              toStatus: finalStatus,
+              remarks: finalStage !== "ENQUIRY"
+                ? `Job created via Bulk Import and auto-routed to ${finalStage}`
+                : "Job created via Bulk Import",
             },
           });
 

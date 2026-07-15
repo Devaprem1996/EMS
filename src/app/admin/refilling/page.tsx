@@ -89,6 +89,20 @@ export default function RefillingDashboardPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => setErrorMsg(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
+
   // Modals Control
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -291,53 +305,139 @@ export default function RefillingDashboardPage() {
   });
 
   return (
-    <div style={{ padding: "10px", color: "#e2e8f0" }}>
+    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+      {/* Background Accent Glow Spots */}
+      <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "20%" }}></div>
+      <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "5%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.02) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
+
       {/* Page Title & Subtitle */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>Refilling Dashboard</h1>
-          <p style={{ fontSize: "14px", color: "#a0aec0", margin: "4px 0 0 0" }}>Manage client requests, follow-ups, and confirmations</p>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Refilling Control Center</h1>
+          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Manage high-pressure testing, gas refilling schedules, and compliance validation</p>
         </div>
       </div>
 
-      {/* Alerts */}
-      {successMsg && (
-        <div style={{ padding: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid #10b981", borderRadius: "8px", color: "#10b981", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
-          <Check size={18} />
-          <span>{successMsg}</span>
-        </div>
-      )}
-      {errorMsg && (
-        <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", borderRadius: "8px", color: "#ef4444", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
-          <AlertCircle size={18} />
-          <span>{errorMsg}</span>
-        </div>
-      )}
+      {/* Toast Notification Stack */}
+      <div className="toast-stack">
+        {successMsg && (
+          <div className="toast-card success-toast">
+            <Check size={18} style={{ color: "#10b981", marginTop: "2px", flexShrink: 0 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "bold", color: "#fff" }}>Success</span>
+              <span style={{ fontSize: "12px", color: "#a0aec0", lineHeight: "1.4" }}>{successMsg}</span>
+            </div>
+            <button 
+              onClick={() => setSuccessMsg(null)} 
+              style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", marginLeft: "auto", display: "flex", alignSelf: "flex-start", padding: "2px" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        {errorMsg && (
+          <div className="toast-card error-toast">
+            <AlertCircle size={18} style={{ color: "#ef4444", marginTop: "2px", flexShrink: 0 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "bold", color: "#fff" }}>Error</span>
+              <span style={{ fontSize: "12px", color: "#a0aec0", lineHeight: "1.4" }}>{errorMsg}</span>
+            </div>
+            <button 
+              onClick={() => setErrorMsg(null)} 
+              style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", marginLeft: "auto", display: "flex", alignSelf: "flex-start", padding: "2px" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Filters & Search Row */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label style={{ fontSize: "11px", color: "#718096", textTransform: "uppercase" }}>Year</label>
+      {/* Premium KPI Metrics Cards Grid */}
+      <div className="kpi-grid">
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Refilling Jobs</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.length}</div>
+            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Gas Refilling Contracts</div>
+          </div>
+          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>🎛️</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Active Queue</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => !["Order Delivered", "Order Dropped"].includes(j.currentStatus)).length}</div>
+            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> In Production Pipeline
+            </div>
+          </div>
+          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>⚡</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Delivered Contracts</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus === "Order Delivered").length}</div>
+            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Dispatched & Verified
+            </div>
+          </div>
+          <div style={{ background: "rgba(16, 185, 129, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>🚛</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #ef4444" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Dropped Orders</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus === "Order Dropped").length}</div>
+            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Cancelled Refilling</div>
+          </div>
+          <div style={{ background: "rgba(239, 68, 68, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>❌</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters & Search Row Toolbar */}
+      <div className="floating-toolbar" style={{ gap: "15px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", flex: 1, minWidth: "260px" }}>
+          <div style={{ position: "relative", flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Search client, contact details..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: "100%", padding: "11px 12px 11px 38px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", fontSize: "13.5px", transition: "all 0.2s" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 10px rgba(220, 38, 38, 0.15)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = "none"; }}
+            />
+            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            style={{ padding: "10px 15px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff", cursor: "pointer" }}
+            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
           >
             <option value="all">All Years</option>
             {getFilterYears().map(yr => (
               <option key={yr} value={yr}>{yr}</option>
             ))}
           </select>
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label style={{ fontSize: "11px", color: "#718096", textTransform: "uppercase" }}>Status</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: "10px 15px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff", cursor: "pointer" }}
+            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
           >
-            <option value="all">All Status</option>
+            <option value="all">All Statuses</option>
             <option value="Refilling Order Received">Refilling Order Received</option>
             <option value="Quotation Sent">Quotation Sent</option>
             <option value="Follow-up In Progress">Follow-up In Progress</option>
@@ -346,116 +446,141 @@ export default function RefillingDashboardPage() {
             <option value="Order Dropped">Order Dropped</option>
           </select>
         </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: "260px" }}>
-          <label style={{ fontSize: "11px", color: "#718096", textTransform: "uppercase" }}>Search</label>
-          <div style={{ position: "relative", width: "100%" }}>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: "100%", padding: "10px 10px 10px 35px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff" }}
-            />
-            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#718096" }} />
-          </div>
-        </div>
       </div>
 
       {/* Data Table */}
-      <div style={{ background: "#111115", borderRadius: "12px", border: "1px solid #2d2d3a", overflowX: "auto" }}>
+      <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>Loading refilling jobs...</div>
+          <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+            <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <div style={{ marginTop: "10px", fontSize: "14px" }}>Synchronizing gas inventory log...</div>
+          </div>
         ) : filteredJobs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#718096" }}>No refilling jobs found.</div>
+          <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
+            <span style={{ fontSize: "28px" }}>📭</span>
+            <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No refilling records matched</div>
+            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Adjust search terms or year/status dropdown values</div>
+          </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
+          <table className="glass-table">
             <thead>
-              <tr style={{ borderBottom: "1px solid #2d2d3a", background: "#171721" }}>
-                <th style={{ padding: "12px 15px" }}>S.No</th>
-                <th style={{ padding: "12px 15px" }}>Client Name</th>
-                <th style={{ padding: "12px 15px" }}>Contact Person Name</th>
-                <th style={{ padding: "12px 15px" }}>Contact No 1</th>
-                <th style={{ padding: "12px 15px" }}>Requirement Category</th>
-                <th style={{ padding: "12px 15px" }}>Delivery Date</th>
-                <th style={{ padding: "12px 15px" }}>Refilling Date</th>
-                <th style={{ padding: "12px 15px" }}>Refilling Status</th>
-                <th style={{ padding: "12px 15px" }}>Technician Names</th>
-                <th style={{ padding: "12px 15px", textAlign: "center" }}>Actions</th>
+              <tr>
+                <th>S.No</th>
+                <th>Client Name</th>
+                <th>Contact Name</th>
+                <th>Contact Phone</th>
+                <th>Category</th>
+                <th>Delivery Date</th>
+                <th>Refilling Date</th>
+                <th>Status</th>
+                <th>Technicians</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredJobs.map((job, index) => (
-                <tr key={job.id} style={{ borderBottom: "1px solid #1a1a24" }}>
-                  <td style={{ padding: "12px 15px" }}>{index + 1}</td>
-                  <td style={{ padding: "12px 15px" }}>{job.customer?.companyName || "N/A"}</td>
-                  <td style={{ padding: "12px 15px" }}>{job.customer?.contactPerson}</td>
-                  <td style={{ padding: "12px 15px" }}>{job.customer?.phone}</td>
-                  <td style={{ padding: "12px 15px" }}>{job.requirementCategory || "SELECT"}</td>
-                  <td style={{ padding: "12px 15px" }}>{formatDate(job.deliveredDate)}</td>
-                  <td style={{ padding: "12px 15px", color: "#10b981", fontWeight: "bold" }}>{formatDate(job.amcDate)}</td>
-                  <td style={{ padding: "12px 15px" }}>
-                    <span style={{
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      background: 
-                        job.currentStatus === "Order Delivered" ? "rgba(16, 185, 129, 0.15)" :
-                        job.currentStatus === "Order Confirmed" ? "rgba(59, 130, 246, 0.15)" :
-                        job.currentStatus === "Order Dropped" ? "rgba(239, 68, 68, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                      color:
-                        job.currentStatus === "Order Delivered" ? "#10b981" :
-                        job.currentStatus === "Order Confirmed" ? "#3b82f6" :
-                        job.currentStatus === "Order Dropped" ? "#ef4444" : "#f59e0b",
-                    }}>
-                      {job.currentStatus}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 15px" }}>
-                    {job.assignments.length === 0 ? (
-                      <span style={{ color: "#718096" }}>Unassigned</span>
-                    ) : (
-                      job.assignments.map(a => a.technician.fullName).join(", ")
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 15px", textAlign: "center" }}>
-                    <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                      <button
-                        onClick={() => handleOpenEdit(job)}
-                        style={{ background: "#ff4d80", border: "none", color: "#fff", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                        title="Update Refilling details"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleOpenAssign(job)}
-                        style={{ background: "#ff6c37", border: "none", color: "#fff", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                        title="Assign Technician"
-                      >
-                        <UserPlus size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredJobs.map((job, index) => {
+                const statusDotClass = 
+                  job.currentStatus === "Order Delivered" ? "pulse-green" :
+                  job.currentStatus === "Order Confirmed" ? "pulse-blue" :
+                  job.currentStatus === "Order Dropped" ? "pulse-red" : "pulse-amber";
+
+                const statusColor =
+                  job.currentStatus === "Order Delivered" ? "#10b981" :
+                  job.currentStatus === "Order Confirmed" ? "#60a5fa" :
+                  job.currentStatus === "Order Dropped" ? "#f87171" : "#fbbf24";
+
+                return (
+                  <tr key={job.id}>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{index + 1}</td>
+                    <td style={{ fontWeight: "600", color: "#fff" }}>{job.customer?.companyName || "N/A"}</td>
+                    <td>{job.customer?.contactPerson}</td>
+                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
+                    <td>
+                      <span style={{ fontSize: "11px", textTransform: "uppercase", background: "rgba(255,255,255,0.05)", padding: "3px 6px", borderRadius: "5px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                        {job.requirementCategory || "SELECT"}
+                      </span>
+                    </td>
+                    <td>{formatDate(job.deliveredDate)}</td>
+                    <td style={{ color: "#10b981", fontWeight: "700" }}>{formatDate(job.amcDate)}</td>
+                    <td>
+                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
+                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                        {job.currentStatus}
+                      </div>
+                    </td>
+                    <td>
+                      {job.assignments.length === 0 ? (
+                        <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                          {job.assignments.map(a => (
+                            <span key={a.id} style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)" }}>
+                              {a.technician.fullName}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <div style={{ display: "inline-flex", gap: "6px" }}>
+                        <button
+                          onClick={() => handleOpenEdit(job)}
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            color: "#fff",
+                            padding: "7px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                          title="Update Refilling details"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleOpenAssign(job)}
+                          style={{
+                            background: "rgba(245, 158, 11, 0.08)",
+                            border: "1px solid rgba(245, 158, 11, 0.2)",
+                            color: "#f59e0b",
+                            padding: "7px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
+                          title="Assign Technician"
+                        >
+                          <UserPlus size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
 
+
       {/* Update Refilling Modal */}
       {isEditModalOpen && selectedJob && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
+          <div className="slide-over-card">
             
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>Update Refilling</h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+            <div className="slide-over-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Update Refilling</h2>
+              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div className="slide-over-body" style={{ gap: "15px" }}>
                 
                 {/* Collapsible Card 1: Enquiry Status & Dates */}
                 <div style={{ border: "1px solid #2d2d3a", borderRadius: "8px", overflow: "hidden" }}>
@@ -564,7 +689,7 @@ export default function RefillingDashboardPage() {
               </div>
 
               {/* Modal Footer */}
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+              <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
               </div>
@@ -575,16 +700,16 @@ export default function RefillingDashboardPage() {
 
       {/* Assign Technician Modal */}
       {isAssignModalOpen && selectedJob && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
+          <div className="slide-over-card">
             
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>Assign Technician</h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+            <div className="slide-over-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Assign Technician</h2>
+              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div className="slide-over-body">
                 
                 {/* Client info */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#111116", padding: "10px", borderRadius: "6px", border: "1px solid #1a1a24" }}>
@@ -661,7 +786,7 @@ export default function RefillingDashboardPage() {
 
               </div>
 
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+              <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 16px", background: "#ff6c37", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Assign</button>
               </div>

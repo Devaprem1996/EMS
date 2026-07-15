@@ -88,10 +88,25 @@ export default function EnquiryDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => setErrorMsg(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
 
   // Modal control
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -536,6 +551,7 @@ export default function EnquiryDashboardPage() {
       "Delivered Date",
       "AMC Years",
       "Assigned Technicians",
+      "Upload To",
     ];
     const exampleRow = [
       "KH Chemicals",
@@ -562,6 +578,7 @@ export default function EnquiryDashboardPage() {
       "",
       "",
       "Ravi Kumar",
+      "Refilling",
     ];
     const csvContent = [
       headers.join(","),
@@ -578,10 +595,7 @@ export default function EnquiryDashboardPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processImportFile = async (file: File) => {
     setImporting(true);
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -640,7 +654,7 @@ export default function EnquiryDashboardPage() {
         if (!res.ok) throw new Error(data.error || "Failed to process bulk import");
 
         setSuccessMsg(
-          `Import complete! Created: ${data.created}, Updated: ${data.updated}, Failed: ${data.failed}`
+          `Import complete! Created: ${data.created}, Updated: ${data.updated}, Failed: ${data.failed}. Records with "Upload To = Refilling" routed to Refilling Dashboard; "Upload To = Service" routed to Services Dashboard.`
         );
         if (data.errors && data.errors.length > 0) {
           console.warn("Import errors:", data.errors);
@@ -651,10 +665,17 @@ export default function EnquiryDashboardPage() {
         setErrorMsg(err.message);
       } finally {
         setImporting(false);
-        e.target.value = "";
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processImportFile(file);
+      e.target.value = "";
+    }
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -668,240 +689,350 @@ export default function EnquiryDashboardPage() {
   };
 
   return (
-    <div style={{ padding: "10px", color: "#e2e8f0" }}>
-      {/* Page Title */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+      {/* Background Accent Glow Spots */}
+      <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "30%" }}></div>
+      <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "10%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
+
+      {/* Page Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>Enquiry Dashboard</h1>
-          <p style={{ fontSize: "14px", color: "#a0aec0", margin: "4px 0 0 0" }}>Manage client requests, follow-ups, and confirmations</p>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Enquiry Hub</h1>
+          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time telemetry, lead assignment, and dispatch pipeline</p>
         </div>
-      </div>
-
-      {/* Success/Error Alerts */}
-      {successMsg && (
-        <div style={{ padding: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid #10b981", borderRadius: "8px", color: "#10b981", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
-          <Check size={18} />
-          <span>{successMsg}</span>
-        </div>
-      )}
-      {errorMsg && (
-        <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", borderRadius: "8px", color: "#ef4444", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
-          <AlertCircle size={18} />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* Search and Filters */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: "260px" }}>
-          <input
-            type="text"
-            placeholder="Search client, contact, enquiry ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", padding: "10px 10px 10px 35px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff" }}
-          />
-          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#718096" }} />
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: "10px 15px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff", cursor: "pointer" }}
-        >
-          <option value="all">All Statuses</option>
-          <option value="Enquiry Registered">Enquiry Registered</option>
-          <option value="Order Confirmed">Order Confirmed</option>
-          <option value="Order Delivered">Order Delivered</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        
-        <label
+        <button
+          onClick={() => {
+            setCompanyName("");
+            setContactPerson("");
+            setPhone("");
+            setPhone2("");
+            setEmail("");
+            setAddress("");
+            setRequirementCategory("SELECT");
+            setEnquirySource("SELECT");
+            setRequirementDetails("");
+            setRequestedDeliveryDate("");
+            setEnquiryDate("");
+            setFollowUpDate("");
+            setNewRemarks("");
+            setDeliveredDate("");
+            setAmcYears("1");
+            setCalculatedAmcDate("");
+            setIsAddModalOpen(true);
+          }}
           style={{
-            padding: "10px 15px",
-            background: "#3b82f6",
+            padding: "10px 18px",
+            background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "12px",
             color: "#fff",
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "8px",
             fontSize: "14px",
-            fontWeight: "500",
-            opacity: importing ? 0.7 : 1,
-            pointerEvents: importing ? "none" : "auto",
+            fontWeight: "600",
+            boxShadow: "0 6px 20px rgba(220, 38, 38, 0.25)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(220, 38, 38, 0.35)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(220, 38, 38, 0.25)";
           }}
         >
-          <Upload size={16} />
-          {importing ? "Importing..." : "Bulk Import"}
+          <Plus size={16} />
+          Register Enquiry
+        </button>
+      </div>
+
+      {/* Toast Notification Stack */}
+      <div className="toast-stack">
+        {successMsg && (
+          <div className="toast-card success-toast">
+            <Check size={18} style={{ color: "#10b981", marginTop: "2px", flexShrink: 0 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "bold", color: "#fff" }}>Success</span>
+              <span style={{ fontSize: "12px", color: "#a0aec0", lineHeight: "1.4" }}>{successMsg}</span>
+            </div>
+            <button 
+              onClick={() => setSuccessMsg(null)} 
+              style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", marginLeft: "auto", display: "flex", alignSelf: "flex-start", padding: "2px" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        {errorMsg && (
+          <div className="toast-card error-toast">
+            <AlertCircle size={18} style={{ color: "#ef4444", marginTop: "2px", flexShrink: 0 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "bold", color: "#fff" }}>Error</span>
+              <span style={{ fontSize: "12px", color: "#a0aec0", lineHeight: "1.4" }}>{errorMsg}</span>
+            </div>
+            <button 
+              onClick={() => setErrorMsg(null)} 
+              style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", marginLeft: "auto", display: "flex", alignSelf: "flex-start", padding: "2px" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Premium KPI Metrics Cards Grid */}
+      <div className="kpi-grid">
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Pipelines</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{enquiries.length}</div>
+            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Registered Enquiries</div>
+          </div>
+          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>📁</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Registered Leads</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{enquiries.filter(e => e.currentStatus === "Enquiry Registered").length}</div>
+            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> Waiting Assignment
+            </div>
+          </div>
+          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>⏳</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Orders Confirmed</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{enquiries.filter(e => e.currentStatus === "Order Confirmed").length}</div>
+            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Approved & Scheduled
+            </div>
+          </div>
+          <div style={{ background: "rgba(16, 185, 129, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>✅</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #ef4444" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Orders Delivered</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{enquiries.filter(e => e.currentStatus === "Order Delivered").length}</div>
+            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Closed Handshakes</div>
+          </div>
+          <div style={{ background: "rgba(239, 68, 68, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>📦</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Toolbar (Search & Filter) */}
+      <div className="floating-toolbar">
+        <div style={{ position: "relative", flex: 1, minWidth: "260px" }}>
           <input
-            type="file"
-            accept=".csv"
-            onChange={handleBulkImport}
-            style={{ display: "none" }}
-            disabled={importing}
+            type="text"
+            placeholder="Search client name, contact, enquiry ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", fontSize: "13.5px", transition: "all 0.2s" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 10px rgba(220, 38, 38, 0.15)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = "none"; }}
           />
-        </label>
+          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+        </div>
 
-        {/* Download Template Button */}
-        <button
-          onClick={downloadTemplate}
-          title="Download CSV template for bulk import"
-          style={{
-            padding: "10px 15px",
-            background: "rgba(59, 130, 246, 0.15)",
-            border: "1px solid rgba(59, 130, 246, 0.4)",
-            borderRadius: "8px",
-            color: "#60a5fa",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            fontSize: "14px",
-            fontWeight: "500",
-          }}
-        >
-          <Download size={16} />
-          Template
-        </button>
-
-        {/* Instructions Toggle Button */}
-        <button
-          onClick={() => setShowImportGuide(prev => !prev)}
-          title="How to use Bulk Import"
-          style={{
-            padding: "10px 12px",
-            background: "rgba(245, 158, 11, 0.12)",
-            border: "1px solid rgba(245, 158, 11, 0.35)",
-            borderRadius: "8px",
-            color: "#f59e0b",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            fontSize: "13px",
-            fontWeight: "500",
-          }}
-        >
-          <Info size={15} />
-          Guide
-          {showImportGuide ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
+          >
+            <option value="all">All Pipeline Stages</option>
+            <option value="Enquiry Registered">Enquiry Registered</option>
+            <option value="Order Confirmed">Order Confirmed</option>
+            <option value="Order Delivered">Order Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          
+          <button
+            onClick={() => setShowImportGuide(true)}
+            title="Open Bulk Import Center to upload files, view column maps, and download templates"
+            style={{
+              padding: "11px 18px",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "10px",
+              color: "#e2e8f0",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "13.5px",
+              fontWeight: "600",
+              transition: "all 0.25s"
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+          >
+            <Upload size={15} />
+            Bulk Import Center
+          </button>
+        </div>
       </div>
 
       {/* ── Bulk Import Instructions Panel ── */}
       {showImportGuide && (
-        <div style={{
-          background: "#13131c",
-          border: "1px solid rgba(245, 158, 11, 0.3)",
-          borderRadius: "10px",
-          padding: "20px",
-          marginBottom: "15px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-        }}>
-          {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "18px" }}>📤</span>
-              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#f59e0b" }}>Bulk Import Guide</h3>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setShowImportGuide(false); }}>
+          <div className="slide-over-card" style={{ maxWidth: "600px" }}>
+            
+            {/* Header */}
+            <div className="slide-over-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "18px" }}>📤</span>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "#fff" }}>Bulk Import Center</h3>
+              </div>
+              <button onClick={() => setShowImportGuide(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
-            <button onClick={() => setShowImportGuide(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={18} /></button>
-          </div>
 
-          {/* Steps */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
-            {[
-              { step: "1", icon: "⬇️", title: "Download Template", desc: "Click the blue 'Template' button to get the CSV file with correct column names and an example row." },
-              { step: "2", icon: "📝", title: "Fill Your Data", desc: "Open in Excel or Google Sheets. Fill one row per ticket. Date format: DD/MM/YYYY or YYYY-MM-DD." },
-              { step: "3", icon: "💾", title: "Save as CSV", desc: "File → Save As → CSV (Comma delimited). Do NOT save as .xlsx — only .csv is accepted." },
-              { step: "4", icon: "📤", title: "Click Bulk Import", desc: "Click the blue 'Bulk Import' button, select your file. Results show Created / Updated / Failed counts." },
-            ].map(s => (
-              <div key={s.step} style={{ background: "#1a1a24", borderRadius: "8px", padding: "12px", display: "flex", gap: "10px" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(245, 158, 11, 0.15)", border: "1px solid #f59e0b", color: "#f59e0b", fontSize: "12px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.step}</div>
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#e2e8f0", marginBottom: "4px" }}>{s.icon} {s.title}</div>
-                  <div style={{ fontSize: "11px", color: "#718096", lineHeight: "1.5" }}>{s.desc}</div>
+            <div className="slide-over-body" style={{ gap: "20px" }}>
+              
+              {/* Premium Drag & Drop Area */}
+              <div 
+                className={`dropzone-container ${isDragging ? "dragover" : ""}`}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) await processImportFile(file);
+                }}
+                onClick={() => document.getElementById("csv-file-picker")?.click()}
+              >
+                <div className="dropzone-icon-wrapper">
+                  <Upload size={24} style={{ color: isDragging ? "#ef4444" : "#6b7280" }} />
+                </div>
+                <h3 style={{ fontSize: "14px", fontWeight: "bold", margin: 0, color: "#fff" }}>
+                  {importing ? "Processing CSV..." : "Drag & Drop CSV File"}
+                </h3>
+                <p style={{ fontSize: "12px", color: "#a0aec0", margin: 0 }}>
+                  {importing ? "Please wait while we upload and parse records..." : "or click here to select a file manually"}
+                </p>
+                <input 
+                  id="csv-file-picker" 
+                  type="file" 
+                  accept=".csv" 
+                  onChange={handleBulkImport} 
+                  style={{ display: "none" }} 
+                  disabled={importing}
+                />
+              </div>
+
+              {/* Template Downloader Section */}
+              <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.02)", padding: "12px 15px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize: "13px", color: "#a0aec0" }}>Need the CSV template structure?</span>
+                <button 
+                  onClick={downloadTemplate} 
+                  style={{ 
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    gap: "6px", 
+                    padding: "8px 12px", 
+                    border: "1px solid rgba(59,130,246,0.3)", 
+                    borderRadius: "8px", 
+                    background: "rgba(59,130,246,0.1)", 
+                    color: "#60a5fa", 
+                    cursor: "pointer", 
+                    fontSize: "12px", 
+                    fontWeight: "bold",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <Download size={13} /> Download Template
+                </button>
+              </div>
+
+              {/* Rules & Tips */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "8px", padding: "12px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "#f87171", marginBottom: "6px" }}>⚠️ Rules</div>
+                  <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
+                    <li>Use <b style={{ color: "#e2e8f0" }}>"Upload To"</b> column to route: <b style={{ color: "#fbbf24" }}>Refilling</b> | <b style={{ color: "#fbbf24" }}>Service</b></li>
+                    <li>File must be saved as <b style={{ color: "#e2e8f0" }}>.csv</b> (not .xlsx)</li>
+                    <li>Dates format: <b style={{ color: "#e2e8f0" }}>DD/MM/YYYY</b></li>
+                  </ul>
+                </div>
+                <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "8px", padding: "12px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "#6ee7b7", marginBottom: "6px" }}>💡 Tips</div>
+                  <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
+                    <li>Column names are <b style={{ color: "#e2e8f0" }}>case-insensitive</b></li>
+                    <li>Duplicate cylinders are <b style={{ color: "#e2e8f0" }}>updated</b></li>
+                    <li>Add multiple techs: <b style={{ color: "#e2e8f0" }}>"Ravi, Suresh"</b></li>
+                  </ul>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Column Reference Table */}
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#a0aec0", marginBottom: "8px" }}>📋 Column Reference</div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                <thead>
-                  <tr style={{ background: "#1a1a24" }}>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a", whiteSpace: "nowrap" }}>Column Name</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a" }}>Required?</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a" }}>Description</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "#f59e0b", borderBottom: "1px solid #2d2d3a", whiteSpace: "nowrap" }}>Example</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["Customer Name",           "✅ Required",  "Company or client name",                                      "KH Chemicals"],
-                    ["Contact Person Name",     "Optional",    "Name of the contact person at client",                        "Karamad Begum"],
-                    ["Mobile",                  "Optional",    "Primary phone number (used to match existing customer)",       "9840135355"],
-                    ["Mobile 2",                "Optional",    "Secondary phone number",                                      "9840135356"],
-                    ["Email",                   "Optional",    "Customer email address",                                      "test@abc.com"],
-                    ["Address",                 "Optional",    "Customer site / delivery address",                            "Tambaram, Chennai"],
-                    ["Cylinder S/N",            "Optional",    "Serial number of the fire extinguisher cylinder",             "CYL-001"],
-                    ["Weight",                  "Optional",    "Cylinder capacity / weight",                                  "9 Kg"],
-                    ["Type",                    "Optional",    "Extinguisher medium type",                                    "DCP / CO2 / Water"],
-                    ["Description",             "Optional",    "Item or requirement description / notes",                     "Annual refilling"],
-                    ["Enquiry Source",          "Optional",    "How enquiry came in",                                         "Existing Customers"],
-                    ["Requirement Category",    "Optional",    "Type of service needed",                                      "Refilling / CCTV"],
-                    ["Enquiry Date",            "Optional",    "Date enquiry was made (DD/MM/YYYY or YYYY-MM-DD)",            "14/07/2026"],
-                    ["Requested Delivery Date", "Optional",    "Customer's preferred delivery date",                          "20/07/2026"],
-                    ["Enquiry Status",          "Optional",    "Starting status. Default: Enquiry Registered",                "Order Confirmed"],
-                    ["Follow Up Date",          "Optional",    "Next follow-up date",                                         "16/07/2026"],
-                    ["Follow Up Remarks",       "Optional",    "Follow-up notes / comments",                                  "Customer confirmed"],
-                    ["Visit Date",             "Optional",    "Scheduled technician visit date",                             "18/07/2026"],
-                    ["Admin Instructions",      "Optional",    "Internal notes for admin",                                    "Handle with care"],
-                    ["Technician Instructions", "Optional",    "Instructions for the field technician",                       "Check valve first"],
-                    ["Customer Location",       "Optional",    "Google Maps URL or GPS coordinates",                          "https://maps.google.com/..."],
-                    ["Delivered Date",          "Optional",    "Date item was delivered to customer",                         "22/07/2026"],
-                    ["AMC Years",               "Optional",    "AMC contract duration in years (1–10)",                      "1"],
-                    ["Assigned Technicians",    "Optional",    "Technician full name or phone (comma-separated for multiple)", "Ravi Kumar, Suresh"],
-                  ].map(([col, req, desc, ex]) => (
-                    <tr key={col} style={{ borderBottom: "1px solid #1a1a24" }}>
-                      <td style={{ padding: "7px 12px", color: "#93c5fd", fontFamily: "monospace", whiteSpace: "nowrap" }}>{col}</td>
-                      <td style={{ padding: "7px 12px", color: req === "✅ Required" ? "#f87171" : "#718096", whiteSpace: "nowrap" }}>{req}</td>
-                      <td style={{ padding: "7px 12px", color: "#a0aec0" }}>{desc}</td>
-                      <td style={{ padding: "7px 12px", color: "#6ee7b7", fontFamily: "monospace", whiteSpace: "nowrap" }}>{ex}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              {/* Mappings Guide Table */}
+              <div>
+                <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#fff", marginBottom: "8px" }}>CSV Columns Reference Mappings</h4>
+                <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11.5px", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                        <th style={{ padding: "8px 12px", color: "#f59e0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Column Name</th>
+                        <th style={{ padding: "8px 12px", color: "#f59e0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Required?</th>
+                        <th style={{ padding: "8px 12px", color: "#f59e0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Description</th>
+                        <th style={{ padding: "8px 12px", color: "#f59e0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["Customer Name",           "✅ Required",  "Company or client name",                                      "KH Chemicals"],
+                        ["Contact Person Name",     "Optional",    "Name of contact person",                                      "Karamad Begum"],
+                        ["Mobile",                  "Optional",    "Primary phone (used to match customer)",                       "9840135355"],
+                        ["Mobile 2",                "Optional",    "Secondary phone number",                                      "9840135356"],
+                        ["Email",                   "Optional",    "Customer email address",                                      "test@abc.com"],
+                        ["Address",                 "Optional",    "Customer site address",                                        "Tambaram, Chennai"],
+                        ["Cylinder S/N",            "Optional",    "Serial number of cylinder",                                   "CYL-001"],
+                        ["Weight",                  "Optional",    "Cylinder capacity / weight",                                  "9 Kg"],
+                        ["Type",                    "Optional",    "Extinguisher type",                                           "DCP / CO2"],
+                        ["Description",             "Optional",    "Item notes / description",                                    "Annual refilling"],
+                        ["Enquiry Source",          "Optional",    "How enquiry came in",                                         "Phone Call"],
+                        ["Requirement Category",    "Optional",    "Type of service needed",                                      "Refilling"],
+                        ["Enquiry Date",            "Optional",    "Date enquiry was made",                                       "14/07/2026"],
+                        ["Requested Delivery Date", "Optional",    "Customer delivery date",                                      "20/07/2026"],
+                        ["Enquiry Status",          "Optional",    "Starting status",                                             "Order Confirmed"],
+                        ["Follow Up Date",          "Optional",    "Next follow-up date",                                         "16/07/2026"],
+                        ["Follow Up Remarks",       "Optional",    "Follow-up remarks notes",                                     "Confirmed order"],
+                        ["Visit Date",             "Optional",    "Scheduled visit date",                                        "18/07/2026"],
+                        ["Admin Instructions",      "Optional",    "Internal notes for admin",                                    "Handle with care"],
+                        ["Technician Instructions", "Optional",    "Instructions for technician",                                 "Check valve first"],
+                        ["Customer Location",       "Optional",    "GPS coordinates or Map link",                                 "https://maps.google.com/..."],
+                        ["Delivered Date",          "Optional",    "Delivered date status",                                       "22/07/2026"],
+                        ["AMC Years",               "Optional",    "AMC years contract (1–10)",                                   "1"],
+                        ["Assigned Technicians",    "Optional",    "Technician name or phone",                                    "Ravi Kumar"],
+                        ["Upload To",               "⭐ Routing",  "Routing control: Refilling \| Service \| blank = Enquiry",    "Refilling"],
+                      ].map(([col, req, desc, ex]) => (
+                        <tr key={col} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", background: req === "⭐ Routing" ? "rgba(245,158,11,0.06)" : "transparent" }}>
+                          <td style={{ padding: "6px 12px", color: req === "⭐ Routing" ? "#fbbf24" : "#93c5fd", fontFamily: "monospace", whiteSpace: "nowrap", fontWeight: req === "⭐ Routing" ? "700" : "normal" }}>{col}</td>
+                          <td style={{ padding: "6px 12px", color: req === "✅ Required" ? "#f87171" : req === "⭐ Routing" ? "#f59e0b" : "#718096", whiteSpace: "nowrap" }}>{req}</td>
+                          <td style={{ padding: "6px 12px", color: "#a0aec0" }}>{desc}</td>
+                          <td style={{ padding: "6px 12px", color: "#6ee7b7", fontFamily: "monospace" }}>{ex}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          {/* Rules & Tips */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "8px", padding: "12px" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "#f87171", marginBottom: "6px" }}>⚠️ Rules</div>
-              <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
-                <li><b style={{ color: "#e2e8f0" }}>Customer Name</b> is the only required column</li>
-                <li>File must be saved as <b style={{ color: "#e2e8f0" }}>.csv</b> (not .xlsx)</li>
-                <li>Dates must be <b style={{ color: "#e2e8f0" }}>DD/MM/YYYY</b> or <b style={{ color: "#e2e8f0" }}>YYYY-MM-DD</b></li>
-                <li>Delivery Date cannot be <b style={{ color: "#e2e8f0" }}>before</b> Enquiry Date</li>
-                <li>Duplicate (same Serial + Customer) = <b style={{ color: "#e2e8f0" }}>UPDATE</b> not create</li>
-              </ul>
-            </div>
-            <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "8px", padding: "12px" }}>
-              <div style={{ fontSize: "12px", fontWeight: "700", color: "#6ee7b7", marginBottom: "6px" }}>💡 Tips</div>
-              <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
-                <li>Column names are <b style={{ color: "#e2e8f0" }}>case-insensitive</b> ("mobile" = "Mobile")</li>
-                <li>You can upload <b style={{ color: "#e2e8f0" }}>multiple times</b> — existing records are updated</li>
-                <li>Assign multiple techs: <b style={{ color: "#e2e8f0" }}>"Ravi, Suresh"</b></li>
-                <li>Set status <b style={{ color: "#e2e8f0" }}>"Order Confirmed"</b> to enable transition buttons</li>
-                <li>Leave optional columns <b style={{ color: "#e2e8f0" }}>blank</b> — they won't overwrite existing data</li>
-              </ul>
             </div>
           </div>
         </div>
@@ -978,124 +1109,163 @@ export default function EnquiryDashboardPage() {
       )}
 
       {/* Table Data Grid */}
-      <div style={{ background: "#111115", borderRadius: "12px", border: "1px solid #2d2d3a", overflowX: "auto" }}>
+      <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>Loading enquiries...</div>
+          <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+            <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying telemetry systems...</div>
+          </div>
         ) : enquiries.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#718096" }}>No enquiries found.</div>
+          <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
+            <span style={{ fontSize: "28px" }}>📭</span>
+            <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No telemetry records available</div>
+            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Register a new client enquiry or import a bulk batch file</div>
+          </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
+          <table className="glass-table">
             <thead>
-              <tr style={{ borderBottom: "1px solid #2d2d3a", background: "#171721" }}>
-                <th style={{ padding: "12px 15px", width: "40px" }}>
+              <tr>
+                <th style={{ width: "40px", textAlign: "left" }}>
                   <input
                     type="checkbox"
                     checked={enquiries.length > 0 && selectedJobIds.length === enquiries.length}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: "pointer", accentColor: "var(--primary)" }}
                   />
                 </th>
-                <th style={{ padding: "12px 15px" }}>S.No</th>
-                <th style={{ padding: "12px 15px" }}>Enquiry Id</th>
-                <th style={{ padding: "12px 15px" }}>Client Name</th>
-                <th style={{ padding: "12px 15px" }}>Contact Person Name</th>
-                <th style={{ padding: "12px 15px" }}>Contact No1</th>
-                <th style={{ padding: "12px 15px" }}>Requirement Category</th>
-                <th style={{ padding: "12px 15px" }}>Enquiry Date</th>
-                <th style={{ padding: "12px 15px" }}>Status Name</th>
-                <th style={{ padding: "12px 15px" }}>Technicians</th>
-                <th style={{ padding: "12px 15px", textAlign: "center" }}>Actions</th>
+                <th>S.No</th>
+                <th>Enquiry Id</th>
+                <th>Client Name</th>
+                <th>Contact Name</th>
+                <th>Contact Phone</th>
+                <th>Category</th>
+                <th>Reg. Date</th>
+                <th>Status</th>
+                <th>Technicians</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {enquiries.map((enq, index) => (
-                <tr key={enq.id} style={{ borderBottom: "1px solid #1a1a24" }}>
-                  <td style={{ padding: "12px 15px" }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedJobIds.includes(enq.id)}
-                      onChange={() => handleSelectJob(enq.id)}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </td>
-                  <td style={{ padding: "12px 15px" }}>{index + 1}</td>
-                  <td style={{ padding: "12px 15px", fontFamily: "monospace", fontWeight: "bold" }}>{enq.jobNumber}</td>
-                  <td style={{ padding: "12px 15px" }}>{enq.customer?.companyName || "N/A"}</td>
-                  <td style={{ padding: "12px 15px" }}>{enq.customer?.contactPerson}</td>
-                  <td style={{ padding: "12px 15px" }}>{enq.customer?.phone}</td>
-                  <td style={{ padding: "12px 15px" }}>{enq.requirementCategory || "SELECT"}</td>
-                  <td style={{ padding: "12px 15px" }}>{formatDate(enq.createdAt)}</td>
-                  <td style={{ padding: "12px 15px" }}>
-                    <span style={{
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      background: 
-                        enq.currentStatus === "Order Delivered" ? "rgba(16, 185, 129, 0.15)" :
-                        enq.currentStatus === "Order Confirmed" ? "rgba(59, 130, 246, 0.15)" :
-                        enq.currentStatus === "Cancelled" ? "rgba(239, 68, 68, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                      color:
-                        enq.currentStatus === "Order Delivered" ? "#10b981" :
-                        enq.currentStatus === "Order Confirmed" ? "#3b82f6" :
-                        enq.currentStatus === "Cancelled" ? "#ef4444" : "#f59e0b",
-                    }}>
-                      {enq.currentStatus}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 15px" }}>
-                    {enq.assignments.length === 0 ? (
-                      <span style={{ color: "#718096" }}>Unassigned</span>
-                    ) : (
-                      enq.assignments.map(a => a.technician.fullName).join(", ")
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 15px", textAlign: "center" }}>
-                    <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                      <button
-                        onClick={() => handleOpenEdit(enq)}
-                        style={{ background: "#ff4d80", border: "none", color: "#fff", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                        title="Edit Enquiry details"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      
-                      {enq.currentStatus === "Order Confirmed" && (
-                        <button
-                          onClick={() => handleOpenAssign(enq)}
-                          style={{ background: "#ff6c37", border: "none", color: "#fff", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                          title="Assign Technicians"
-                        >
-                          <UserPlus size={14} />
-                        </button>
-                      )}
+              {enquiries.map((enq, index) => {
+                const statusDotClass = 
+                  enq.currentStatus === "Order Delivered" ? "pulse-green" :
+                  enq.currentStatus === "Order Confirmed" ? "pulse-blue" :
+                  enq.currentStatus === "Cancelled" ? "pulse-red" : "pulse-amber";
 
-                      {/* Flow 2: Individual → Refilling button — only visible on Order Confirmed tickets */}
-                      {enq.currentStatus === "Order Confirmed" && (
-                        <button
-                          onClick={() => handleSingleTransitionOpen(enq)}
-                          style={{
-                            background: "rgba(16, 185, 129, 0.15)",
-                            border: "1px solid #10b981",
-                            color: "#10b981",
-                            padding: "5px 8px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                          }}
-                          title="Move to Refilling Dashboard"
-                        >
-                          <ArrowRightCircle size={13} /> Refilling
-                        </button>
+                const statusColor =
+                  enq.currentStatus === "Order Delivered" ? "#10b981" :
+                  enq.currentStatus === "Order Confirmed" ? "#60a5fa" :
+                  enq.currentStatus === "Cancelled" ? "#f87171" : "#fbbf24";
+
+                return (
+                  <tr key={enq.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedJobIds.includes(enq.id)}
+                        onChange={() => handleSelectJob(enq.id)}
+                        style={{ cursor: "pointer", accentColor: "var(--primary)" }}
+                      />
+                    </td>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{index + 1}</td>
+                    <td style={{ fontFamily: "monospace", fontWeight: "700", color: "var(--accent)" }}>{enq.jobNumber}</td>
+                    <td style={{ fontWeight: "600", color: "#fff" }}>{enq.customer?.companyName || "N/A"}</td>
+                    <td>{enq.customer?.contactPerson}</td>
+                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{enq.customer?.phone}</td>
+                    <td>
+                      <span style={{ fontSize: "11px", textTransform: "uppercase", background: "rgba(255,255,255,0.05)", padding: "3px 6px", borderRadius: "5px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                        {enq.requirementCategory || "SELECT"}
+                      </span>
+                    </td>
+                    <td>{formatDate(enq.createdAt)}</td>
+                    <td>
+                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
+                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                        {enq.currentStatus}
+                      </div>
+                    </td>
+                    <td>
+                      {enq.assignments.length === 0 ? (
+                        <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                          {enq.assignments.map(a => (
+                            <span key={a.id} style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)" }}>
+                              {a.technician.fullName}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <div style={{ display: "inline-flex", gap: "6px" }}>
+                        <button
+                          onClick={() => handleOpenEdit(enq)}
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            color: "#fff",
+                            padding: "7px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                          title="Edit Enquiry details"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        
+                        {enq.currentStatus === "Order Confirmed" && (
+                          <button
+                            onClick={() => handleOpenAssign(enq)}
+                            style={{
+                              background: "rgba(245, 158, 11, 0.08)",
+                              border: "1px solid rgba(245, 158, 11, 0.2)",
+                              color: "#f59e0b",
+                              padding: "7px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
+                            title="Assign Technicians"
+                          >
+                            <UserPlus size={13} />
+                          </button>
+                        )}
+
+                        {enq.currentStatus === "Order Confirmed" && (
+                          <button
+                            onClick={() => handleSingleTransitionOpen(enq)}
+                            style={{
+                              background: "rgba(16, 185, 129, 0.08)",
+                              border: "1px solid rgba(16, 185, 129, 0.2)",
+                              color: "#10b981",
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.18)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(16, 185, 129, 0.08)"; }}
+                            title="Move to Refilling Dashboard"
+                          >
+                            <ArrowRightCircle size={13} /> Refilling
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -1128,14 +1298,14 @@ export default function EnquiryDashboardPage() {
 
       {/* Add Enquiry Modal */}
       {isAddModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90%", overflow: "hidden" }}>
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>Register New Enquiry</h2>
-              <button onClick={() => setIsAddModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAddModalOpen(false); }}>
+          <div className="slide-over-card">
+            <div className="slide-over-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Register New Enquiry</h2>
+              <button onClick={() => setIsAddModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
-            <form onSubmit={handleAddSubmit}>
-              <div style={{ padding: "20px", maxHeight: "65vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <form onSubmit={handleAddSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+              <div className="slide-over-body">
                 <div>
                   <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client / Company Name</label>
                   <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Siva Clinicals" style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
@@ -1219,7 +1389,7 @@ export default function EnquiryDashboardPage() {
                   <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={2} placeholder="Details about customer specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
                 </div>
               </div>
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+              <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 16px", background: "#3b82f6", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Register</button>
               </div>
@@ -1230,13 +1400,13 @@ export default function EnquiryDashboardPage() {
 
       {/* Edit Enquiry Modal (Tabbed Layout) */}
       {isEditModalOpen && selectedEnquiry && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "700px", maxHeight: "90%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
+          <div className="slide-over-card" style={{ maxWidth: "660px" }}>
             
             {/* Modal Header */}
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>Edit Enquiry: <span style={{ color: "#3b82f6" }}>{selectedEnquiry.jobNumber}</span></h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+            <div className="slide-over-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "#3b82f6" }}>{selectedEnquiry.jobNumber}</span></h2>
+              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
 
             {/* Tabs List */}
@@ -1276,7 +1446,7 @@ export default function EnquiryDashboardPage() {
             </div>
 
             <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto" }}>
+              <div className="slide-over-body">
                 
                 {/* 1. Client Details Tab */}
                 {activeTab === "client" && (
@@ -1428,29 +1598,29 @@ export default function EnquiryDashboardPage() {
               </div>
 
               {/* Modal Footer */}
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+              <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
               </div>
             </form>
-
           </div>
         </div>
       )}
+
       {/* Assign Technician Modal */}
       {isAssignModalOpen && (isBulkAssign || selectedEnquiry) && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "600px", maxHeight: "90%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
+          <div className="slide-over-card">
             
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>
-                {isBulkAssign ? `Bulk Assign Technicians (${selectedJobIds.length} Enquiries)` : "Assign Technician"}
+            <div className="slide-over-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>
+                {isBulkAssign ? `Bulk Assign (${selectedJobIds.length} Enquiries)` : "Assign Technician"}
               </h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
  
             <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div className="slide-over-body">
                 
                 {/* Client Pre-fill info */}
                 {!isBulkAssign && selectedEnquiry && (
@@ -1492,7 +1662,7 @@ export default function EnquiryDashboardPage() {
                     <textarea value={selectedEnquiry.customer?.address || ""} readOnly rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed", resize: "none" }} />
                   </div>
                 )}
-
+ 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Admin Instructions</label>
@@ -1503,12 +1673,12 @@ export default function EnquiryDashboardPage() {
                     <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
                   </div>
                 </div>
-
+ 
                 <div>
                   <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Location (Google Map URL or Coordinates)</label>
                   <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="e.g. 12.9249, 80.1293 or link" style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                 </div>
-
+ 
                 <div>
                   <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "6px", fontWeight: "bold" }}>Assign ENQUIRY To (Technicians) *</label>
                   
@@ -1529,21 +1699,21 @@ export default function EnquiryDashboardPage() {
                       ))
                     )}
                   </div>
-
+ 
                   <p style={{ fontSize: "11px", color: "#ff6c37", marginTop: "8px", lineHeight: "1.4", marginBlockEnd: 0 }}>
                     * Deselect existing technician (if any) for new assignment and
-                    <br />* Delete existing assignment from technician view screen
+                    * Delete existing assignment from technician view screen
                   </p>
                 </div>
-
+ 
               </div>
-
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
+ 
+              <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 16px", background: "#ff6c37", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Assign</button>
               </div>
             </form>
-
+ 
           </div>
         </div>
       )}

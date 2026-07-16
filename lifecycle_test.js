@@ -33,7 +33,8 @@ const { chromium } = require('@playwright/test');
     await page.fill('input[placeholder="e.g. 9944332106"]', '9333333333');
     await page.fill('input[type="date"]', today);
     await page.locator('form select').first().selectOption('New Fire Extinguisher');
-    await page.click('button:has-text("Register")');
+    await page.locator('form select').last().selectOption('Phone Call');
+    await page.click('form button:has-text("Register")');
     await page.waitForTimeout(3000);
     console.log("✅ Enquiry registered!");
 

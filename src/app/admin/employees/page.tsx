@@ -11,7 +11,11 @@ import {
   ShieldAlert, 
   Key, 
   Check, 
-  UserPlus
+  UserPlus,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from "lucide-react";
 import { EMS_CONFIG } from "@/config/ems-config";
 
@@ -33,6 +37,10 @@ export default function EmployeeMasterPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,10 +80,18 @@ export default function EmployeeMasterPage() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchEmployees();
+      setCurrentPage(1); // Reset page on new filters
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search, statusFilter]);
+
+  // Client-side pagination calculations
+  const totalItems = employees.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedEmployees = employees.slice(startIndex, endIndex);
 
   // Open Modal for Add
   const handleOpenAdd = () => {
@@ -167,6 +183,35 @@ export default function EmployeeMasterPage() {
           <h1 className="page-title">Employee Master</h1>
           <p className="page-subtitle">Configure system users, assignments, and authorization roles</p>
         </div>
+        <button
+          onClick={handleOpenAdd}
+          style={{
+            padding: "10px 18px",
+            background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+            border: "none",
+            borderRadius: "12px",
+            color: "#fff",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "14px",
+            fontWeight: "600",
+            boxShadow: "0 6px 20px rgba(220, 38, 38, 0.25)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(220, 38, 38, 0.35)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(220, 38, 38, 0.25)";
+          }}
+        >
+          <Plus size={16} />
+          Add Employee
+        </button>
       </div>
 
       {/* Success Banner */}
@@ -225,9 +270,9 @@ export default function EmployeeMasterPage() {
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp, index) => (
+              {paginatedEmployees.map((emp, index) => (
                 <tr key={emp.id}>
-                  <td>{index + 1}</td>
+                  <td>{startIndex + index + 1}</td>
                   <td style={{ fontFamily: "var(--font-mono)", fontWeight: "600", color: "#fff" }}>
                     {emp.employeeNumber || "N/A"}
                   </td>
@@ -280,15 +325,55 @@ export default function EmployeeMasterPage() {
         )}
       </div>
 
-      {/* Floating Action Button (FAB) */}
-      <button 
-        onClick={handleOpenAdd} 
-        className="fab-btn"
-        title="Add Employee"
-        aria-label="Add Employee"
-      >
-        <Plus size={24} />
-      </button>
+      {/* Pagination Footer */}
+      {!loading && totalItems > 0 && (
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1 }}>
+          <span className="pagination-info">
+            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+          </span>
+          <div className="pagination-controls">
+            <button 
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="Previous Page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center" }}>
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Next Page"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Last Page"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Add / Edit Modal */}
       {isModalOpen && (

@@ -1,0 +1,392 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { 
+  Save, 
+  Palette, 
+  Layout, 
+  ListFilter, 
+  Plus, 
+  Trash2, 
+  Check, 
+  AlertCircle, 
+  FileSpreadsheet,
+  ToggleLeft,
+  ToggleRight
+} from "lucide-react";
+import { useConfig } from "@/context/ConfigContext";
+import { EmsConfig, DynamicField } from "@/config/ems-config";
+
+const COLOR_SWATCHES = [
+  { name: "Crimson Fire Red", primary: "#dc2626", accent: "#ef4444" },
+  { name: "Vibrant Cobalt Blue", primary: "#2563eb", accent: "#3b82f6" },
+  { name: "Emerald Compliance Green", primary: "#059669", accent: "#10b981" },
+  { name: "Futuristic Tech Violet", primary: "#7c3aed", accent: "#8b5cf6" },
+  { name: "Monochrome Steel Gray", primary: "#4b5563", accent: "#6b7280" }
+];
+
+export default function SettingsPage() {
+  const { config, loading, updateConfig } = useConfig();
+  const [activeTab, setActiveTab] = useState<"brand" | "stages" | "categories" | "fields" | "csv">("brand");
+
+  // Success/Error toast states
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Brand States
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#dc2626");
+  const [accentColor, setAccentColor] = useState("#ef4444");
+  const [darkTheme, setDarkTheme] = useState(true);
+
+  // Stages States
+  const [enquiryEnabled, setEnquiryEnabled] = useState(true);
+  const [enquiryName, setEnquiryName] = useState("");
+  const [refillingEnabled, setRefillingEnabled] = useState(true);
+  const [refillingName, setRefillingName] = useState("");
+  const [servicesEnabled, setServicesEnabled] = useState(true);
+  const [servicesName, setServicesName] = useState("");
+
+  // Categories & Sources (inputs as comma-separated strings)
+  const [categoriesText, setCategoriesText] = useState("");
+  const [sourcesText, setSourcesText] = useState("");
+
+  // Custom Fields Schema
+  const [enquiryFields, setEnquiryFields] = useState<DynamicField[]>([]);
+  const [refillingFields, setRefillingFields] = useState<DynamicField[]>([]);
+  const [servicesFields, setServicesFields] = useState<DynamicField[]>([]);
+
+  // Temp states for adding new fields
+  const [addFieldStage, setAddFieldStage] = useState<"ENQUIRY" | "REFILLING" | "SERVICES">("ENQUIRY");
+  const [newFieldKey, setNewFieldKey] = useState("");
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldType, setNewFieldType] = useState<"text" | "number" | "boolean" | "date" | "select" | "multi-select">("text");
+  const [newFieldOptions, setNewFieldOptions] = useState("");
+  const [newFieldRequired, setNewFieldRequired] = useState(false);
+
+  // CSV Mappings States (key mapping string inputs)
+  const [csvMappings, setCsvMappings] = useState<Record<string, string>>({});
+
+  // Load state from context config
+  useEffect(() => {
+    if (config) {
+      setTitle(config.brand.title || "");
+      setSubtitle(config.brand.subtitle || "");
+      setLogoUrl(config.brand.logoUrl || "");
+      setPrimaryColor(config.brand.theme.primaryColor || "#dc2626");
+      setAccentColor(config.brand.theme.accentColor || "#ef4444");
+      setDarkTheme(config.brand.theme.darkTheme !== false);
+
+      setEnquiryEnabled(config.stages.ENQUIRY.enabled !== false);
+      setEnquiryName(config.stages.ENQUIRY.displayName || "Enquiry");
+      setRefillingEnabled(config.stages.REFILLING.enabled !== false);
+      setRefillingName(config.stages.REFILLING.displayName || "Refilling");
+      setServicesEnabled(config.stages.SERVICES.enabled !== false);
+      setServicesName(config.stages.SERVICES.displayName || "Services");
+
+      // Load category lists or fallback
+      const cats = config.categories || ["CCTV", "New Fire Extinguisher", "Refilling"];
+      setCategoriesText(cats.join(", "));
+      const srcs = config.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"];
+      setSourcesText(srcs.join(", "));
+
+      // Custom fields schema
+      setEnquiryFields(config.stages.ENQUIRY.fields || []);
+      setRefillingFields(config.stages.REFILLING.fields || []);
+      setServicesFields(config.stages.SERVICES.fields || []);
+
+      // CSV mappings mapping
+      const mappings: Record<string, string> = {};
+      if (config.importMappings) {
+        for (const [key, val] of Object.entries(config.importMappings)) {
+          mappings[key] = Array.isArray(val) ? val.join(", ") : "";
+        }
+      }
+      setCsvMappings(mappings);
+    }
+  }, [config]);
+
+  // Swatch Color Click handler
+  const handleApplySwatch = (primary: string, accent: string) => {
+    setPrimaryColor(primary);
+    setAccentColor(accent);
+  };
+
+  // Add Dynamic Custom Field logic
+  const handleAddField = (stage: "ENQUIRY" | "REFILLING" | "SERVICES") => {
+    if (!newFieldKey.trim() || !newFieldLabel.trim()) {
+      setErrorMsg("Field key and label are required");
+      return;
+    }
+    const cleanKey = newFieldKey.trim().replace(/\s+/g, "_").toLowerCase();
+    
+    // Check duplicates
+    const fieldsToSearch = stage === "ENQUIRY" ? enquiryFields : stage === "REFILLING" ? refillingFields : servicesFields;
+    if (fieldsToSearch.some(f => f.key === cleanKey)) {
+      setErrorMsg("A field with this key already exists in this stage");
+      return;
+    }
+
+    const newField: DynamicField = {
+      key: cleanKey,
+      label: newFieldLabel.trim(),
+      type: newFieldType,
+      required: newFieldRequired,
+      ...(newFieldOptions.trim() ? { options: newFieldOptions.split(",").map(o => o.trim()).filter(Boolean) } : {})
+    };
+
+    if (stage === "ENQUIRY") setEnquiryFields([...enquiryFields, newField]);
+    else if (stage === "REFILLING") setRefillingFields([...refillingFields, newField]);
+    else setServicesFields([...servicesFields, newField]);
+
+    // Reset fields input
+    setNewFieldKey("");
+    setNewFieldLabel("");
+    setNewFieldType("text");
+    setNewFieldOptions("");
+    setNewFieldRequired(false);
+    setSuccessMsg("Field added to staging config!");
+  };
+
+  // Remove Dynamic Custom Field logic
+  const handleRemoveField = (stage: "ENQUIRY" | "REFILLING" | "SERVICES", key: string) => {
+    if (stage === "ENQUIRY") {
+      setEnquiryFields(enquiryFields.filter(f => f.key !== key));
+    } else if (stage === "REFILLING") {
+      setRefillingFields(refillingFields.filter(f => f.key !== key));
+    } else {
+      setServicesFields(servicesFields.filter(f => f.key !== key));
+    }
+    setSuccessMsg("Field removed from staging config!");
+  };
+
+  // Handle Form Submission / Save Config
+  const handleSaveSettings = async () => {
+    if (!title.trim()) {
+      setErrorMsg("Application title is required");
+      return;
+    }
+
+    setSaving(true);
+    setErrorMsg(null);
+
+    // Format custom category strings into arrays
+    const categories = categoriesText.split(",").map(c => c.trim()).filter(Boolean);
+    const sources = sourcesText.split(",").map(s => s.trim()).filter(Boolean);
+
+    // Build the EmsConfig payload
+    const updatedImportMappings: Record<string, string[]> = {};
+    for (const [key, val] of Object.entries(csvMappings)) {
+      updatedImportMappings[key] = val.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+    }
+
+    const updatedConfigPayload: EmsConfig = {
+      brand: {
+        title: title.trim(),
+        subtitle: subtitle.trim(),
+        logoUrl: logoUrl.trim() || undefined,
+        theme: {
+          primaryColor,
+          accentColor,
+          darkTheme
+        }
+      },
+      stages: {
+        ENQUIRY: {
+          enabled: enquiryEnabled,
+          displayName: enquiryName.trim() || "Enquiry",
+          fields: enquiryFields
+        },
+        REFILLING: {
+          enabled: refillingEnabled,
+          displayName: refillingName.trim() || "Refilling",
+          fields: refillingFields
+        },
+        SERVICES: {
+          enabled: servicesEnabled,
+          displayName: servicesName.trim() || "Services",
+          fields: servicesFields
+        }
+      },
+      categories,
+      sources,
+      importMappings: updatedImportMappings as any
+    };
+
+    const success = await updateConfig(updatedConfigPayload);
+    setSaving(false);
+    if (success) {
+      setSuccessMsg("Configuration saved successfully! Theme updated across dashboard.");
+    } else {
+      setErrorMsg("Failed to persist configuration to database.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "100px", color: "#94a3b8" }}>
+        <div style={{ display: "inline-block", width: "40px", height: "40px", border: "3px solid rgba(255,255,255,0.05)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        <div style={{ marginTop: "15px", fontSize: "15px" }}>Loading settings console...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "20px", color: "var(--text-primary)", position: "relative", minHeight: "100%" }}>
+      {/* Page Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", maxWidth: "800px", margin: "0 auto 25px auto" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Settings Control Panel
+          </h1>
+          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>
+            Configure white-labeled branding properties and dynamic color templates. Pipeline requirements are managed in codebase configuration.
+          </p>
+        </div>
+        <button
+          onClick={handleSaveSettings}
+          disabled={saving}
+          style={{
+            padding: "10px 18px",
+            background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+            border: "none",
+            borderRadius: "10px",
+            color: "#fff",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "14px",
+            fontWeight: "600",
+            boxShadow: "0 4px 15px rgba(var(--primary-rgb), 0.25)",
+            transition: "all 0.25s"
+          }}
+        >
+          <Save size={16} />
+          {saving ? "Saving Changes..." : "Save Settings"}
+        </button>
+      </div>
+
+      {/* Success/Error Banner Stack */}
+      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        {(successMsg || errorMsg) && (
+          <div style={{ marginBottom: "20px" }}>
+            {successMsg && (
+              <div className="alert-banner" style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#10b981", borderRadius: "10px", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <Check size={18} />
+                <span>{successMsg}</span>
+                <button onClick={() => setSuccessMsg(null)} style={{ background: "none", border: "none", color: "#10b981", cursor: "pointer", marginLeft: "auto", fontWeight: "bold" }}>×</button>
+              </div>
+            )}
+            {errorMsg && (
+              <div className="alert-banner" style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#f87171", borderRadius: "10px", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
+                <AlertCircle size={18} />
+                <span>{errorMsg}</span>
+                <button onClick={() => setErrorMsg(null)} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", marginLeft: "auto", fontWeight: "bold" }}>×</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Settings Grid (Centered Card panel) */}
+      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        {/* Settings Tab Content Panel */}
+        <main style={{ background: "var(--bg-card-glass)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "25px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)" }}>
+          
+          <div>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "10px" }}>Branding & Visual Identity</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div>
+                <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "5px" }}>Application Brand Title</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. SafeShield" style={{ width: "100%", padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", outline: "none" }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "5px" }}>Tagline / Subtitle</label>
+                <input type="text" value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="e.g. Intelligent Enquiry Management System" style={{ width: "100%", padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", outline: "none" }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "5px" }}>Branding Logo Image URL</label>
+                <input type="text" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="e.g. https://domain.com/logo.png" style={{ width: "100%", padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", outline: "none" }} />
+                {logoUrl && (
+                  <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "12px", color: "#718096" }}>Preview:</span>
+                    <img src={logoUrl} alt="Logo preview" style={{ maxHeight: "30px", objectFit: "contain", borderRadius: "4px" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Theme Dark/Light Mode switch */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "10px", marginTop: "10px" }}>
+                <div>
+                  <span style={{ fontSize: "14px", fontWeight: "bold", color: "var(--text-primary)" }}>Theme Color Mode</span>
+                  <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>Switch between high-contrast dark space and clean light slate designs.</p>
+                </div>
+                <button id="theme-toggle-btn" type="button" onClick={() => setDarkTheme(!darkTheme)} style={{ background: "none", border: "none", color: darkTheme ? "var(--accent)" : "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  {darkTheme ? <ToggleRight size={38} /> : <ToggleLeft size={38} />}
+                </button>
+              </div>
+
+              {/* Themes Preset Color Swatches */}
+              <div style={{ marginTop: "15px" }}>
+                <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "8px" }}>White-Label Preset Theme Swatches</label>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {COLOR_SWATCHES.map((swatch) => (
+                    <button
+                      key={swatch.name}
+                      onClick={() => handleApplySwatch(swatch.primary, swatch.accent)}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border-glass)",
+                        background: "var(--bg-input)",
+                        color: "var(--text-primary)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        fontSize: "12px",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-glow)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "var(--bg-input)"}
+                    >
+                      <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: swatch.primary, display: "inline-block" }}></span>
+                      <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: swatch.accent, display: "inline-block", marginLeft: "-4px" }}></span>
+                      {swatch.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Color Pickers */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginTop: "10px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "5px" }}>Primary Hex Color Code</label>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} style={{ width: "38px", height: "38px", border: "none", borderRadius: "8px", cursor: "pointer", background: "none" }} />
+                    <input type="text" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} style={{ flex: 1, padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", fontFamily: "var(--font-mono)" }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "5px" }}>Accent Hex Color Code</label>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ width: "38px", height: "38px", border: "none", borderRadius: "8px", cursor: "pointer", background: "none" }} />
+                    <input type="text" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ flex: 1, padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", fontFamily: "var(--font-mono)" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  );
+}

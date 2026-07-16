@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { invalidateJobsAndTasks } from "@/lib/cache";
+
 
 // PUT /api/jobs/[id] - Edit details of an enquiry
 export async function PUT(
@@ -45,6 +47,13 @@ export async function PUT(
 
       // Service Date
       visitDate,
+      stageData,
+
+      // Cylinder / Equipment Specs
+      serialNumber,
+      capacity,
+      extinguisherType,
+      itemDescription,
     } = body;
 
     // 1. Find existing Job
@@ -69,6 +78,7 @@ export async function PUT(
           secondaryPhone: phone2 !== undefined ? phone2 : undefined,
           email: email !== undefined ? email : undefined,
           address: address !== undefined ? address : undefined,
+          updatedBy: session.userId,
         },
       });
     }
@@ -115,6 +125,8 @@ export async function PUT(
             fromStatus: existingJob.currentStatus,
             toStatus: currentStatus,
             remarks: "Status updated in Edit Enquiry modal",
+            createdBy: session.userId,
+            updatedBy: session.userId,
           },
         });
       }
@@ -136,6 +148,8 @@ export async function PUT(
         data: {
           ticketId: id,
           remarks: newRemarks,
+          createdBy: session.userId,
+          updatedBy: session.userId,
         },
       });
       jobUpdateData.latestFollowUpNotes = newRemarks;
@@ -161,6 +175,25 @@ export async function PUT(
     } else {
       jobUpdateData.amcDate = null;
     }
+
+    if (stageData !== undefined) {
+      jobUpdateData.stageData = stageData ? (typeof stageData === "string" ? stageData : JSON.stringify(stageData)) : null;
+    }
+
+    if (serialNumber !== undefined) {
+      jobUpdateData.serialNumber = serialNumber;
+    }
+    if (capacity !== undefined) {
+      jobUpdateData.capacity = capacity;
+    }
+    if (extinguisherType !== undefined) {
+      jobUpdateData.extinguisherType = extinguisherType;
+    }
+    if (itemDescription !== undefined) {
+      jobUpdateData.itemDescription = itemDescription;
+    }
+
+    jobUpdateData.updatedBy = session.userId;
 
     // 4. Perform Update
     const updatedJob = await prisma.ticket.update({
@@ -212,6 +245,9 @@ export async function PUT(
         } : null,
       })),
     };
+
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
 
     return NextResponse.json(mappedJob);
   } catch (error) {

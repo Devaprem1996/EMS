@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { invalidateJobsAndTasks } from "@/lib/cache";
 
 // POST /api/jobs/bulk-transition - Bulk transition jobs to a new stage
 // Flow 1: Only "Order Confirmed" tickets are eligible to transition to REFILLING.
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
           data: {
             currentStage: toStage,
             currentStatus: nextStatus,
+            updatedBy: session.userId,
           },
         });
 
@@ -69,12 +71,17 @@ export async function POST(req: NextRequest) {
             fromStatus: job.currentStatus,
             toStatus: nextStatus,
             remarks: `Transitioned stage from ${job.currentStage} to ${toStage}`,
+            createdBy: session.userId,
+            updatedBy: session.userId,
           },
         });
 
         transitioned++;
       }
     });
+
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
 
     return NextResponse.json({
       success: true,
@@ -87,3 +94,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to perform bulk transition" }, { status: 500 });
   }
 }
+

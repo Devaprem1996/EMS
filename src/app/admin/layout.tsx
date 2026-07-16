@@ -13,15 +13,18 @@ import {
   LogOut, 
   User as UserIcon,
   Menu,
-  X
+  X,
+  Settings
 } from "lucide-react";
-import { EMS_CONFIG } from "@/config/ems-config";
+import { useConfig } from "@/context/ConfigContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const { config, loading: configLoading } = useConfig();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -59,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  if (loading) {
+  if (loading || configLoading) {
     return (
       <div className="login-wrapper" style={{ justifyContent: "center", alignItems: "center" }}>
         <div className="spinner" style={{ width: "40px", height: "40px", borderWidth: "3px" }}></div>
@@ -67,26 +70,61 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // Build dynamic menu items based on configurations
   const menuItems = [
     { name: "Employee Master", path: "/admin/employees", icon: Users },
-    { name: "Enquiry Dashboard", path: "/admin/enquiry", icon: FileText },
-    { name: "Refilling Dashboard", path: "/admin/refilling", icon: RotateCcw },
-    { name: "Service Dashboard", path: "/admin/services", icon: Wrench },
-    { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard },
   ];
 
+  if (!config || config.stages?.ENQUIRY?.enabled !== false) {
+    menuItems.push({
+      name: `${config?.stages?.ENQUIRY?.displayName || "Enquiry"} Dashboard`,
+      path: "/admin/enquiry",
+      icon: FileText,
+    });
+  }
+
+  if (!config || config.stages?.REFILLING?.enabled !== false) {
+    menuItems.push({
+      name: `${config?.stages?.REFILLING?.displayName || "Refilling"} Dashboard`,
+      path: "/admin/refilling",
+      icon: RotateCcw,
+    });
+  }
+
+  if (!config || config.stages?.SERVICES?.enabled !== false) {
+    menuItems.push({
+      name: `${config?.stages?.SERVICES?.displayName || "Service"} Dashboard`,
+      path: "/admin/services",
+      icon: Wrench,
+    });
+  }
+
+  menuItems.push(
+    { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard },
+    { name: "System Settings", path: "/admin/settings", icon: Settings }
+  );
+
+  const brandTitle = config?.brand?.title || "Safeway";
+  const logoUrl = config?.brand?.logoUrl;
+
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className="dashboard-sidebar" style={{ borderRight: "1px solid rgba(255, 255, 255, 0.05)", background: "#0a0a0f" }}>
-        <div className="sidebar-logo" style={{ display: "flex", gap: "10px", alignItems: "center", padding: "20px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-          <div style={{ background: "rgba(220, 38, 38, 0.15)", padding: "8px", borderRadius: "10px", display: "inline-flex", border: "1px solid rgba(220, 38, 38, 0.25)", color: "#ef4444" }}>
-            <Flame size={20} fill="currentColor" />
-          </div>
-          <span style={{ fontSize: "16px", fontWeight: "bold", letterSpacing: "-0.03em" }}>{EMS_CONFIG.brand.title}</span>
-        </div>
-        
-        <nav className="sidebar-menu" style={{ padding: "25px 15px", gap: "8px" }}>
+    <div className="dashboard-container" style={{ flexDirection: "column" }}>
+      {/* Top Header Navigation */}
+      <header className="top-nav-header">
+        {/* Left Side: Logo/Brand */}
+        <Link href="/admin/enquiry" className="top-nav-logo">
+          {logoUrl ? (
+            <img src={logoUrl} alt={brandTitle} />
+          ) : (
+            <div style={{ background: "rgba(220,38,38,0.1)", padding: "6px", borderRadius: "8px", display: "inline-flex", border: "1px solid rgba(220,38,38,0.2)", color: "var(--accent)" }}>
+              <Flame size={18} fill="currentColor" />
+            </div>
+          )}
+          <span style={{ fontSize: "15px", fontWeight: "bold" }}>{brandTitle}</span>
+        </Link>
+
+        {/* Center: Desktop Navigation links */}
+        <nav className="top-nav-menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;
@@ -94,77 +132,86 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link 
                 key={item.path} 
                 href={item.path}
-                className={`menu-link ${isActive ? "active" : ""}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "12px 16px",
-                  borderRadius: "10px",
-                  fontSize: "13.5px",
-                  fontWeight: "500",
-                  color: isActive ? "#fff" : "#9ca3af",
-                  background: isActive ? "linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)" : "transparent",
-                  border: isActive ? "1px solid rgba(220, 38, 38, 0.3)" : "1px solid transparent",
-                  boxShadow: isActive ? "0 4px 15px rgba(220, 38, 38, 0.1)" : "none",
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                }}
+                className={`top-nav-link ${isActive ? "active" : ""}`}
               >
-                <Icon size={16} style={{ color: isActive ? "#ef4444" : "#6b7280" }} />
+                <Icon size={14} style={{ color: isActive ? "var(--accent)" : "#6b7280" }} />
                 <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="sidebar-footer" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.05)", padding: "15px" }}>
-          <button 
-            onClick={handleLogout} 
-            className="menu-link logout-link" 
-            style={{ 
-              width: "100%", 
-              background: "rgba(239, 68, 68, 0.05)", 
-              border: "1px solid rgba(239, 68, 68, 0.15)",
-              color: "#f87171",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "12px",
-              borderRadius: "10px",
-              cursor: "pointer"
-            }}
-          >
-            <LogOut size={16} />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Panel */}
-      <main className="dashboard-main">
-        {/* Top Header */}
-        <header className="dashboard-header">
-          <div className="header-user">
+        {/* Right: Profile & Mobile Toggle */}
+        <div className="top-nav-right">
+          <div className="header-user" style={{ marginRight: "10px" }}>
             <span className="header-user-icon">
-              <UserIcon size={16} />
+              <UserIcon size={14} />
             </span>
-            <span>{user?.fullName || "Admin User"}</span>
+            <span style={{ fontSize: "13px" }}>{user?.fullName || "Admin User"}</span>
           </div>
+
           <button 
             onClick={handleLogout} 
             className="header-logout-btn" 
             title="Log Out"
             aria-label="Log Out"
+            style={{ padding: "6px", background: "none", border: "none", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center" }}
           >
-            <LogOut size={20} />
+            <LogOut size={16} />
           </button>
-        </header>
 
-        {/* Content */}
-        <div className="dashboard-content">
-          {children}
+          {/* Mobile hamburger menu toggle */}
+          <button 
+            className="hamburger-btn" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Menu"
+            style={{ display: "none", background: "none", border: "none", color: "var(--text-primary)", cursor: "pointer", padding: "0.5rem" }}
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
-      </main>
+
+        {/* Mobile Dropdown Menu Drawer */}
+        {isMobileMenuOpen && (
+          <nav className="top-nav-menu-mobile">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.path;
+              return (
+                <Link 
+                  key={item.path} 
+                  href={item.path}
+                  className={`top-nav-link ${isActive ? "active" : ""}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{ width: "100%" }}
+                >
+                  <Icon size={14} style={{ color: isActive ? "var(--accent)" : "#6b7280" }} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+      </header>
+
+      {/* Main Content Pane */}
+      <div className="layout-top-nav-main">
+        <main className="layout-top-nav-content animated-page">
+          {children}
+        </main>
+      </div>
+      
+      {/* Mobile media query hamburger control style inject */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .top-nav-menu {
+            display: none !important;
+          }
+          .hamburger-btn {
+            display: block !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

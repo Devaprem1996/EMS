@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { serverCache } from "@/lib/cache";
+import { rateLimit } from "@/lib/rate-limiter";
 
 // GET /api/tasks - Retrieve all active technician assignments
 export async function GET(req: NextRequest) {
   try {
+    // 1. Rate Limiting Check
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const limiter = rateLimit(ip, 120);
+    if (limiter.isLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429, 
+          headers: { "Retry-After": String(Math.ceil((limiter.reset - Date.now()) / 1000)) } 
+        }
+      );
+    }
+
     const session = getAuthSession(req);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -12,6 +27,14 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+
+    // 2. Cache Hit Check
+    const cacheScope = session.role === "TECHNICIAN" ? session.userId : "all";
+    const cacheKey = `tasks:${cacheScope}:${search}`;
+    const cachedData = serverCache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
 
     const whereClause: any = {
       deletedAt: null,
@@ -117,9 +140,13 @@ export async function GET(req: NextRequest) {
       completedAt: asg.completedAt,
     }));
 
+    // Cache the tasks list for 1 minute
+    serverCache.set(cacheKey, mappedAssignments, 60000);
+
     return NextResponse.json(mappedAssignments);
   } catch (error) {
     console.error("[Tasks GET API] Error:", error);
     return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
   }
 }
+

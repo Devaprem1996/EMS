@@ -19,8 +19,13 @@ import {
   Download,
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from "lucide-react";
+import { useConfig } from "@/context/ConfigContext";
 
 interface Customer {
   id: string;
@@ -71,6 +76,7 @@ interface Enquiry {
   assignFor: string | null;
   assignments: Assignment[];
   followUps: FollowUp[];
+  stageData?: string | null;
   createdAt: string;
 }
 
@@ -83,12 +89,31 @@ interface Technician {
 }
 
 export default function EnquiryDashboardPage() {
+  const { config } = useConfig();
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
   const [isDragging, setIsDragging] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const filteredEnquiries = enquiries.filter(enq => {
+    if (selectedCategoryTab === "all") return true;
+    return enq.requirementCategory === selectedCategoryTab;
+  });
+
+  // Client-side pagination calculations
+  const totalItems = filteredEnquiries.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedEnquiries = filteredEnquiries.slice(startIndex, endIndex);
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -192,9 +217,14 @@ export default function EnquiryDashboardPage() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchData();
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(delayDebounce);
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategoryTab]);
 
   // Handle open Add Enquiry Modal
   const handleOpenAdd = () => {
@@ -211,6 +241,7 @@ export default function EnquiryDashboardPage() {
     setEnquiryDate(new Date().toISOString().split("T")[0]);
     setRequestedDeliveryDate("");
     setCurrentStatus("Enquiry Registered");
+    setCustomFieldsData({});
     setIsAddModalOpen(true);
   };
 
@@ -244,6 +275,7 @@ export default function EnquiryDashboardPage() {
           currentStatus,
           enquiryDate: enquiryDate || null,
           requestedDeliveryDate: requestedDeliveryDate || null,
+          stageData: customFieldsData,
         }),
       });
 
@@ -303,6 +335,7 @@ export default function EnquiryDashboardPage() {
     setAmcYears(String(enq.amcYears || 1));
     setCalculatedAmcDate(enq.amcDate ? enq.amcDate.split("T")[0] : "");
 
+    setCustomFieldsData(enq.stageData ? JSON.parse(enq.stageData) : {});
     setIsEditModalOpen(true);
   };
 
@@ -353,6 +386,7 @@ export default function EnquiryDashboardPage() {
           newRemarks: newRemarks.trim() || null,
           deliveredDate: deliveredDate || null,
           amcYears: parseInt(amcYears, 10),
+          stageData: customFieldsData,
         }),
       });
 
@@ -891,10 +925,10 @@ export default function EnquiryDashboardPage() {
       {/* ── Bulk Import Instructions Panel ── */}
       {showImportGuide && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setShowImportGuide(false); }}>
-          <div className="slide-over-card" style={{ maxWidth: "600px" }}>
+          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "600px" }}>
             
             {/* Header */}
-            <div className="slide-over-header">
+            <div className="slide-over-header theme-modal-card-header">
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "18px" }}>📤</span>
                 <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "#fff" }}>Bulk Import Center</h3>
@@ -1108,6 +1142,30 @@ export default function EnquiryDashboardPage() {
         </div>
       )}
 
+      {/* Category Tabs filter */}
+      <div className="category-tabs-container" style={{ display: "flex", gap: "8px", marginBottom: "15px", overflowX: "auto", paddingBottom: "5px" }}>
+        {["all", ...(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"])].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategoryTab(cat)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "1px solid " + (selectedCategoryTab === cat ? "var(--primary)" : "rgba(255,255,255,0.06)"),
+              background: selectedCategoryTab === cat ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
+              color: selectedCategoryTab === cat ? "#fff" : "#94a3b8",
+              cursor: "pointer",
+              fontSize: "12.5px",
+              fontWeight: "600",
+              boxShadow: selectedCategoryTab === cat ? "0 4px 10px rgba(var(--primary-rgb), 0.2)" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            {cat === "all" ? "All Types" : cat}
+          </button>
+        ))}
+      </div>
+
       {/* Table Data Grid */}
       <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
@@ -1115,7 +1173,7 @@ export default function EnquiryDashboardPage() {
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying telemetry systems...</div>
           </div>
-        ) : enquiries.length === 0 ? (
+        ) : filteredEnquiries.length === 0 ? (
           <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No telemetry records available</div>
@@ -1128,7 +1186,7 @@ export default function EnquiryDashboardPage() {
                 <th style={{ width: "40px", textAlign: "left" }}>
                   <input
                     type="checkbox"
-                    checked={enquiries.length > 0 && selectedJobIds.length === enquiries.length}
+                    checked={filteredEnquiries.length > 0 && selectedJobIds.length === filteredEnquiries.length}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     style={{ cursor: "pointer", accentColor: "var(--primary)" }}
                   />
@@ -1146,7 +1204,7 @@ export default function EnquiryDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {enquiries.map((enq, index) => {
+              {paginatedEnquiries.map((enq, index) => {
                 const statusDotClass = 
                   enq.currentStatus === "Order Delivered" ? "pulse-green" :
                   enq.currentStatus === "Order Confirmed" ? "pulse-blue" :
@@ -1167,7 +1225,7 @@ export default function EnquiryDashboardPage() {
                         style={{ cursor: "pointer", accentColor: "var(--primary)" }}
                       />
                     </td>
-                    <td style={{ color: "#64748b", fontWeight: "600" }}>{index + 1}</td>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
                     <td style={{ fontFamily: "monospace", fontWeight: "700", color: "var(--accent)" }}>{enq.jobNumber}</td>
                     <td style={{ fontWeight: "600", color: "#fff" }}>{enq.customer?.companyName || "N/A"}</td>
                     <td>{enq.customer?.contactPerson}</td>
@@ -1271,36 +1329,61 @@ export default function EnquiryDashboardPage() {
         )}
       </div>
 
-      {/* Floating Add Button */}
-      <button
-        onClick={handleOpenAdd}
-        style={{
-          position: "fixed",
-          bottom: "30px",
-          right: "30px",
-          width: "56px",
-          height: "56px",
-          borderRadius: "50%",
-          background: "#3b82f6",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9
-        }}
-        title="Add Enquiry"
-      >
-        <Plus size={24} />
-      </button>
+      {/* Pagination Footer */}
+      {!loading && totalItems > 0 && (
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1 }}>
+          <span className="pagination-info">
+            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+          </span>
+          <div className="pagination-controls">
+            <button 
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="Previous Page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center" }}>
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Next Page"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Last Page"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Add Button Removed */}
 
       {/* Add Enquiry Modal */}
       {isAddModalOpen && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAddModalOpen(false); }}>
-          <div className="slide-over-card">
-            <div className="slide-over-header">
+          <div className="slide-over-card theme-modal-card">
+            <div className="slide-over-header theme-modal-card-header">
               <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Register New Enquiry</h2>
               <button onClick={() => setIsAddModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
@@ -1350,9 +1433,9 @@ export default function EnquiryDashboardPage() {
                     <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement Category</label>
                     <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                       <option value="SELECT">SELECT</option>
-                      <option value="CCTV">CCTV</option>
-                      <option value="New Fire Extinguisher">New Fire Extinguisher</option>
-                      <option value="Refilling">Refilling</option>
+                      {(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"]).map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
                     </select>
                     {/* Flow 3: Auto-route banner */}
                     {requirementCategory === "Refilling" && (
@@ -1378,9 +1461,9 @@ export default function EnquiryDashboardPage() {
                     <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Source of Enquiry</label>
                     <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                       <option value="SELECT">SELECT</option>
-                      <option value="Existing Customers">Existing Customers</option>
-                      <option value="Social Media">Social Media</option>
-                      <option value="Phone Call">Phone Call</option>
+                      {(config?.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"]).map(src => (
+                        <option key={src} value={src}>{src}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1388,6 +1471,37 @@ export default function EnquiryDashboardPage() {
                   <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement Description</label>
                   <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={2} placeholder="Details about customer specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
                 </div>
+                {/* Custom Fields in Add modal */}
+                {config?.stages?.ENQUIRY?.fields && config.stages.ENQUIRY.fields.length > 0 && (
+                  <div style={{ marginTop: "15px", padding: "15px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px" }}>
+                    <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "12px" }}>Custom Fields</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {config.stages.ENQUIRY.fields.map(field => {
+                        const val = customFieldsData[field.key] ?? "";
+                        const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
+                        return (
+                          <div key={field.key}>
+                            <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>
+                              {field.label} {field.required ? "*" : ""}
+                            </label>
+                            {field.type === "boolean" ? (
+                              <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
+                            ) : field.type === "select" ? (
+                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                                <option value="">SELECT</option>
+                                {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : field.type === "multi-select" ? (
+                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                            ) : (
+                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="slide-over-footer">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
@@ -1401,10 +1515,10 @@ export default function EnquiryDashboardPage() {
       {/* Edit Enquiry Modal (Tabbed Layout) */}
       {isEditModalOpen && selectedEnquiry && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
-          <div className="slide-over-card" style={{ maxWidth: "660px" }}>
+          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "660px" }}>
             
             {/* Modal Header */}
-            <div className="slide-over-header">
+            <div className="slide-over-header theme-modal-card-header">
               <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "#3b82f6" }}>{selectedEnquiry.jobNumber}</span></h2>
               <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
             </div>
@@ -1490,18 +1604,18 @@ export default function EnquiryDashboardPage() {
                         <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement Category *</label>
                         <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                           <option value="SELECT">SELECT</option>
-                          <option value="CCTV">CCTV</option>
-                          <option value="New Fire Extinguisher">New Fire Extinguisher</option>
-                          <option value="Refilling">Refilling</option>
+                          {(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"]).map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
                         </select>
                       </div>
                       <div>
                         <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Source of Enquiry *</label>
                         <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                           <option value="SELECT">SELECT</option>
-                          <option value="Existing Customers">Existing Customers</option>
-                          <option value="Social Media">Social Media</option>
-                          <option value="Phone Call">Phone Call</option>
+                          {(config?.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"]).map(src => (
+                            <option key={src} value={src}>{src}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -1509,6 +1623,37 @@ export default function EnquiryDashboardPage() {
                       <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement</label>
                       <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Cylinder count, medium type..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
                     </div>
+                    {/* Custom Fields in Edit modal */}
+                    {config?.stages?.ENQUIRY?.fields && config.stages.ENQUIRY.fields.length > 0 && (
+                      <div style={{ marginTop: "15px", padding: "15px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px" }}>
+                        <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "12px" }}>Custom Fields</h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {config.stages.ENQUIRY.fields.map(field => {
+                            const val = customFieldsData[field.key] ?? "";
+                            const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
+                            return (
+                              <div key={field.key}>
+                                <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>
+                                  {field.label} {field.required ? "*" : ""}
+                                </label>
+                                {field.type === "boolean" ? (
+                                  <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
+                                ) : field.type === "select" ? (
+                                  <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                                    <option value="">SELECT</option>
+                                    {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                  </select>
+                                ) : field.type === "multi-select" ? (
+                                  <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                                ) : (
+                                  <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1610,9 +1755,9 @@ export default function EnquiryDashboardPage() {
       {/* Assign Technician Modal */}
       {isAssignModalOpen && (isBulkAssign || selectedEnquiry) && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
-          <div className="slide-over-card">
+          <div className="slide-over-card theme-modal-card">
             
-            <div className="slide-over-header">
+            <div className="slide-over-header theme-modal-card-header">
               <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>
                 {isBulkAssign ? `Bulk Assign (${selectedJobIds.length} Enquiries)` : "Assign Technician"}
               </h2>

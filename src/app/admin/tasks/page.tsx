@@ -8,7 +8,11 @@ import {
   X, 
   Check, 
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from "lucide-react";
 
 interface Customer {
@@ -61,6 +65,11 @@ export default function TechnicianViewPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -95,9 +104,14 @@ export default function TechnicianViewPage() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchData();
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(delayDebounce);
   }, [search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedType]);
 
   // Handle Edit Action Click
   const handleOpenEdit = (asg: Assignment) => {
@@ -185,6 +199,19 @@ export default function TechnicianViewPage() {
     return ["Pending", "Completed"];
   };
 
+  const filteredAssignments = assignments.filter((asg) => {
+    if (selectedType === "all") return true;
+    const type = asg.job?.assignFor || "DELIVERY";
+    return type.toUpperCase() === selectedType.toUpperCase();
+  });
+
+  // Client-side pagination calculations
+  const totalItems = filteredAssignments.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedAssignments = filteredAssignments.slice(startIndex, endIndex);
+
   return (
     <div style={{ padding: "10px", color: "#e2e8f0" }}>
       {/* Title */}
@@ -213,42 +240,60 @@ export default function TechnicianViewPage() {
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: "100%", padding: "12px 15px 12px 40px", background: "#1a1a24", border: "1px solid #2d2d3a", borderRadius: "8px", color: "#fff", fontSize: "14px" }}
+          style={{ width: "100%", padding: "12px 15px 12px 40px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", fontSize: "14px" }}
         />
-        <Search size={18} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "#718096" }} />
+        <Search size={18} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+      </div>
+
+      {/* Assignment Type Filter Tabs */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "12px" }}>
+        {[
+          { key: "all", label: "All Assignments" },
+          { key: "DELIVERY", label: "Delivery" },
+          { key: "REFILLING", label: "Refilling" },
+          { key: "SERVICE", label: "Service" }
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setSelectedType(tab.key)}
+            className={`premium-tab-btn ${selectedType === tab.key ? "active" : ""}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Centralized Grid table */}
-      <div style={{ background: "#111115", borderRadius: "12px", border: "1px solid #2d2d3a", overflowX: "auto" }}>
+      <div className="table-container" style={{ overflowX: "auto" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px" }}>Loading assignments...</div>
-        ) : assignments.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#718096" }}>No assignments found.</div>
+        ) : filteredAssignments.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>No assignments found matching this type.</div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
+          <table className="premium-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2d2d3a", background: "#171721" }}>
-                <th style={{ padding: "15px" }}>S.No</th>
-                <th style={{ padding: "15px" }}>Client Name</th>
-                <th style={{ padding: "15px" }}>Contact No1</th>
-                <th style={{ padding: "15px" }}>Employee Name</th>
-                <th style={{ padding: "15px" }}>Completed Status</th>
-                <th style={{ padding: "15px" }}>Technician Names</th>
-                <th style={{ padding: "15px" }}>Assignment Type</th>
-                <th style={{ padding: "15px" }}>Customer Location</th>
-                <th style={{ padding: "15px" }}>Assigned On</th>
-                <th style={{ padding: "15px", textAlign: "center" }}>Actions</th>
+              <tr style={{ borderBottom: "1px solid var(--border-glass)" }}>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>S.No</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Client Name</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Contact No1</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Employee Name</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Completed Status</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Technician Names</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Assignment Type</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Customer Location</th>
+                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Assigned On</th>
+                <th style={{ padding: "15px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {assignments.map((asg, index) => {
+              {paginatedAssignments.map((asg, index) => {
                 const siblingNames = asg.job.assignments.map(sa => sa.technician.fullName).join(", ");
                 const displayStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
                 const locUrl = asg.job.customerLocation;
 
                 return (
-                  <tr key={asg.id} style={{ borderBottom: "1px solid #1a1a24" }}>
-                    <td style={{ padding: "15px" }}>{index + 1}</td>
+                  <tr key={asg.id} style={{ borderBottom: "1px solid var(--border-glass)" }}>
+                    <td style={{ padding: "15px" }}>{startIndex + index + 1}</td>
                     <td style={{ padding: "15px" }}>{asg.job.customer?.companyName || "N/A"}</td>
                     <td style={{ padding: "15px" }}>{asg.job.customer?.phone}</td>
                     <td style={{ padding: "15px", fontWeight: "600" }}>{asg.technician.fullName}</td>
@@ -317,14 +362,62 @@ export default function TechnicianViewPage() {
         )}
       </div>
 
+      {/* Pagination Footer */}
+      {!loading && totalItems > 0 && (
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px" }}>
+          <span className="pagination-info">
+            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+          </span>
+          <div className="pagination-controls">
+            <button 
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="Previous Page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center" }}>
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Next Page"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Last Page"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Task View Modal */}
       {isModalOpen && selectedAsg && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
-          <div style={{ background: "#181822", border: "1px solid #2d2d3a", borderRadius: "12px", width: "100%", maxWidth: "650px", maxHeight: "95%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div className="modal-card theme-modal-card" style={{ width: "100%", maxWidth: "650px", maxHeight: "95%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             
-            <div style={{ padding: "15px 20px", borderBottom: "1px solid #2d2d3a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="modal-header theme-modal-card-header" style={{ padding: "15px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ fontSize: "18px", margin: 0 }}>Task View</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer" }}><X size={20} /></button>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>

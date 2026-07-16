@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { invalidateJobsAndTasks } from "@/lib/cache";
 
 // POST /api/jobs/bulk-assign - Bulk assign technicians to a list of jobs
 export async function POST(req: NextRequest) {
@@ -50,6 +51,8 @@ export async function POST(req: NextRequest) {
               ticketId: id,
               employeeId: techId,
               status: "ASSIGNED",
+              createdBy: session.userId,
+              updatedBy: session.userId,
             })),
           });
         }
@@ -63,6 +66,7 @@ export async function POST(req: NextRequest) {
             technicianNotes: technicianInstructions || null,
             locationCoordinates: customerLocation || null,
             assignmentType: assignFor || "DELIVERY",
+            updatedBy: session.userId,
           },
         });
 
@@ -76,10 +80,15 @@ export async function POST(req: NextRequest) {
             fromStatus: job.currentStatus,
             toStatus: job.currentStatus,
             remarks: `Technician assignments bulk updated. Assigned technicians: ${technicianIds.length}`,
+            createdBy: session.userId,
+            updatedBy: session.userId,
           },
         });
       }
     });
+
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
 
     return NextResponse.json({ success: true, count: jobIds.length });
   } catch (error) {
@@ -87,3 +96,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to perform bulk assignment" }, { status: 500 });
   }
 }
+

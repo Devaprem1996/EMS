@@ -11,7 +11,13 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  MessageSquare,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from "lucide-react";
+import { useConfig } from "@/context/ConfigContext";
 
 interface Customer {
   id: string;
@@ -51,7 +57,14 @@ interface Job {
   customerLocation: string | null;
   assignFor: string | null;
   assignments: Assignment[];
+  stageData?: string | null;
   createdAt: string;
+  serialNumber?: string | null;
+  capacity?: string | null;
+  extinguisherType?: string | null;
+  itemDescription?: string | null;
+  amcYears?: number | null;
+  amcDate?: string | null;
 }
 
 interface Technician {
@@ -63,11 +76,18 @@ interface Technician {
 }
 
 export default function ServiceDashboardPage() {
+  const { config } = useConfig();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -94,11 +114,27 @@ export default function ServiceDashboardPage() {
 
   // Collapsible cards state in edit modal
   const [isStatusCardOpen, setIsStatusCardOpen] = useState(true);
+  const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(true);
+  const [isEquipmentCardOpen, setIsEquipmentCardOpen] = useState(true);
+  const [isRequirementCardOpen, setIsRequirementCardOpen] = useState(true);
 
   // --- Form Fields ---
   // Service Update Form fields
   const [visitDate, setVisitDate] = useState("");
   const [currentStatus, setCurrentStatus] = useState("Pending");
+
+  // Read-only reference contexts
+  const [serialNumber, setSerialNumber] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [extinguisherType, setExtinguisherType] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone2, setCustomerPhone2] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [deliveredDate, setDeliveredDate] = useState("");
+  const [amcYears, setAmcYears] = useState("");
+  const [amcDate, setAmcDate] = useState("");
+  const [requirementDetails, setRequirementDetails] = useState("");
 
   // Assign Technician Form fields
   const [assignVisitDate, setAssignVisitDate] = useState("");
@@ -133,9 +169,14 @@ export default function ServiceDashboardPage() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchData();
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(delayDebounce);
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategoryTab]);
 
   // Handle Edit Service Modal Open
   const handleOpenEdit = (job: Job) => {
@@ -143,6 +184,28 @@ export default function ServiceDashboardPage() {
     setVisitDate(job.visitDate ? job.visitDate.split("T")[0] : "");
     setCurrentStatus(job.currentStatus === "Pending Service" ? "Pending" : (job.currentStatus || "Pending"));
     setIsStatusCardOpen(true);
+    setIsCustomerCardOpen(true);
+    setIsEquipmentCardOpen(true);
+    setIsRequirementCardOpen(true);
+
+    // Initialize read-only specs
+    setSerialNumber(job.serialNumber || "");
+    setCapacity(job.capacity || "");
+    setExtinguisherType(job.extinguisherType || "");
+    setItemDescription(job.itemDescription || "");
+    setRequirementDetails(job.requirementDetails || "");
+    
+    // Customer
+    setCustomerEmail(job.customer?.email || "");
+    setCustomerPhone2(job.customer?.phone2 || "");
+    setCustomerAddress(job.customer?.address || "");
+
+    // AMC
+    setDeliveredDate(job.deliveredDate ? job.deliveredDate.split("T")[0] : "");
+    setAmcYears(job.amcYears ? String(job.amcYears) : "");
+    setAmcDate(job.amcDate ? job.amcDate.split("T")[0] : "");
+
+    setCustomFieldsData(job.stageData ? JSON.parse(job.stageData) : {});
     setIsEditModalOpen(true);
   };
 
@@ -164,6 +227,7 @@ export default function ServiceDashboardPage() {
         body: JSON.stringify({
           visitDate: visitDate || null,
           currentStatus,
+          stageData: customFieldsData,
         }),
       });
 
@@ -241,6 +305,18 @@ export default function ServiceDashboardPage() {
     return `${day}/${month}/${year}`;
   };
 
+  const filteredJobs = jobs.filter(job => {
+    if (selectedCategoryTab === "all") return true;
+    return job.requirementCategory === selectedCategoryTab;
+  });
+
+  // Client-side pagination calculations
+  const totalItems = filteredJobs.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
   return (
     <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
@@ -250,7 +326,9 @@ export default function ServiceDashboardPage() {
       {/* Page Title & Subtitle */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Services Dispatch</h1>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {config?.stages?.SERVICES?.displayName || "Service"} Dispatch
+          </h1>
           <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time inspector tracking, annual visits schedules, and cylinder inspection tasks</p>
         </div>
       </div>
@@ -358,6 +436,30 @@ export default function ServiceDashboardPage() {
         </div>
       </div>
 
+      {/* Category Tabs filter */}
+      <div className="category-tabs-container" style={{ display: "flex", gap: "8px", marginBottom: "15px", overflowX: "auto", paddingBottom: "5px" }}>
+        {["all", ...(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"])].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategoryTab(cat)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "1px solid " + (selectedCategoryTab === cat ? "var(--primary)" : "rgba(255,255,255,0.06)"),
+              background: selectedCategoryTab === cat ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
+              color: selectedCategoryTab === cat ? "#fff" : "#94a3b8",
+              cursor: "pointer",
+              fontSize: "12.5px",
+              fontWeight: "600",
+              boxShadow: selectedCategoryTab === cat ? "0 4px 10px rgba(var(--primary-rgb), 0.2)" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            {cat === "all" ? "All Types" : cat}
+          </button>
+        ))}
+      </div>
+
       {/* Data Table */}
       <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
@@ -365,7 +467,7 @@ export default function ServiceDashboardPage() {
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying dispatch databases...</div>
           </div>
-        ) : jobs.length === 0 ? (
+        ) : filteredJobs.length === 0 ? (
           <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No services records matched</div>
@@ -386,15 +488,22 @@ export default function ServiceDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job, index) => {
+              {paginatedJobs.map((job, index) => {
                 const displayStatus = job.currentStatus === "Pending Service" ? "Pending" : job.currentStatus;
                 const statusDotClass = displayStatus === "Completed" ? "pulse-green" : "pulse-amber";
                 const statusColor = displayStatus === "Completed" ? "#10b981" : "#fbbf24";
 
                 return (
                   <tr key={job.id}>
-                    <td style={{ color: "#64748b", fontWeight: "600" }}>{index + 1}</td>
-                    <td style={{ fontWeight: "600", color: "#fff" }}>{job.customer?.companyName || "N/A"}</td>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
+                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
+                      <div>{job.customer?.companyName || "N/A"}</div>
+                      {job.serialNumber && (
+                        <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px", fontWeight: "normal" }}>
+                          SN: <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>{job.serialNumber}</span> {job.extinguisherType && `(${job.extinguisherType}${job.capacity ? ` - ${job.capacity}` : ""})`}
+                        </div>
+                      )}
+                    </td>
                     <td>{job.customer?.contactPerson}</td>
                     <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
                     <td style={{ color: "#fff", fontWeight: "600" }}>{formatDate(job.visitDate)}</td>
@@ -431,7 +540,7 @@ export default function ServiceDashboardPage() {
                             transition: "all 0.2s"
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
                           title="Service Update"
                         >
                           <Edit2 size={13} />
@@ -462,6 +571,54 @@ export default function ServiceDashboardPage() {
             </tbody>
           </table>
         )}
+        
+        {/* Pagination Footer */}
+        {!loading && totalItems > 0 && (
+          <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+            </span>
+            <div style={{ display: "flex", gap: "5px" }}>
+              <button 
+                onClick={() => setCurrentPage(1)} 
+                disabled={currentPage === 1}
+                className="pagination-btn"
+                title="First Page"
+              >
+                <ChevronsLeft size={14} />
+              </button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                disabled={currentPage === 1}
+                className="pagination-btn"
+                title="Previous Page"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              
+              <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                disabled={currentPage === totalPages}
+                className="pagination-btn"
+                title="Next Page"
+              >
+                <ChevronRight size={14} />
+              </button>
+              <button 
+                onClick={() => setCurrentPage(totalPages)} 
+                disabled={currentPage === totalPages}
+                className="pagination-btn"
+                title="Last Page"
+              >
+                <ChevronsRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Service Update Modal */}
@@ -475,45 +632,154 @@ export default function ServiceDashboardPage() {
             </div>
 
             <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body" style={{ gap: "15px" }}>
+              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
                 
-                {/* Collapsible Card: Enquiry Status & Dates */}
-                <div style={{ border: "1px solid #2d2d3a", borderRadius: "8px", overflow: "hidden" }}>
+                {/* Card 1: Customer Info */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
                   <div 
-                    onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
-                    style={{ padding: "12px 15px", background: "#13131c", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Calendar size={18} style={{ color: "#f59e0b" }} />
-                      <span style={{ fontWeight: "600", fontSize: "14px" }}>Enquiry Status & Dates</span>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Customer & Site Information</span>
                     </div>
-                    {isStatusCardOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isCustomerCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </div>
+
+                  {isCustomerCardOpen && (
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Client (Company Name)</label>
+                          <input type="text" value={selectedJob.customer?.companyName || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Person Name</label>
+                          <input type="text" value={selectedJob.customer?.contactPerson || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 1</label>
+                          <input type="text" value={selectedJob.customer?.phone || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 2</label>
+                          <input type="text" value={customerPhone2 || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Email Address</label>
+                        <input type="text" value={customerEmail || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Site Address</label>
+                        <textarea value={customerAddress || "No site address logged."} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 2: Equipment & AMC Context */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                  <div 
+                    onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Equipment & AMC Reference</span>
+                    </div>
+                    {isEquipmentCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </div>
+
+                  {isEquipmentCardOpen && (
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Serial No</label>
+                          <input type="text" value={serialNumber || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Extinguisher Type</label>
+                          <input type="text" value={extinguisherType || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Capacity</label>
+                          <input type="text" value={capacity || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Delivered Date</label>
+                          <input type="text" value={deliveredDate ? formatDate(deliveredDate) : "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>AMC Years Coverage</label>
+                          <input type="text" value={amcYears ? `${amcYears} Year(s)` : "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>AMC Renewal Date</label>
+                          <input type="text" value={amcDate ? formatDate(amcDate) : "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px", color: "#10b981", fontWeight: "bold" }} />
+                        </div>
+                      </div>
+                      {itemDescription && (
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Item Description</label>
+                          <input type="text" value={itemDescription} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 3: Original Requirement Context */}
+                {requirementDetails && (
+                  <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                    <div 
+                      onClick={() => setIsRequirementCardOpen(!isRequirementCardOpen)}
+                      style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <MessageSquare size={16} style={{ color: "var(--accent)" }} />
+                        <span style={{ fontWeight: "600", fontSize: "13px" }}>Original Enquiry Context</span>
+                      </div>
+                      {isRequirementCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </div>
+                    {isRequirementCardOpen && (
+                      <div style={{ padding: "12px", borderTop: "1px solid var(--border-glass)" }}>
+                        <textarea value={requirementDetails} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Card 4: Service Schedule & Status */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                  <div 
+                    onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Service Schedule & Status</span>
+                    </div>
+                    {isStatusCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </div>
 
                   {isStatusCardOpen && (
-                    <div style={{ padding: "15px", background: "#181822", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #2d2d3a" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client (Company Name)*</label>
-                        <input type="text" value={selectedJob.customer?.companyName || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Person Name*</label>
-                          <input type="text" value={selectedJob.customer?.contactPerson || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Service Date*</label>
+                          <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 1*</label>
-                          <input type="text" value={selectedJob.customer?.phone || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                        <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Service Date*</label>
-                          <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Service Status*</label>
-                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Service Status*</label>
+                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
                             <option value="Select">Select</option>
                             <option value="Pending">Pending</option>
                             <option value="Completed">Completed</option>
@@ -524,12 +790,44 @@ export default function ServiceDashboardPage() {
                   )}
                 </div>
 
+                {/* Custom Fields in Edit modal */}
+                {config?.stages?.SERVICES?.fields && config.stages.SERVICES.fields.length > 0 && (
+                  <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-glass)", borderRadius: "8px" }}>
+                    <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "8px" }}>Custom Fields</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {config.stages.SERVICES.fields.map(field => {
+                        const val = customFieldsData[field.key] ?? "";
+                        const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
+                        return (
+                          <div key={field.key}>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>
+                              {field.label} {field.required ? "*" : ""}
+                            </label>
+                            {field.type === "boolean" ? (
+                              <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
+                            ) : field.type === "select" ? (
+                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                                <option value="">SELECT</option>
+                                {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : field.type === "multi-select" ? (
+                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                            ) : (
+                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               {/* Modal Footer */}
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
+              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Update Details</button>
               </div>
             </form>
           </div>
@@ -539,84 +837,84 @@ export default function ServiceDashboardPage() {
       {/* Assign Technician Modal */}
       {isAssignModalOpen && selectedJob && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
-          <div className="slide-over-card">
+          <div className="slide-over-card theme-modal-card">
             
-            <div className="slide-over-header">
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Assign Technician</h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
+            <div className="slide-over-header theme-modal-card-header">
+              <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold" }}>Assign Technician</h2>
+              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
             </div>
 
             <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body">
+              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
                 
-                {/* Client info */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#111116", padding: "10px", borderRadius: "6px", border: "1px solid #1a1a24" }}>
+                {/* Client info summary */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", background: "var(--bg-input)", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-glass)" }}>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CLIENT NAME*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CLIENT NAME</span>
                     <span style={{ fontSize: "12px", fontWeight: "bold" }}>{selectedJob.customer?.companyName || "N/A"}</span>
                   </div>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT PERSON*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT PERSON</span>
                     <span style={{ fontSize: "12px" }}>{selectedJob.customer?.contactPerson}</span>
                   </div>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT NUMBER*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT NUMBER</span>
                     <span style={{ fontSize: "12px" }}>{selectedJob.customer?.phone}</span>
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div className="responsive-form-grid">
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Visit/Service Date *</label>
-                    <input type="date" value={assignVisitDate} onChange={e => setAssignVisitDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Visit/Service Date *</label>
+                    <input type="date" value={assignVisitDate} onChange={e => setAssignVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Assign For</label>
-                    <input type="text" value="SERVICE" readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address</label>
-                  <textarea value={selectedJob.customer?.address || ""} readOnly rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed", resize: "none" }} />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Admin Instructions</label>
-                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Technician Instructions</label>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Assign For</label>
+                    <input type="text" value="SERVICE" readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Location</label>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Coordinates or URL..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Address</label>
+                  <textarea value={selectedJob.customer?.address || ""} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                </div>
+
+                <div className="responsive-form-grid">
+                  <div>
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Admin Instructions</label>
+                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Technician Instructions</label>
+                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "6px", fontWeight: "bold" }}>Assign SERVICE To (Technicians) *</label>
-                  <div style={{ background: "#111116", border: "1px solid #2d2d3a", borderRadius: "8px", padding: "10px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Customer Location</label>
+                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Coordinates or URL..." style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "4px", fontWeight: "bold" }}>Assign SERVICE To (Technicians) *</label>
+                  <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "8px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                     {technicians.length === 0 ? (
-                      <div style={{ fontSize: "12px", color: "#718096" }}>No active technicians found.</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>No active technicians found.</div>
                     ) : (
                       technicians.map(tech => (
-                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
+                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
                           <input
                             type="checkbox"
                             checked={selectedTechIds.includes(tech.id)}
                             onChange={() => handleTechToggle(tech.id)}
-                            style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                            style={{ width: "15px", height: "15px", cursor: "pointer" }}
                           />
                           <span>{tech.fullName} ({tech.phone})</span>
                         </label>
                       ))
                     )}
                   </div>
-                  <p style={{ fontSize: "11px", color: "#ff6c37", marginTop: "8px", lineHeight: "1.4", marginBlockEnd: 0 }}>
+                  <p style={{ fontSize: "10.5px", color: "#ff6c37", marginTop: "6px", lineHeight: "1.3", marginBlockEnd: 0 }}>
                     * Deselect existing technician (if any) for new assignment
                     <br />* Delete existing assignment from technician view screen
                   </p>
@@ -624,9 +922,9 @@ export default function ServiceDashboardPage() {
 
               </div>
 
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff6c37", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Assign</button>
+              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Assign</button>
               </div>
             </form>
           </div>

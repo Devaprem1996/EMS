@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { invalidateJobsAndTasks } from "@/lib/cache";
 
 // POST /api/jobs/[id]/assign - Assign technicians to an enquiry
 export async function POST(
@@ -44,7 +45,10 @@ export async function POST(
       // Soft-delete existing assignments for this ticket
       await tx.ticketAssignment.updateMany({
         where: { ticketId: id, deletedAt: null },
-        data: { deletedAt: new Date() },
+        data: { 
+          deletedAt: new Date(),
+          updatedBy: session.userId
+        },
       });
 
       // Create or restore assignments
@@ -61,6 +65,7 @@ export async function POST(
               status: "ASSIGNED",
               completedAt: null,
               notes: null,
+              updatedBy: session.userId,
             },
           });
         } else {
@@ -69,6 +74,8 @@ export async function POST(
               ticketId: id,
               employeeId: techId,
               status: "ASSIGNED",
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
         }
@@ -83,6 +90,7 @@ export async function POST(
           technicianNotes: technicianInstructions || null,
           locationCoordinates: customerLocation || null,
           assignmentType: assignFor || "DELIVERY",
+          updatedBy: session.userId,
         },
         include: {
           customer: true,
@@ -112,6 +120,8 @@ export async function POST(
           fromStatus: job.currentStatus,
           toStatus: job.currentStatus,
           remarks: `Technician assignments updated. Assigned technicians: ${technicianIds.length}`,
+          createdBy: session.userId,
+          updatedBy: session.userId,
         },
       });
 
@@ -142,9 +152,13 @@ export async function POST(
       })),
     };
 
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
+
     return NextResponse.json(mappedJob);
   } catch (error) {
     console.error("[Job Assignment API] Error:", error);
     return NextResponse.json({ error: "Failed to update technician assignment" }, { status: 500 });
   }
 }
+

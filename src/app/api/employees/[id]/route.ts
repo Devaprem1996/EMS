@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { isAdmin } from "@/lib/auth-helpers";
+import { isAdmin, getAuthSession } from "@/lib/auth-helpers";
 import * as bcrypt from "bcryptjs";
 
 // PUT /api/employees/[id] - Update employee details (Admin Only)
@@ -9,7 +9,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!isAdmin(req)) {
+    const session = getAuthSession(req);
+    if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Access restricted to admins" }, { status: 403 });
     }
 
@@ -79,6 +80,8 @@ export async function PUT(
     if (password) {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
+
+    updateData.updatedBy = session.userId;
 
     // Perform database update
     const updatedEmployee = await prisma.employee.update({

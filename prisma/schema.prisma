@@ -24,6 +24,8 @@ model Employee {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   deletedAt      DateTime?
+  createdBy      String?
+  updatedBy      String?
 }
 
 model Customer {
@@ -38,6 +40,8 @@ model Customer {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   deletedAt      DateTime?
+  createdBy      String?
+  updatedBy      String?
 }
 
 model Ticket {
@@ -85,6 +89,12 @@ model Ticket {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   deletedAt             DateTime?
+  createdBy             String?
+  updatedBy             String?
+
+  @@index([customerId])
+  @@index([currentStage])
+  @@index([currentStatus])
 }
 
 model TicketFollowUp {
@@ -94,6 +104,10 @@ model TicketFollowUp {
   remarks   String
   createdAt DateTime  @default(now())
   deletedAt DateTime?
+  createdBy String?
+  updatedBy String?
+
+  @@index([ticketId])
 }
 
 model TicketAssignment {
@@ -107,8 +121,11 @@ model TicketAssignment {
   status      String    // "ASSIGNED" | "COMPLETED"
   notes       String?
   deletedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
 
   @@unique([ticketId, employeeId]) // An employee can only be assigned to a ticket once
+  @@index([employeeId])
 }
 
 model TicketHistory {
@@ -124,4 +141,18 @@ model TicketHistory {
   remarks     String?
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+
+  @@index([ticketId])
+  @@index([changedById])
+}
+
+model SystemConfig {
+  id        String   @id @default("default")
+  config    String   // JSON string of the EmsConfig
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 }

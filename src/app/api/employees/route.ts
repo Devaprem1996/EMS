@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { isAdmin } from "@/lib/auth-helpers";
+import { isAdmin, getAuthSession } from "@/lib/auth-helpers";
 import * as bcrypt from "bcryptjs";
+import { serverCache } from "@/lib/cache";
+import { rateLimit } from "@/lib/rate-limiter";
 
 // GET /api/employees - Fetch all employees (Admin Only)
 export async function GET(req: NextRequest) {
   try {
+    // 1. Rate Limiting Check
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const limiter = rateLimit(ip, 100);
+    if (limiter.isLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429, 
+          headers: { "Retry-After": String(Math.ceil((limiter.reset - Date.now()) / 1000)) } 
+        }
+      );
+    }
+
     if (!isAdmin(req)) {
       return NextResponse.json({ error: "Forbidden: Access restricted to admins" }, { status: 403 });
     }
@@ -13,6 +28,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "all"; // "all" | "active" | "inactive"
+
+    // Construct Cache Key for active technicians/employees (which is queried frequently on all dashboards)
+    const isCacheable = status === "active";
+    const cacheKey = `employees:active:search:${search}`;
+    
+    if (isCacheable) {
+      const cachedData = serverCache.get(cacheKey);
+      if (cachedData) {
+        return NextResponse.json(cachedData);
+      }
+    }
 
     // Construct query filters
     const whereClause: any = {};
@@ -57,6 +83,11 @@ export async function GET(req: NextRequest) {
       phone: emp.contactPhone,
     }));
 
+    // Cache the active employees list for 5 minutes
+    if (isCacheable) {
+      serverCache.set(cacheKey, mapped, 300000);
+    }
+
     return NextResponse.json(mapped);
   } catch (error) {
     console.error("[Employees API GET] Error:", error);
@@ -67,7 +98,21 @@ export async function GET(req: NextRequest) {
 // POST /api/employees - Create new employee (Admin Only)
 export async function POST(req: NextRequest) {
   try {
-    if (!isAdmin(req)) {
+    // 1. Rate Limiting Check
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const limiter = rateLimit(ip, 30);
+    if (limiter.isLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429, 
+          headers: { "Retry-After": String(Math.ceil((limiter.reset - Date.now()) / 1000)) } 
+        }
+      );
+    }
+
+    const session = getAuthSession(req);
+    if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Access restricted to admins" }, { status: 403 });
     }
 
@@ -122,6 +167,8 @@ export async function POST(req: NextRequest) {
         employeeNumber,
         email: email || null,
         isActive: isActive !== undefined ? isActive : true,
+        createdBy: session.userId,
+        updatedBy: session.userId,
       },
       select: {
         id: true,
@@ -142,9 +189,13 @@ export async function POST(req: NextRequest) {
       phone: newEmployee.contactPhone,
     };
 
+    // Invalidate active employee caches
+    serverCache.invalidatePattern(/^employees:/);
+
     return NextResponse.json(mapped, { status: 201 });
   } catch (error) {
     console.error("[Employees API POST] Error:", error);
     return NextResponse.json({ error: "Failed to create employee" }, { status: 500 });
   }
 }
+

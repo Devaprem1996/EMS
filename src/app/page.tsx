@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { EMS_CONFIG } from "@/config/ems-config";
+import { useConfig } from "@/context/ConfigContext";
 import { Phone, Lock, Eye, EyeOff, ArrowRight, Flame, ShieldAlert } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { config } = useConfig();
   
   // Form State
   const [username, setUsername] = useState("");
@@ -103,11 +104,15 @@ export default function LoginPage() {
       <div className="form-pane">
         <div className="login-card">
           <div className="brand-header">
-            <div className="brand-logo-container">
-              <Flame size={32} fill="currentColor" />
+            <div className="brand-logo-container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+              {config?.brand?.logoUrl ? (
+                <img src={config.brand.logoUrl} alt={config.brand.title || "Safeway"} style={{ maxHeight: "48px", maxWidth: "80px", objectFit: "contain", borderRadius: "6px" }} />
+              ) : (
+                <Flame size={32} fill="currentColor" />
+              )}
             </div>
-            <h2 className="brand-name">{EMS_CONFIG.brand.title}</h2>
-            <p className="brand-tagline">{EMS_CONFIG.brand.subtitle}</p>
+            <h2 className="brand-name">{config?.brand?.title || "Safeway"}</h2>
+            <p className="brand-tagline">{config?.brand?.subtitle || "Enquiry Management System"}</p>
           </div>
 
           {error && (

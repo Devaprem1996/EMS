@@ -56,9 +56,13 @@ export interface EmsConfig {
     assignedTechnicians: string[];
     targetDashboard: string[];
   };
+  categories?: string[];
+  sources?: string[];
 }
 
 export const EMS_CONFIG: EmsConfig = {
+  categories: ["CCTV", "New Fire Extinguisher", "Refilling"],
+  sources: ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"],
   brand: {
     title: "Safeway",
     subtitle: "Enquiry Management System",

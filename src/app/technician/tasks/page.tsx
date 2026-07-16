@@ -55,6 +55,7 @@ export default function TechnicianTasksPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -160,360 +161,224 @@ export default function TechnicianTasksPage() {
     return ["Pending", "Completed"];
   };
 
+  const filteredAssignments = assignments.filter((asg) => {
+    if (selectedType === "all") return true;
+    const type = asg.job?.assignFor || "DELIVERY";
+    return type.toUpperCase() === selectedType.toUpperCase();
+  });
+
   // Client-side pagination calculations
-  const totalItems = assignments.length;
+  const totalItems = filteredAssignments.length;
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const paginatedAssignments = assignments.slice(startIndex, endIndex);
+  const paginatedAssignments = filteredAssignments.slice(startIndex, endIndex);
 
   return (
-    <div style={{ padding: "20px", color: "#1e293b", background: "#f8fafc", minHeight: "100%" }}>
-      {/* Dynamic light theme override for layout */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .dashboard-container {
-          background-color: #f8fafc !important;
-        }
-        .dashboard-sidebar {
-          background: #ffffff !important;
-          border-right: 1px solid #e2e8f0 !important;
-        }
-        .sidebar-logo {
-          border-bottom: 1px solid #e2e8f0 !important;
-          color: #dc2626 !important;
-        }
-        .menu-link {
-          color: #475569 !important;
-        }
-        .menu-link:hover {
-          background: #f1f5f9 !important;
-          color: #0f172a !important;
-        }
-        .menu-link.active {
-          background: #dc2626 !important;
-          color: #ffffff !important;
-          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15) !important;
-        }
-        .sidebar-footer {
-          border-top: 1px solid #e2e8f0 !important;
-        }
-        .dashboard-main {
-          background: #f8fafc !important;
-        }
-        .dashboard-header {
-          background: #ffffff !important;
-          border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .header-user {
-          color: #334155 !important;
-        }
-        .header-user-icon {
-          background: #f1f5f9 !important;
-          color: #475569 !important;
-          border: 1px solid #e2e8f0 !important;
-        }
-        .header-logout-btn {
-          color: #64748b !important;
-        }
-        .header-logout-btn:hover {
-          color: #0f172a !important;
-        }
-      `}} />
+    <div style={{ padding: "20px", position: "relative", minHeight: "100%" }}>
+      {/* Background Accent Glow Spots */}
+      <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "30%" }}></div>
+      <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "10%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
 
       {/* Page Title */}
-      <div style={{ marginBottom: "20px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#1e293b", margin: 0 }}>Technician View</h1>
+      <div style={{ marginBottom: "20px", position: "relative", zIndex: 1 }}>
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "var(--text-primary)", margin: 0 }}>Technician View</h1>
       </div>
 
       {/* Notifications */}
       {successMsg && (
-        <div style={{ padding: "12px", background: "#ecfdf5", border: "1px solid #10b981", borderRadius: "8px", color: "#065f46", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ padding: "12px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "8px", color: "#10b981", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center", position: "relative", zIndex: 1 }}>
           <Check size={18} />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div style={{ padding: "12px", background: "#fef2f2", border: "1px solid #ef4444", borderRadius: "8px", color: "#991b1b", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", color: "#ef4444", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center", position: "relative", zIndex: 1 }}>
           <AlertCircle size={18} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Search Input Card */}
-      <div style={{ position: "relative", width: "100%", marginBottom: "20px" }}>
+      <div style={{ position: "relative", width: "100%", marginBottom: "20px", zIndex: 1 }} className="search-container">
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search client name, assignment..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ 
-            width: "100%", 
-            padding: "12px 40px 12px 16px", 
-            background: "#ffffff", 
-            border: "1px solid #cbd5e1", 
-            borderRadius: "8px", 
-            color: "#1e293b", 
-            fontSize: "14px",
-            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-            outline: "none"
-          }}
+          className="search-input"
         />
-        <Search size={18} style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+        <Search size={18} className="search-icon-inside" />
+      </div>
+
+      {/* Assignment Type Filter Tabs */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "12px", position: "relative", zIndex: 1 }}>
+        {[
+          { key: "all", label: "All Assignments" },
+          { key: "DELIVERY", label: "Delivery" },
+          { key: "REFILLING", label: "Refilling" },
+          { key: "SERVICE", label: "Service" }
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setSelectedType(tab.key);
+              setCurrentPage(1); // Reset page to 1 when changing tabs
+            }}
+            className={`premium-tab-btn ${selectedType === tab.key ? "active" : ""}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Table Data Grid Card */}
-      <div style={{ 
-        background: "#ffffff", 
-        borderRadius: "12px", 
-        border: "1px solid #e2e8f0", 
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column"
-      }}>
-        <div style={{ overflowX: "auto" }}>
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>Loading assignments...</div>
-          ) : paginatedAssignments.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>No assignments found.</div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #e2e8f0", background: "#22316c" }}>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>S.No</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Client Name</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Contact No1</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Completed Status</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Assignment Type</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Customer Location</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600" }}>Assigned On</th>
-                  <th style={{ padding: "14px 16px", color: "#ffffff", fontWeight: "600", textAlign: "center" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedAssignments.map((asg, index) => {
-                  const displayStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
-                  const locUrl = asg.job.customerLocation;
+      <div className="table-container" style={{ overflowX: "auto", position: "relative", zIndex: 1 }}>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading assignments...</div>
+        ) : paginatedAssignments.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>No assignments found matching this type.</div>
+        ) : (
+          <table className="premium-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Client Name</th>
+                <th>Contact No1</th>
+                <th>Completed Status</th>
+                <th>Assignment Type</th>
+                <th>Customer Location</th>
+                <th>Assigned On</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedAssignments.map((asg, index) => {
+                const displayStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
+                const locUrl = asg.job.customerLocation;
 
-                  return (
-                    <tr key={asg.id} style={{ borderBottom: "1px solid #f1f5f9", background: "#ffffff" }}>
-                      <td style={{ padding: "14px 16px", color: "#334155" }}>{startIndex + index + 1}</td>
-                      <td style={{ padding: "14px 16px", color: "#0f172a", fontWeight: "500" }}>{asg.job.customer?.companyName || "N/A"}</td>
-                      <td style={{ padding: "14px 16px", color: "#475569" }}>{asg.job.customer?.phone}</td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <span style={{
-                          padding: "4px 8px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          background: 
-                            displayStatus === "Completed" 
-                              ? "#e6fffa" 
-                              : displayStatus === "Assign For Service" 
-                                ? "#ebf8ff" 
-                                : "#fffaf0",
-                          color:
-                            displayStatus === "Completed" 
-                              ? "#319795" 
-                              : displayStatus === "Assign For Service" 
-                                ? "#3182ce" 
-                                : "#dd6b20",
-                          border:
-                            displayStatus === "Completed" 
-                              ? "1px solid #b2f5ea" 
-                              : displayStatus === "Assign For Service" 
-                                ? "1px solid #bee3f8" 
-                                : "1px solid #feebc8",
-                        }}>
-                          {displayStatus}
-                        </span>
-                      </td>
-                      <td style={{ padding: "14px 16px", fontWeight: "bold", color: "#475569" }}>{asg.job.assignFor || "DELIVERY"}</td>
-                      <td style={{ padding: "14px 16px" }}>
-                        {locUrl ? (
-                          <a 
-                            href={locUrl.startsWith("http") ? locUrl : `https://google.com/maps/search/?api=1&query=${encodeURIComponent(locUrl)}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            style={{ color: "#3182ce", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                          >
-                            View Location <ExternalLink size={12} />
-                          </a>
-                        ) : (
-                          <span style={{ color: "#94a3b8" }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "14px 16px", color: "#475569" }}>{formatDate(asg.assignedAt)}</td>
-                      <td style={{ padding: "14px 16px", textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                          <button
-                            onClick={() => handleOpenEdit(asg)}
-                            style={{ 
-                              background: "#fff5f5", 
-                              border: "1px solid #fed7d7", 
-                              color: "#ff4d80", 
-                              padding: "8px", 
-                              borderRadius: "6px", 
-                              cursor: "pointer", 
-                              display: "inline-flex", 
-                              alignItems: "center" 
-                            }}
-                            title="Task Details"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                const statusDotClass = 
+                  displayStatus === "Completed" ? "pulse-green" :
+                  displayStatus === "Assign For Service" ? "pulse-blue" : "pulse-amber";
 
-        {/* Pagination Footer */}
-        {!loading && totalItems > 0 && (
-          <div style={{ 
-            display: "flex", 
-            justifyContent: "flex-end", 
-            alignItems: "center", 
-            padding: "12px 24px", 
-            background: "#ffffff", 
-            borderTop: "1px solid #e2e8f0",
-            gap: "20px",
-            fontSize: "13px",
-            color: "#64748b"
-          }}>
-            {/* Items Per Page */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>Items per page:</span>
-              <select 
-                value={pageSize} 
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  border: "1px solid #cbd5e1",
-                  background: "#ffffff",
-                  color: "#1e293b",
-                  outline: "none",
-                  cursor: "pointer"
-                }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-              </select>
-            </div>
+                const statusColor =
+                  displayStatus === "Completed" ? "#10b981" :
+                  displayStatus === "Assign For Service" ? "#60a5fa" : "#fbbf24";
 
-            {/* Range Info */}
-            <div>
-              {startIndex + 1} - {endIndex} of {totalItems}
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <button 
-                onClick={() => setCurrentPage(1)} 
-                disabled={currentPage === 1}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "4px",
-                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                  color: currentPage === 1 ? "#cbd5e1" : "#475569",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                <ChevronsLeft size={16} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                disabled={currentPage === 1}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "4px",
-                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                  color: currentPage === 1 ? "#cbd5e1" : "#475569",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
-                disabled={currentPage === totalPages}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "4px",
-                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                  color: currentPage === totalPages ? "#cbd5e1" : "#475569",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                <ChevronRight size={16} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(totalPages)} 
-                disabled={currentPage === totalPages}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "4px",
-                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                  color: currentPage === totalPages ? "#cbd5e1" : "#475569",
-                  display: "inline-flex",
-                  alignItems: "center"
-                }}
-              >
-                <ChevronsRight size={16} />
-              </button>
-            </div>
-          </div>
+                return (
+                  <tr key={asg.id}>
+                    <td>{startIndex + index + 1}</td>
+                    <td style={{ fontWeight: "600" }}>{asg.job.customer?.companyName || "N/A"}</td>
+                    <td style={{ fontFamily: "monospace" }}>{asg.job.customer?.phone}</td>
+                    <td>
+                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
+                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                        {displayStatus}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: "bold" }}>{asg.job.assignFor || "DELIVERY"}</td>
+                    <td>
+                      {locUrl ? (
+                        <a 
+                          href={locUrl.startsWith("http") ? locUrl : `https://google.com/maps/search/?api=1&query=${encodeURIComponent(locUrl)}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: "var(--accent)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        >
+                          View Location <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span style={{ color: "var(--text-secondary)" }}>-</span>
+                      )}
+                    </td>
+                    <td>{formatDate(asg.assignedAt)}</td>
+                    <td style={{ textAlign: "center" }}>
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <button
+                          onClick={() => handleOpenEdit(asg)}
+                          style={{ 
+                            background: "rgba(255, 255, 255, 0.04)", 
+                            border: "1px solid rgba(255, 255, 255, 0.08)", 
+                            color: "var(--text-primary)", 
+                            padding: "8px", 
+                            borderRadius: "6px", 
+                            cursor: "pointer", 
+                            display: "inline-flex", 
+                            alignItems: "center",
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
+                          title="Task Details"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
 
-      {/* Task View Modal */}
+      {/* Pagination Footer */}
+      {!loading && totalItems > 0 && (
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1 }}>
+          <span className="pagination-info">
+            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+          </span>
+          <div className="pagination-controls">
+            <button 
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="Previous Page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center" }}>
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Next Page"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Last Page"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal Dialog */}
       {isModalOpen && selectedAsg && (
-        <div style={{ 
-          position: "fixed", 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          background: "rgba(15, 23, 42, 0.4)", 
-          backdropFilter: "blur(4px)",
-          zIndex: 1000, 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "center", 
-          padding: "15px" 
-        }}>
-          <div style={{ 
-            background: "#ffffff", 
-            border: "1px solid #e2e8f0", 
-            borderRadius: "12px", 
-            width: "100%", 
-            maxWidth: "650px", 
-            maxHeight: "95%", 
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            overflow: "hidden", 
-            display: "flex", 
-            flexDirection: "column" 
-          }}>
+        <div className="slide-over-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "650px", maxHeight: "95%" }}>
             
             {/* Modal Header */}
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "700", color: "#22316c" }}>Task View</h2>
+            <div className="slide-over-header theme-modal-card-header">
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "700", color: "#fff" }}>Task Details</h2>
               <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "inline-flex" }}><X size={20} /></button>
             </div>
 
@@ -524,68 +389,68 @@ export default function TechnicianTasksPage() {
                 {/* Client / Contact Person */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Client Name */}
-                  <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Client Name*</span>
-                    <input type="text" value={selectedAsg.job.customer?.companyName || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Client Name*</span>
+                    <input type="text" value={selectedAsg.job.customer?.companyName || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
                   {/* Contact Person */}
-                  <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Contact Person*</span>
-                    <input type="text" value={selectedAsg.job.customer?.contactPerson || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Contact Person*</span>
+                    <input type="text" value={selectedAsg.job.customer?.contactPerson || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
                 </div>
 
                 {/* Contact Number / Visit Date */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Contact Number */}
-                  <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Contact Number*</span>
-                    <input type="text" value={selectedAsg.job.customer?.phone || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Contact Number*</span>
+                    <input type="text" value={selectedAsg.job.customer?.phone || ""} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
                   {/* Visit/Service Date */}
-                  <div style={{ position: "relative", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", background: "#ffffff" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#ffffff", padding: "0 4px", fontSize: "11px", color: "#22316c", fontWeight: "600" }}>Visit/Service Date*</span>
-                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#0f172a", cursor: "pointer" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Visit/Service Date*</span>
+                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", cursor: "pointer" }} />
                   </div>
                 </div>
 
                 {/* Address */}
-                <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Address</span>
-                  <textarea value={selectedAsg.job.customer?.address || ""} readOnly rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed", resize: "none", fontFamily: "inherit" }} />
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Address</span>
+                  <textarea value={selectedAsg.job.customer?.address || ""} readOnly rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed", resize: "none", fontFamily: "inherit" }} />
                 </div>
 
                 {/* Instructions */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Admin Instructions */}
-                  <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Admin Instructions</span>
-                    <textarea value={selectedAsg.job.adminInstructions || ""} readOnly rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed", resize: "none", fontFamily: "inherit" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Admin Instructions</span>
+                    <textarea value={selectedAsg.job.adminInstructions || ""} readOnly rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed", resize: "none", fontFamily: "inherit" }} />
                   </div>
                   {/* Technician Instructions */}
-                  <div style={{ position: "relative", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", background: "#ffffff" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#ffffff", padding: "0 4px", fontSize: "11px", color: "#22316c", fontWeight: "600" }}>Technician Instructions</span>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#0f172a", resize: "none", fontFamily: "inherit" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Technician Instructions</span>
+                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                   </div>
                 </div>
 
                 {/* Customer Location */}
-                <div style={{ position: "relative", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", background: "#ffffff" }}>
-                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#ffffff", padding: "0 4px", fontSize: "11px", color: "#22316c", fontWeight: "600" }}>Customer Location</span>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Maps link or coordinates..." style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#0f172a" }} />
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Customer Location</span>
+                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Maps link or coordinates..." style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)" }} />
                 </div>
 
                 {/* Assigned For & Completed Status */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Assigned For */}
-                  <div style={{ position: "relative", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "6px 12px", background: "#f8fafc" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#f8fafc", padding: "0 4px", fontSize: "11px", color: "#64748b", fontWeight: "600" }}>Assigned For*</span>
-                    <input type="text" value={selectedAsg.job.assignFor || "DELIVERY"} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#64748b", cursor: "not-allowed" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Assigned For*</span>
+                    <input type="text" value={selectedAsg.job.assignFor || "DELIVERY"} readOnly style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
                   {/* Completed Status */}
-                  <div style={{ position: "relative", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", background: "#ffffff" }}>
-                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "#ffffff", padding: "0 4px", fontSize: "11px", color: "#22316c", fontWeight: "600" }}>Completed Status*</span>
-                    <select value={completedStatus} onChange={e => setCompletedStatus(e.target.value)} required style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "#0f172a", cursor: "pointer" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Completed Status*</span>
+                    <select value={completedStatus} onChange={e => setCompletedStatus(e.target.value)} required style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", cursor: "pointer" }}>
                       {getStatusOptions(selectedAsg.job.assignFor).map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
@@ -596,9 +461,9 @@ export default function TechnicianTasksPage() {
               </div>
 
               {/* Modal Footer */}
-              <div style={{ padding: "16px 20px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#f8fafc" }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #cbd5e1", borderRadius: "6px", color: "#475569", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#ffffff", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Update</button>
+              <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border-glass)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-input)" }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)", border: "none", borderRadius: "6px", color: "#ffffff", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Update</button>
               </div>
             </form>
           </div>

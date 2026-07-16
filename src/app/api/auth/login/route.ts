@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import * as bcrypt from "bcryptjs";
+import { signSession } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       username: employee.mobileNumber,
       mobileNumber: employee.mobileNumber,
       fullName: employee.fullName || employee.mobileNumber,
-      role: employee.role,
+      role: employee.role as "ADMIN" | "TECHNICIAN",
     };
 
     // Create a response
@@ -55,8 +56,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Set cookie (Base64 encoded for simple session representation)
-    const sessionString = Buffer.from(JSON.stringify(sessionData)).toString("base64");
+    // Set cryptographically signed session cookie
+    const sessionString = signSession(sessionData);
     
     response.cookies.set("ems_session", sessionString, {
       httpOnly: true,
@@ -75,3 +76,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

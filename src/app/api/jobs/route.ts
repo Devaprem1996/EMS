@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { serverCache } from "@/lib/cache";
+import { rateLimit } from "@/lib/rate-limiter";
 
 // GET /api/jobs - List jobs/enquiries
 export async function GET(req: NextRequest) {
   try {
+    // 1. Rate Limiting Check
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const limiter = rateLimit(ip, 120);
+    if (limiter.isLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429, 
+          headers: { "Retry-After": String(Math.ceil((limiter.reset - Date.now()) / 1000)) } 
+        }
+      );
+    }
+
     const session = getAuthSession(req);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,6 +29,13 @@ export async function GET(req: NextRequest) {
     const stage = searchParams.get("stage") || "ENQUIRY";
     const status = searchParams.get("status") || "all";
     const search = searchParams.get("search") || "";
+
+    // 2. Cache Hit Check
+    const cacheKey = `jobs:${stage}:${status}:${search}`;
+    const cachedJobs = serverCache.get(cacheKey);
+    if (cachedJobs) {
+      return NextResponse.json(cachedJobs);
+    }
 
     const whereClause: any = {
       currentStage: stage,
@@ -93,6 +115,9 @@ export async function GET(req: NextRequest) {
       })),
     }));
 
+    // Cache results for 1 minute
+    serverCache.set(cacheKey, mappedJobs, 60000);
+
     return NextResponse.json(mappedJobs);
   } catch (error) {
     console.error("[Jobs GET API] Error:", error);
@@ -103,6 +128,19 @@ export async function GET(req: NextRequest) {
 // POST /api/jobs - Create manual job/enquiry
 export async function POST(req: NextRequest) {
   try {
+    // 1. Rate Limiting Check
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const limiter = rateLimit(ip, 60);
+    if (limiter.isLimited) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429, 
+          headers: { "Retry-After": String(Math.ceil((limiter.reset - Date.now()) / 1000)) } 
+        }
+      );
+    }
+
     const session = getAuthSession(req);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -121,7 +159,8 @@ export async function POST(req: NextRequest) {
       requirementDetails,
       currentStatus,
       enquiryDate,
-      requestedDeliveryDate
+      requestedDeliveryDate,
+      stageData
     } = body;
 
     if (!contactPerson || !phone) {
@@ -153,6 +192,7 @@ export async function POST(req: NextRequest) {
           secondaryPhone: phone2 || customer.secondaryPhone,
           email: email || customer.email,
           address: address || customer.address,
+          updatedBy: session.userId,
         },
       });
     } else {
@@ -165,6 +205,8 @@ export async function POST(req: NextRequest) {
           secondaryPhone: phone2 || null,
           email: email || null,
           address: address || null,
+          createdBy: session.userId,
+          updatedBy: session.userId,
         },
       });
     }
@@ -202,6 +244,9 @@ export async function POST(req: NextRequest) {
         requirementDetails: requirementDetails || null,
         requestedDeliveryDate: requestedDeliveryDate ? new Date(requestedDeliveryDate) : null,
         createdAt: finalEnquiryDate,
+        stageData: stageData ? (typeof stageData === "string" ? stageData : JSON.stringify(stageData)) : null,
+        createdBy: session.userId,
+        updatedBy: session.userId,
       },
       include: {
         customer: true,
@@ -225,9 +270,13 @@ export async function POST(req: NextRequest) {
       assignments: [],
     };
 
+    // Invalidate cached job lists
+    serverCache.invalidatePattern(/^jobs:/);
+
     return NextResponse.json(mappedJob, { status: 201 });
   } catch (error) {
     console.error("[Jobs POST API] Error:", error);
     return NextResponse.json({ error: "Failed to create enquiry" }, { status: 500 });
   }
 }
+

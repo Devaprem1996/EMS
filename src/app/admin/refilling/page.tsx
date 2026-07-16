@@ -14,8 +14,13 @@ import {
   ChevronUp,
   MapPin,
   Clock,
-  RotateCcw
+  RotateCcw,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from "lucide-react";
+import { useConfig } from "@/context/ConfigContext";
 
 interface Customer {
   id: string;
@@ -66,7 +71,12 @@ interface Job {
   assignFor: string | null;
   assignments: Assignment[];
   followUps: FollowUp[];
+  stageData?: string | null;
   createdAt: string;
+  serialNumber?: string | null;
+  capacity?: string | null;
+  extinguisherType?: string | null;
+  itemDescription?: string | null;
 }
 
 interface Technician {
@@ -78,12 +88,19 @@ interface Technician {
 }
 
 export default function RefillingDashboardPage() {
+  const { config } = useConfig();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -111,6 +128,8 @@ export default function RefillingDashboardPage() {
   // Collapsible cards state in edit modal
   const [isStatusCardOpen, setIsStatusCardOpen] = useState(true);
   const [isFollowUpCardOpen, setIsFollowUpCardOpen] = useState(true);
+  const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(true);
+  const [isEquipmentCardOpen, setIsEquipmentCardOpen] = useState(true);
 
   // --- Form Fields ---
   // Update Refilling Form fields
@@ -120,6 +139,13 @@ export default function RefillingDashboardPage() {
   const [currentStatus, setCurrentStatus] = useState("Refilling Order Received");
   const [followUpDate, setFollowUpDate] = useState("");
   const [newRemarks, setNewRemarks] = useState("");
+
+  // Cylinder/Equipment Specs
+  const [serialNumber, setSerialNumber] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [extinguisherType, setExtinguisherType] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
+  const [requirementDetails, setRequirementDetails] = useState("");
 
   // Assign Technician Form fields
   const [visitDate, setVisitDate] = useState("");
@@ -154,9 +180,14 @@ export default function RefillingDashboardPage() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchData();
+      setCurrentPage(1); // Reset page on filters changes
     }, 300);
     return () => clearTimeout(delayDebounce);
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [yearFilter, selectedCategoryTab]);
 
   // Handle Edit Refilling Modal Open
   const handleOpenEdit = (job: Job) => {
@@ -169,6 +200,17 @@ export default function RefillingDashboardPage() {
     setNewRemarks("");
     setIsStatusCardOpen(true);
     setIsFollowUpCardOpen(true);
+    setIsCustomerCardOpen(true);
+    setIsEquipmentCardOpen(true);
+    
+    // Initialize cylinder specs
+    setSerialNumber(job.serialNumber || "");
+    setCapacity(job.capacity || "");
+    setExtinguisherType(job.extinguisherType || "");
+    setItemDescription(job.itemDescription || "");
+    setRequirementDetails(job.requirementDetails || "");
+
+    setCustomFieldsData(job.stageData ? JSON.parse(job.stageData) : {});
     setIsEditModalOpen(true);
   };
 
@@ -203,6 +245,11 @@ export default function RefillingDashboardPage() {
           currentStatus,
           followUpDate: followUpDate || null,
           newRemarks: newRemarks.trim() || null,
+          stageData: customFieldsData,
+          serialNumber: serialNumber || null,
+          capacity: capacity || null,
+          extinguisherType: extinguisherType || null,
+          itemDescription: itemDescription || null,
         }),
       });
 
@@ -298,11 +345,19 @@ export default function RefillingDashboardPage() {
 
   // Filter jobs by year locally
   const filteredJobs = jobs.filter(job => {
+    if (selectedCategoryTab !== "all" && job.requirementCategory !== selectedCategoryTab) return false;
     if (yearFilter === "all") return true;
     if (!job.amcDate) return false;
     const jobYear = new Date(job.amcDate).getFullYear().toString();
     return jobYear === yearFilter;
   });
+
+  // Client-side pagination calculations
+  const totalItems = filteredJobs.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
 
   return (
     <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
@@ -313,7 +368,9 @@ export default function RefillingDashboardPage() {
       {/* Page Title & Subtitle */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Refilling Control Center</h1>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {config?.stages?.REFILLING?.displayName || "Refilling"} Control Center
+          </h1>
           <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Manage high-pressure testing, gas refilling schedules, and compliance validation</p>
         </div>
       </div>
@@ -448,6 +505,30 @@ export default function RefillingDashboardPage() {
         </div>
       </div>
 
+      {/* Category Tabs filter */}
+      <div className="category-tabs-container" style={{ display: "flex", gap: "8px", marginBottom: "15px", overflowX: "auto", paddingBottom: "5px" }}>
+        {["all", ...(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"])].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategoryTab(cat)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "1px solid " + (selectedCategoryTab === cat ? "var(--primary)" : "rgba(255,255,255,0.06)"),
+              background: selectedCategoryTab === cat ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
+              color: selectedCategoryTab === cat ? "#fff" : "#94a3b8",
+              cursor: "pointer",
+              fontSize: "12.5px",
+              fontWeight: "600",
+              boxShadow: selectedCategoryTab === cat ? "0 4px 10px rgba(var(--primary-rgb), 0.2)" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            {cat === "all" ? "All Types" : cat}
+          </button>
+        ))}
+      </div>
+
       {/* Data Table */}
       <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
@@ -478,7 +559,7 @@ export default function RefillingDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredJobs.map((job, index) => {
+              {paginatedJobs.map((job, index) => {
                 const statusDotClass = 
                   job.currentStatus === "Order Delivered" ? "pulse-green" :
                   job.currentStatus === "Order Confirmed" ? "pulse-blue" :
@@ -491,8 +572,15 @@ export default function RefillingDashboardPage() {
 
                 return (
                   <tr key={job.id}>
-                    <td style={{ color: "#64748b", fontWeight: "600" }}>{index + 1}</td>
-                    <td style={{ fontWeight: "600", color: "#fff" }}>{job.customer?.companyName || "N/A"}</td>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
+                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
+                      <div>{job.customer?.companyName || "N/A"}</div>
+                      {job.serialNumber && (
+                        <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px", fontWeight: "normal" }}>
+                          SN: <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>{job.serialNumber}</span> {job.extinguisherType && `(${job.extinguisherType}${job.capacity ? ` - ${job.capacity}` : ""})`}
+                        </div>
+                      )}
+                    </td>
                     <td>{job.customer?.contactPerson}</td>
                     <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
                     <td>
@@ -568,115 +656,259 @@ export default function RefillingDashboardPage() {
         )}
       </div>
 
+      {/* Pagination Footer */}
+      {!loading && totalItems > 0 && (
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className="pagination-info" style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+          </span>
+          <div className="pagination-controls" style={{ display: "flex", gap: "5px" }}>
+            <button 
+              onClick={() => setCurrentPage(1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              title="Previous Page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            
+            <span style={{ fontSize: "13px", color: "var(--text-primary)", minWidth: "80px", textAlign: "center", alignSelf: "center" }}>
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Next Page"
+            >
+              <ChevronRight size={14} />
+            </button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              title="Last Page"
+            >
+              <ChevronsRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Update Refilling Modal */}
       {isEditModalOpen && selectedJob && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
-          <div className="slide-over-card">
+          <div className="slide-over-card theme-modal-card">
             
-            <div className="slide-over-header">
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Update Refilling</h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
+            <div className="slide-over-header theme-modal-card-header">
+              <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold" }}>Update Refilling Details</h2>
+              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
             </div>
 
             <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body" style={{ gap: "15px" }}>
+              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
                 
-                {/* Collapsible Card 1: Enquiry Status & Dates */}
-                <div style={{ border: "1px solid #2d2d3a", borderRadius: "8px", overflow: "hidden" }}>
+                {/* Card 1: Customer Info */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
                   <div 
-                    onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
-                    style={{ padding: "12px 15px", background: "#13131c", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Calendar size={18} style={{ color: "#f59e0b" }} />
-                      <span style={{ fontWeight: "600", fontSize: "14px" }}>Enquiry Status & Dates</span>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Customer & Site Information</span>
                     </div>
-                    {isStatusCardOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isCustomerCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </div>
+
+                  {isCustomerCardOpen && (
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Client (Company Name)</label>
+                          <input type="text" value={selectedJob.customer?.companyName || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Person Name</label>
+                          <input type="text" value={selectedJob.customer?.contactPerson || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 1</label>
+                          <input type="text" value={selectedJob.customer?.phone || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 2</label>
+                          <input type="text" value={selectedJob.customer?.phone2 || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Email Address</label>
+                        <input type="text" value={selectedJob.customer?.email || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Site Address</label>
+                        <textarea value={selectedJob.customer?.address || "No site address logged."} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 2: Equipment / Cylinder Details */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                  <div 
+                    onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Cylinder & Equipment Specifications</span>
+                    </div>
+                    {isEquipmentCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </div>
+
+                  {isEquipmentCardOpen && (
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Tag / Serial No</label>
+                          <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. CYL-99823" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Extinguisher Type</label>
+                          <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                            <option value="">Select Type</option>
+                            <option value="CO2">CO2</option>
+                            <option value="DCP">DCP</option>
+                            <option value="Water">Water</option>
+                            <option value="Foam">Foam</option>
+                            <option value="Clean Agent">Clean Agent</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Capacity</label>
+                          <input type="text" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g. 2 Kg, 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Item Description</label>
+                          <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Fire Extinguisher DCP 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 3: Refilling Status & AMC Dates */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                  <div 
+                    onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Calendar size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Refilling Status & AMC Dates</span>
+                    </div>
+                    {isStatusCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </div>
 
                   {isStatusCardOpen && (
-                    <div style={{ padding: "15px", background: "#181822", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #2d2d3a" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client (Company Name)*</label>
-                        <input type="text" value={selectedJob.customer?.companyName || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                      <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Person Name*</label>
-                          <input type="text" value={selectedJob.customer?.contactPerson || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Delivered Date*</label>
+                          <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 1*</label>
-                          <input type="text" value={selectedJob.customer?.phone || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                        <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Delivered Date*</label>
-                          <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>No. of Years*</label>
-                          <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>No. of Years*</label>
+                          <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                               <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
                             ))}
                           </select>
                         </div>
                       </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Refilling Date*</label>
-                        <input type="date" value={calculatedAmcDate} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#10b981", fontWeight: "bold", cursor: "not-allowed" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Current Year Refilling Status*</label>
-                        <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                          <option value="Refilling Order Received">Refilling Order Received</option>
-                          <option value="Quotation Sent">Quotation Sent</option>
-                          <option value="Follow-up In Progress">Follow-up In Progress</option>
-                          <option value="Order Confirmed">Order Confirmed</option>
-                          <option value="Order Delivered">Order Delivered</option>
-                          <option value="Order Dropped">Order Dropped</option>
-                        </select>
+                      <div className="responsive-form-grid">
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Next Refilling Date (Calculated)*</label>
+                          <input type="date" value={calculatedAmcDate} readOnly style={{ width: "100%", padding: "7px", borderRadius: "6px", color: "#10b981", fontWeight: "bold", cursor: "not-allowed" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Current Refilling Status*</label>
+                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                            <option value="Refilling Order Received">Refilling Order Received</option>
+                            <option value="Quotation Sent">Quotation Sent</option>
+                            <option value="Follow-up In Progress">Follow-up In Progress</option>
+                            <option value="Order Confirmed">Order Confirmed</option>
+                            <option value="Order Delivered">Order Delivered</option>
+                            <option value="Order Dropped">Order Dropped</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Collapsible Card 2: Follow Up */}
-                <div style={{ border: "1px solid #2d2d3a", borderRadius: "8px", overflow: "hidden" }}>
+                {/* Card 4: Requirement Notes Context */}
+                {requirementDetails && (
+                  <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                    <div style={{ padding: "10px 12px", background: "var(--bg-input)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <MessageSquare size={16} style={{ color: "var(--accent)" }} />
+                        <span style={{ fontWeight: "600", fontSize: "13px" }}>Original Enquiry Context</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: "12px", borderTop: "1px solid var(--border-glass)" }}>
+                      <textarea value={requirementDetails} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Card 5: Follow Up */}
+                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
                   <div 
                     onClick={() => setIsFollowUpCardOpen(!isFollowUpCardOpen)}
-                    style={{ padding: "12px 15px", background: "#13131c", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <MessageSquare size={18} style={{ color: "#f59e0b" }} />
-                      <span style={{ fontWeight: "600", fontSize: "14px" }}>Follow Up</span>
+                      <MessageSquare size={16} style={{ color: "var(--accent)" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Follow Up Notes</span>
                     </div>
-                    {isFollowUpCardOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isFollowUpCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </div>
 
                   {isFollowUpCardOpen && (
-                    <div style={{ padding: "15px", background: "#181822", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #2d2d3a" }}>
+                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                       <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Follow up Date*</label>
-                        <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Scheduled Follow-up Date</label>
+                        <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                       </div>
                       <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Followup Notes / Remarks*</label>
-                        <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Add Remarks / New Note</label>
+                        <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
                       </div>
                       
-                      <div style={{ marginTop: "10px" }}>
-                        <h4 style={{ fontSize: "13px", fontWeight: "bold", borderBottom: "1px solid #2d2d3a", paddingBottom: "6px", marginBottom: "8px" }}>Followup History</h4>
-                        <div style={{ maxHeight: "150px", overflowY: "auto", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ marginTop: "5px" }}>
+                        <h4 style={{ fontSize: "12px", fontWeight: "bold", borderBottom: "1px solid var(--border-glass)", paddingBottom: "4px", marginBottom: "6px" }}>Followup History</h4>
+                        <div style={{ maxHeight: "150px", overflowY: "auto", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
                           {selectedJob.followUps.length === 0 ? (
-                            <div style={{ color: "#718096", fontSize: "12px" }}>No prior follow-up history logs.</div>
+                            <div style={{ color: "var(--text-muted)", fontSize: "12px" }}>No prior follow-up history logs.</div>
                           ) : (
                             selectedJob.followUps.map(f => (
-                              <div key={f.id} style={{ fontSize: "12px", borderBottom: "1px solid #1a1a24", paddingBottom: "6px" }}>
-                                <span style={{ color: "#ff4d80", fontWeight: "500" }}>{formatDate(f.createdAt)}</span>: {f.remarks}
+                              <div key={f.id} style={{ fontSize: "12.5px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "4px" }}>
+                                <span style={{ color: "var(--accent)", fontWeight: "500" }}>{formatDate(f.createdAt)}</span>: {f.remarks}
                               </div>
                             ))
                           )}
@@ -686,12 +918,44 @@ export default function RefillingDashboardPage() {
                   )}
                 </div>
 
+                {/* Custom Fields in Edit modal */}
+                {config?.stages?.REFILLING?.fields && config.stages.REFILLING.fields.length > 0 && (
+                  <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-glass)", borderRadius: "8px" }}>
+                    <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "8px" }}>Custom Fields</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {config.stages.REFILLING.fields.map(field => {
+                        const val = customFieldsData[field.key] ?? "";
+                        const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
+                        return (
+                          <div key={field.key}>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>
+                              {field.label} {field.required ? "*" : ""}
+                            </label>
+                            {field.type === "boolean" ? (
+                              <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
+                            ) : field.type === "select" ? (
+                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                                <option value="">SELECT</option>
+                                {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : field.type === "multi-select" ? (
+                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                            ) : (
+                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               {/* Modal Footer */}
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
+              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Update Details</button>
               </div>
             </form>
           </div>
@@ -701,84 +965,84 @@ export default function RefillingDashboardPage() {
       {/* Assign Technician Modal */}
       {isAssignModalOpen && selectedJob && (
         <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
-          <div className="slide-over-card">
+          <div className="slide-over-card theme-modal-card">
             
-            <div className="slide-over-header">
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Assign Technician</h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
+            <div className="slide-over-header theme-modal-card-header">
+              <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold" }}>Assign Technician</h2>
+              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
             </div>
 
             <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body">
+              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
                 
-                {/* Client info */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#111116", padding: "10px", borderRadius: "6px", border: "1px solid #1a1a24" }}>
+                {/* Client info summary */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", background: "var(--bg-input)", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-glass)" }}>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CLIENT NAME*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CLIENT NAME</span>
                     <span style={{ fontSize: "12px", fontWeight: "bold" }}>{selectedJob.customer?.companyName || "N/A"}</span>
                   </div>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT PERSON*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT PERSON</span>
                     <span style={{ fontSize: "12px" }}>{selectedJob.customer?.contactPerson}</span>
                   </div>
                   <div>
-                    <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT NUMBER*</span>
+                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT NUMBER</span>
                     <span style={{ fontSize: "12px" }}>{selectedJob.customer?.phone}</span>
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div className="responsive-form-grid">
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Visit/Service Date *</label>
-                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Visit/Service Date *</label>
+                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Assign For</label>
-                    <input type="text" value="REFILLING" readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address</label>
-                  <textarea value={selectedJob.customer?.address || ""} readOnly rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed", resize: "none" }} />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Admin Instructions</label>
-                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Technician Instructions</label>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Assign For</label>
+                    <input type="text" value="REFILLING" readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Location</label>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Coordinates or URL..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Address</label>
+                  <textarea value={selectedJob.customer?.address || ""} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                </div>
+
+                <div className="responsive-form-grid">
+                  <div>
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Admin Instructions</label>
+                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Technician Instructions</label>
+                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "6px", fontWeight: "bold" }}>Assign REFILLING To (Technicians) *</label>
-                  <div style={{ background: "#111116", border: "1px solid #2d2d3a", borderRadius: "8px", padding: "10px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Customer Location</label>
+                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Coordinates or URL..." style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "4px", fontWeight: "bold" }}>Assign REFILLING To (Technicians) *</label>
+                  <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "8px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                     {technicians.length === 0 ? (
-                      <div style={{ fontSize: "12px", color: "#718096" }}>No active technicians found.</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>No active technicians found.</div>
                     ) : (
                       technicians.map(tech => (
-                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
+                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
                           <input
                             type="checkbox"
                             checked={selectedTechIds.includes(tech.id)}
                             onChange={() => handleTechToggle(tech.id)}
-                            style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                            style={{ width: "15px", height: "15px", cursor: "pointer" }}
                           />
                           <span>{tech.fullName} ({tech.phone})</span>
                         </label>
                       ))
                     )}
                   </div>
-                  <p style={{ fontSize: "11px", color: "#ff6c37", marginTop: "8px", lineHeight: "1.4", marginBlockEnd: 0 }}>
+                  <p style={{ fontSize: "10.5px", color: "#ff6c37", marginTop: "6px", lineHeight: "1.3", marginBlockEnd: 0 }}>
                     * Deselect existing technician (if any) for new assignment
                     <br />* Delete existing assignment from technician view screen
                   </p>
@@ -786,9 +1050,9 @@ export default function RefillingDashboardPage() {
 
               </div>
 
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff6c37", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Assign</button>
+              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Assign</button>
               </div>
             </form>
           </div>

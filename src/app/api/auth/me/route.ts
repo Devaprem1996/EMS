@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthSession } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const sessionCookie = req.cookies.get("ems_session");
+    const sessionData = getAuthSession(req);
 
-    if (!sessionCookie || !sessionCookie.value) {
+    if (!sessionData) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
-
-    // Decode session data
-    const decodedString = Buffer.from(sessionCookie.value, "base64").toString("utf-8");
-    const sessionData = JSON.parse(decodedString);
 
     return NextResponse.json({
       authenticated: true,
@@ -27,3 +24,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 }
+

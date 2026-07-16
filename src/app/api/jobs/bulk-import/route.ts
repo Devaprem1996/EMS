@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
-import { EMS_CONFIG } from "@/config/ems-config";
+import { getDbConfig } from "@/lib/config-loader";
+import { invalidateJobsAndTasks } from "@/lib/cache";
+
 
 function parseCSVDate(dateStr: string | null | undefined): Date | null {
   if (!dateStr) return null;
@@ -65,6 +67,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid data format: rows must be an array" }, { status: 400 });
     }
 
+    const dbConfig = await getDbConfig();
+
     const results = {
       created: 0,
       updated: 0,
@@ -98,7 +102,7 @@ export async function POST(req: NextRequest) {
       try {
         // Map raw headers to keys based on ems-config
         const mappedRow: any = {};
-        const mappings = EMS_CONFIG.importMappings;
+        const mappings = dbConfig.importMappings;
 
         for (const [key, aliases] of Object.entries(mappings)) {
           const matchKey = Object.keys(rawRow).find(k => 
@@ -143,6 +147,7 @@ export async function POST(req: NextRequest) {
           if (mappedRow.address && mappedRow.address !== customer.address) updateData.address = mappedRow.address;
           
           if (Object.keys(updateData).length > 0) {
+            updateData.updatedBy = session.userId;
             customer = await prisma.customer.update({
               where: { id: customer.id },
               data: updateData,
@@ -158,6 +163,8 @@ export async function POST(req: NextRequest) {
               secondaryPhone: mappedRow.phone2 || null,
               email: mappedRow.email || null,
               address: mappedRow.address || null,
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
         }
@@ -231,6 +238,8 @@ export async function POST(req: NextRequest) {
             jobUpdateData.amcDate = calculatedAmcDate;
           }
 
+          jobUpdateData.updatedBy = session.userId;
+
           const updatedJob = await prisma.ticket.update({
             where: { id: existingJob.id },
             data: jobUpdateData,
@@ -244,6 +253,8 @@ export async function POST(req: NextRequest) {
                 ticketId: updatedJob.id,
                 employeeId: techId,
                 status: "ASSIGNED",
+                createdBy: session.userId,
+                updatedBy: session.userId,
               })),
             });
           }
@@ -254,6 +265,8 @@ export async function POST(req: NextRequest) {
               data: {
                 ticketId: updatedJob.id,
                 remarks: mappedRow.followUpRemarks,
+                createdBy: session.userId,
+                updatedBy: session.userId,
               },
             });
           }
@@ -268,6 +281,8 @@ export async function POST(req: NextRequest) {
               fromStatus: existingJob.currentStatus,
               toStatus: updatedJob.currentStatus,
               remarks: "Job updated via Bulk Import",
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
 
@@ -319,6 +334,8 @@ export async function POST(req: NextRequest) {
               technicianNotes: mappedRow.technicianInstructions || null,
               locationCoordinates: mappedRow.customerLocation || null,
               createdAt: enqDate,
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
 
@@ -330,6 +347,8 @@ export async function POST(req: NextRequest) {
                 employeeId: techId,
                 status: "ASSIGNED",
                 assignFor: finalStage === "SERVICES" ? "SERVICE" : finalStage === "REFILLING" ? "REFILLING" : null,
+                createdBy: session.userId,
+                updatedBy: session.userId,
               })),
             });
           }
@@ -340,6 +359,8 @@ export async function POST(req: NextRequest) {
               data: {
                 ticketId: newJob.id,
                 remarks: mappedRow.followUpRemarks,
+                createdBy: session.userId,
+                updatedBy: session.userId,
               },
             });
           }
@@ -356,6 +377,8 @@ export async function POST(req: NextRequest) {
               remarks: finalStage !== "ENQUIRY"
                 ? `Job created via Bulk Import and auto-routed to ${finalStage}`
                 : "Job created via Bulk Import",
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
 
@@ -366,6 +389,9 @@ export async function POST(req: NextRequest) {
         results.errors.push(`Row ${index + 1} (${rawRow.customerName || rawRow["Client Name"] || "Unknown"}): ${err.message}`);
       }
     }
+
+    // Invalidate caches
+    invalidateJobsAndTasks();
 
     return NextResponse.json(results);
   } catch (error) {

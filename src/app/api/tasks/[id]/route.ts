@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
+import { invalidateJobsAndTasks } from "@/lib/cache";
 
 // PUT /api/tasks/[id] - Update a specific technician task/assignment status and job instructions
 export async function PUT(
@@ -46,6 +47,7 @@ export async function PUT(
         data: {
           status: status !== undefined ? status : undefined,
           completedAt: status === "Completed" ? new Date() : null,
+          updatedBy: session.userId,
         },
       });
 
@@ -56,6 +58,7 @@ export async function PUT(
         technicianNotes: technicianInstructions !== undefined ? technicianInstructions : undefined,
         locationCoordinates: customerLocation !== undefined ? customerLocation : undefined,
       };
+      ticketUpdateData.updatedBy = session.userId;
 
       // AUTO-TRANSITION: "Assign For Service" → move ticket from REFILLING to SERVICES stage
       if (status === "Assign For Service") {
@@ -73,6 +76,8 @@ export async function PUT(
               fromStage: "REFILLING",
               toStage: "SERVICES",
               remarks: "Auto-transitioned: Technician set status to 'Assign For Service'",
+              createdBy: session.userId,
+              updatedBy: session.userId,
             },
           });
         }
@@ -91,6 +96,9 @@ export async function PUT(
       ...updatedAssignment,
       technicianId: updatedAssignment.employeeId,
     };
+
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
 
     return NextResponse.json(mappedAsg);
   } catch (error) {
@@ -130,8 +138,12 @@ export async function DELETE(
       where: { id },
       data: {
         deletedAt: new Date(),
+        updatedBy: session.userId,
       },
     });
+
+    // Invalidate cached lists
+    invalidateJobsAndTasks();
 
     return NextResponse.json({ success: true, deletedId: deletedAsg.id });
   } catch (error) {
@@ -139,3 +151,4 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
   }
 }
+

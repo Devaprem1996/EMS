@@ -18,6 +18,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 3D Tilt State
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((centerY - y) / centerY) * 8; // max 8 degrees tilt
+    const rotateY = ((x - centerX) / centerX) * 8;
+
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
   // Check if already authenticated, if so, redirect immediately
   useEffect(() => {
     async function checkSession() {
@@ -46,7 +68,7 @@ export default function LoginPage() {
       }
     }
     checkSession();
-  }, [router]);
+  }, [router, config]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,125 +110,132 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-wrapper">
-      {/* Background Animated Glows */}
-      <div className="glow-spot glow-spot-1"></div>
-      <div className="glow-spot glow-spot-2"></div>
-
-      {/* Left Visual Pane (Tech Background & Dynamic Slogan) */}
-      <div className="visual-pane">
+    <div className="login-wrapper premium-fullscreen">
+      {/* Cinematic Fullscreen Background Image */}
+      <div className="cinematic-bg-container">
         <img
-          className="visual-image"
-          src="/login-bg.png"
-          alt="Technician inspecting fire extinguisher cylinder"
+          src="/login-bg-premium.png"
+          className="cinematic-bg-image"
+          alt="Premium 3D background"
         />
-        <div className="visual-overlay"></div>
-        
-        <div className="visual-content">
-          <div className="brand-badge">
+        <div className="cinematic-bg-overlay"></div>
+      </div>
+
+      <div className="fullscreen-content-container">
+        {/* Left Column: Brand Hero Text */}
+        <div className="hero-pane-3d">
+          <div className="brand-badge-3d">
             <Flame size={14} fill="currentColor" />
             Fire Safety Management
           </div>
-          <h1 className="visual-title">
+          <h1 className="hero-title-3d">
             Streamlining Compliance & Maintenance.
           </h1>
-          <p className="visual-desc">
+          <p className="hero-desc-3d">
             A comprehensive, customizable ERP tool designed to automate cylinder tracking, pressure test validation, refilling schedules, and field inspections.
           </p>
         </div>
-      </div>
 
-      {/* Right Form Pane */}
-      <div className="form-pane">
-        <div className="login-card">
-          <div className="brand-header">
-            <div className="brand-logo-container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              {config?.brand?.logoUrl ? (
-                <img src={config.brand.logoUrl} alt={config.brand.title || "Safeway"} style={{ maxHeight: "48px", maxWidth: "80px", objectFit: "contain", borderRadius: "6px" }} />
-              ) : (
-                <Flame size={32} fill="currentColor" />
-              )}
+        {/* Right Column: Glass Login Card */}
+        <div className="form-pane-3d">
+          <div 
+            className="login-card-3d"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{
+              transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(10px)`,
+              transition: tilt.x === 0 && tilt.y === 0 ? "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" : "none"
+            }}
+          >
+            <div className="brand-header">
+              <div className="brand-logo-container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                {config?.brand?.logoUrl ? (
+                  <img src={config.brand.logoUrl} alt={config.brand.title || "Safeway"} style={{ maxHeight: "48px", maxWidth: "80px", objectFit: "contain", borderRadius: "6px" }} />
+                ) : (
+                  <Flame size={32} fill="currentColor" />
+                )}
+              </div>
+              <h2 className="brand-name">{config?.brand?.title || "Safeway"}</h2>
+              <p className="brand-tagline">{config?.brand?.subtitle || "Enquiry Management System"}</p>
             </div>
-            <h2 className="brand-name">{config?.brand?.title || "Safeway"}</h2>
-            <p className="brand-tagline">{config?.brand?.subtitle || "Enquiry Management System"}</p>
+
+            {error && (
+              <div className="alert-banner">
+                <ShieldAlert size={18} className="alert-icon" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              {/* Mobile Number Input */}
+              <div className="form-group">
+                <label htmlFor="username" className="form-label">
+                  Mobile Number
+                </label>
+                <div className="input-container">
+                  <input
+                    type="tel"
+                    id="username"
+                    className="form-input"
+                    placeholder="Enter registered mobile"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <Phone size={18} className="input-icon" />
+                </div>
+              </div>
+
+              {/* Password Input */}
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
+                <div className="input-container">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                  <Lock size={18} className="input-icon" />
+                  <button
+                    type="button"
+                    className="toggle-password-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={loading || !username || !password}
+              >
+                {loading ? (
+                  <>
+                    <div className="spinner"></div>
+                    Authenticating...
+                  </>
+                ) : (
+                  <>
+                    Log In
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
-
-          {error && (
-            <div className="alert-banner">
-              <ShieldAlert size={18} className="alert-icon" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            {/* Mobile Number Input */}
-            <div className="form-group">
-              <label htmlFor="username" className="form-label">
-                Mobile Number
-              </label>
-              <div className="input-container">
-                <input
-                  type="tel"
-                  id="username"
-                  className="form-input"
-                  placeholder="Enter registered mobile"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-                <Phone size={18} className="input-icon" />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <div className="input-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  className="form-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-                <Lock size={18} className="input-icon" />
-                <button
-                  type="button"
-                  className="toggle-password-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={loading || !username || !password}
-            >
-              {loading ? (
-                <>
-                  <div className="spinner"></div>
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  Log In
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
         </div>
       </div>
     </div>

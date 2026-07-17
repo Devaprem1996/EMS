@@ -23,6 +23,7 @@ export async function PUT(
       adminInstructions,
       technicianInstructions,
       customerLocation,
+      signature,
     } = body;
 
     const asgWhere: any = { id, deletedAt: null };
@@ -65,6 +66,22 @@ export async function PUT(
         locationCoordinates: customerLocation !== undefined ? customerLocation : undefined,
       };
       ticketUpdateData.updatedBy = session.userId;
+
+      if (signature !== undefined) {
+        // Fetch current ticket stageData to merge signature
+        const currentTicket = await tx.ticket.findUnique({
+          where: { id: assignment.ticketId },
+          select: { stageData: true }
+        });
+        let currentData: any = {};
+        if (currentTicket && currentTicket.stageData) {
+          try {
+            currentData = JSON.parse(currentTicket.stageData);
+          } catch (e) {}
+        }
+        currentData.signature = signature;
+        ticketUpdateData.stageData = JSON.stringify(currentData);
+      }
 
       if (ticket) {
         // Sync parent ticket status based on assignment status

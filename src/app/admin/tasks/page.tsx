@@ -45,6 +45,7 @@ interface Job {
   customerLocation: string | null;
   assignFor: string | null;
   assignments: SiblingAssignment[];
+  stageData?: string | null;
 }
 
 interface Assignment {
@@ -85,6 +86,7 @@ export default function TechnicianViewPage() {
   const [technicianInstructions, setTechnicianInstructions] = useState("");
   const [customerLocation, setCustomerLocation] = useState("");
   const [completedStatus, setCompletedStatus] = useState("Pending");
+  const [existingSignature, setExistingSignature] = useState<string | null>(null);
 
   // Fetch data
   const fetchData = async () => {
@@ -124,6 +126,17 @@ export default function TechnicianViewPage() {
     // Map initial ASSIGNED status to Pending for UI consistency
     const currentAsgStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
     setCompletedStatus(currentAsgStatus);
+
+    let existingSign: string | null = null;
+    if (asg.job.stageData) {
+      try {
+        const parsed = JSON.parse(asg.job.stageData);
+        if (parsed.signature) {
+          existingSign = parsed.signature;
+        }
+      } catch (e) {}
+    }
+    setExistingSignature(existingSign);
     
     setIsModalOpen(true);
   };
@@ -528,6 +541,16 @@ export default function TechnicianViewPage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Dynamic Signature Block */}
+                {existingSignature && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Signature Preview</label>
+                    <div style={{ padding: "10px", background: "#0c0c10", borderRadius: "8px", border: "1px dashed #2d2d3a", display: "flex", justifyContent: "center" }}>
+                      <img src={existingSignature} alt="Customer Signature" style={{ maxHeight: "100px", maxWidth: "100%", objectFit: "contain" }} />
+                    </div>
+                  </div>
+                )}
 
               </div>
 

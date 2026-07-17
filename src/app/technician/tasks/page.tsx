@@ -13,6 +13,129 @@ import {
   ChevronRight,
   ChevronsRight
 } from "lucide-react";
+import { useRef } from "react";
+
+function SignaturePad({ onSave, onClear }: { onSave: (base64: string) => void; onClear: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.strokeStyle = "#ff4d80"; // Premium Accent pink-red
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+  }, []);
+
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    
+    // Support scale difference between visual bounding rect and canvas resolution
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    if ("touches" in e) {
+      if (e.touches.length === 0) return { x: 0, y: 0 };
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    } else {
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    }
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { x, y } = getCoordinates(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    isDrawingRef.current = true;
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { x, y } = getCoordinates(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+  };
+
+  const stopDrawing = () => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      onSave(canvas.toDataURL("image/png"));
+    }
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onClear();
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ border: "1px dashed var(--border-glass)", borderRadius: "8px", background: "#0c0c10", overflow: "hidden", position: "relative" }}>
+        <canvas
+          ref={canvasRef}
+          width={580}
+          height={150}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          style={{ display: "block", cursor: "crosshair", width: "100%", height: "150px" }}
+        />
+        <button
+          type="button"
+          onClick={clear}
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            padding: "4px 8px",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid var(--border-glass)",
+            borderRadius: "4px",
+            color: "var(--text-secondary)",
+            fontSize: "11px",
+            cursor: "pointer"
+          }}
+        >
+          Clear Pad
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface Customer {
   id: string;
@@ -35,6 +158,7 @@ interface Job {
   technicianInstructions: string | null;
   customerLocation: string | null;
   assignFor: string | null;
+  stageData?: string | null;
 }
 
 interface Assignment {
@@ -74,6 +198,8 @@ export default function TechnicianTasksPage() {
   const [technicianInstructions, setTechnicianInstructions] = useState("");
   const [customerLocation, setCustomerLocation] = useState("");
   const [completedStatus, setCompletedStatus] = useState("Pending");
+  const [signature, setSignature] = useState<string | null>(null);
+  const [existingSignature, setExistingSignature] = useState<string | null>(null);
 
   // Fetch data
   const fetchData = async () => {
@@ -108,6 +234,18 @@ export default function TechnicianTasksPage() {
     // Map initial ASSIGNED status to Pending for UI consistency
     const currentAsgStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
     setCompletedStatus(currentAsgStatus);
+
+    let existingSign: string | null = null;
+    if (asg.job.stageData) {
+      try {
+        const parsed = JSON.parse(asg.job.stageData);
+        if (parsed.signature) {
+          existingSign = parsed.signature;
+        }
+      } catch (e) {}
+    }
+    setExistingSignature(existingSign);
+    setSignature(null);
     
     setIsModalOpen(true);
   };
@@ -126,6 +264,7 @@ export default function TechnicianTasksPage() {
           visitDate: visitDate || null,
           technicianInstructions,
           customerLocation,
+          signature: signature || undefined,
         }),
       });
 
@@ -501,6 +640,23 @@ export default function TechnicianTasksPage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Dynamic Signature Block */}
+                {existingSignature ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>Customer Signature Preview</label>
+                    <div style={{ padding: "10px", background: "#0c0c10", borderRadius: "8px", border: "1px dashed var(--border-glass)", display: "flex", justifyContent: "center" }}>
+                      <img src={existingSignature} alt="Customer Signature" style={{ maxHeight: "100px", maxWidth: "100%", objectFit: "contain" }} />
+                    </div>
+                  </div>
+                ) : (
+                  completedStatus === "Completed" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "12px", color: "var(--accent)", fontWeight: "600" }}>Customer Hand-off Signature *</label>
+                      <SignaturePad onSave={setSignature} onClear={() => setSignature(null)} />
+                    </div>
+                  )
+                )}
 
               </div>
 

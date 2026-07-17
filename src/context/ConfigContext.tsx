@@ -7,6 +7,8 @@ interface ConfigContextType {
   config: EmsConfig | null;
   loading: boolean;
   updateConfig: (newConfig: EmsConfig) => Promise<boolean>;
+  themeMode: "light" | "dark";
+  toggleTheme: () => void;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -24,6 +26,16 @@ function hexToRgb(hex: string): string | null {
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<EmsConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("dark");
+
+  // Load initial local preference on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("theme-mode") as "light" | "dark" | null;
+    if (saved) {
+      setThemeMode(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  }, []);
 
   // Fetch configuration on mount
   useEffect(() => {
@@ -48,7 +60,9 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     if (config?.brand?.theme) {
       let primaryHex = config.brand.theme.primaryColor || "#ffffff";
       const accentHex = config.brand.theme.accentColor || "#ff3300";
-      const isDarkMode = config.brand.theme.darkTheme !== false;
+      
+      const savedPref = localStorage.getItem("theme-mode") as "light" | "dark" | null;
+      const isDarkMode = savedPref ? (savedPref === "dark") : (config.brand.theme.darkTheme !== false);
 
       // Prevent white-on-white visual collision in light mode
       if (!isDarkMode && (primaryHex.toLowerCase() === "#ffffff" || primaryHex.toLowerCase() === "#fff")) {
@@ -68,14 +82,19 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         document.documentElement.style.setProperty("--accent-rgb", accentRgb);
       }
 
-      // Set data-theme attribute for CSS mapping selector overrides
-      if (isDarkMode) {
-        document.documentElement.setAttribute("data-theme", "dark");
-      } else {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
+      // Synchronize data-theme attribute and React state
+      const targetTheme = isDarkMode ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", targetTheme);
+      setThemeMode(targetTheme);
     }
   }, [config]);
+
+  const toggleTheme = () => {
+    const newTheme = themeMode === "dark" ? "light" : "dark";
+    localStorage.setItem("theme-mode", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+    setThemeMode(newTheme);
+  };
 
   const updateConfig = async (newConfig: EmsConfig): Promise<boolean> => {
     try {
@@ -97,7 +116,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ConfigContext.Provider value={{ config, loading, updateConfig }}>
+    <ConfigContext.Provider value={{ config, loading, updateConfig, themeMode, toggleTheme }}>
       {children}
     </ConfigContext.Provider>
   );

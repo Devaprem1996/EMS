@@ -2501,4 +2501,13 @@ button:active:not(:disabled), .btn:active:not(:disabled) {
 :root[data-theme="light"] .theme-toggle-floating-btn:hover {
   background: rgba(15, 23, 42, 0.08) !important;
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Light Theme Overrides for Table Pagination Footers */
+:root[data-theme="light"] .pagination-container {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+:root[data-theme="light"] .pagination-info {
+  color: var(--text-secondary) !important;
 }

@@ -120,9 +120,23 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
             className="header-logout-btn" 
             title="Log Out"
             aria-label="Log Out"
-            style={{ padding: "6px", background: "none", border: "none", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center" }}
+            style={{ 
+              padding: "6px 12px", 
+              background: "rgba(239, 68, 68, 0.08)", 
+              border: "1px solid rgba(239, 68, 68, 0.15)", 
+              borderRadius: "6px",
+              color: "#ef4444", 
+              cursor: "pointer", 
+              display: "flex", 
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "12px",
+              fontWeight: "600",
+              marginLeft: "8px"
+            }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
+            <span>Log Out</span>
           </button>
 
           {/* Mobile hamburger menu toggle */}
@@ -155,6 +169,34 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
                 </Link>
               );
             })}
+
+            {/* Logout item in mobile drawer */}
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="top-nav-link"
+              style={{ 
+                width: "100%", 
+                textAlign: "left", 
+                background: "rgba(239, 68, 68, 0.08)", 
+                border: "1px solid rgba(239, 68, 68, 0.15)", 
+                borderRadius: "6px",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.5rem", 
+                padding: "0.5rem 1rem", 
+                color: "#ef4444",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "13px",
+                marginTop: "4px"
+              }}
+            >
+              <LogOut size={14} />
+              <span>Log Out</span>
+            </button>
           </nav>
         )}
       </header>

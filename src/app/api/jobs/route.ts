@@ -25,13 +25,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const tenantId = session.tenantId;
+
     const { searchParams } = new URL(req.url);
     const stage = searchParams.get("stage") || "ENQUIRY";
     const status = searchParams.get("status") || "all";
     const search = searchParams.get("search") || "";
 
     // 2. Cache Hit Check
-    const cacheKey = `jobs:${stage}:${status}:${search}`;
+    const cacheKey = tenantId ? `jobs:${stage}:${status}:${search}:tenant:${tenantId}` : `jobs:${stage}:${status}:${search}`;
     const cachedJobs = serverCache.get(cacheKey);
     if (cachedJobs) {
       return NextResponse.json(cachedJobs);
@@ -40,6 +42,10 @@ export async function GET(req: NextRequest) {
     const whereClause: any = {
       currentStage: stage,
     };
+
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
 
     if (status !== "all") {
       whereClause.currentStatus = status;
@@ -146,6 +152,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const tenantId = session.tenantId;
+
     const body = await req.json();
     const { 
       companyName, 
@@ -179,7 +187,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Resolve or Create Customer by Primary Phone
     let customer = await prisma.customer.findFirst({
-      where: { primaryPhone: phone },
+      where: { primaryPhone: phone, tenantId },
     });
 
     if (customer) {
@@ -199,6 +207,7 @@ export async function POST(req: NextRequest) {
       // Create new customer
       customer = await prisma.customer.create({
         data: {
+          tenantId,
           companyName: companyName || null,
           contactName: contactPerson,
           primaryPhone: phone,
@@ -217,6 +226,7 @@ export async function POST(req: NextRequest) {
         ticketNumber: {
           startsWith: "EQ",
         },
+        tenantId,
       },
       orderBy: {
         ticketNumber: "desc",
@@ -235,6 +245,7 @@ export async function POST(req: NextRequest) {
     // 3. Create Ticket
     const newJob = await prisma.ticket.create({
       data: {
+        tenantId,
         ticketNumber: nextTicketNumber,
         customerId: customer.id,
         currentStage: "ENQUIRY",

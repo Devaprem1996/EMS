@@ -42,6 +42,15 @@ export default function SettingsPage() {
   const [accentColor, setAccentColor] = useState("#ef4444");
   const [darkTheme, setDarkTheme] = useState(true);
 
+  // Dynamic Vocabulary Custom Labels States
+  const [serialNumberLabel, setSerialNumberLabel] = useState("Cylinder Tag / Serial No");
+  const [capacityLabel, setCapacityLabel] = useState("Cylinder Capacity");
+  const [extinguisherTypeLabel, setExtinguisherTypeLabel] = useState("Extinguisher Type");
+  const [itemDescriptionLabel, setItemDescriptionLabel] = useState("Item Description");
+  const [deliveredDateLabel, setDeliveredDateLabel] = useState("Delivered Date");
+  const [amcYearsLabel, setAmcYearsLabel] = useState("No. of Years");
+  const [amcDateLabel, setAmcDateLabel] = useState("Next Refilling Date (Calculated)");
+
   // Stages States
   const [enquiryEnabled, setEnquiryEnabled] = useState(true);
   const [enquiryName, setEnquiryName] = useState("");
@@ -79,6 +88,16 @@ export default function SettingsPage() {
       setPrimaryColor(config.brand.theme.primaryColor || "#dc2626");
       setAccentColor(config.brand.theme.accentColor || "#ef4444");
       setDarkTheme(config.brand.theme.darkTheme !== false);
+
+      // Dynamic Vocabulary Custom Labels
+      const lbs = config.brand.labels || {};
+      setSerialNumberLabel(lbs.serialNumber || "Cylinder Tag / Serial No");
+      setCapacityLabel(lbs.capacity || "Cylinder Capacity");
+      setExtinguisherTypeLabel(lbs.extinguisherType || "Extinguisher Type");
+      setItemDescriptionLabel(lbs.itemDescription || "Item Description");
+      setDeliveredDateLabel(lbs.deliveredDate || "Delivered Date");
+      setAmcYearsLabel(lbs.amcYears || "No. of Years");
+      setAmcDateLabel(lbs.amcDate || "Next Refilling Date (Calculated)");
 
       setEnquiryEnabled(config.stages.ENQUIRY.enabled !== false);
       setEnquiryName(config.stages.ENQUIRY.displayName || "Enquiry");
@@ -192,6 +211,15 @@ export default function SettingsPage() {
           primaryColor,
           accentColor,
           darkTheme
+        },
+        labels: {
+          serialNumber: serialNumberLabel.trim(),
+          capacity: capacityLabel.trim(),
+          extinguisherType: extinguisherTypeLabel.trim(),
+          itemDescription: itemDescriptionLabel.trim(),
+          deliveredDate: deliveredDateLabel.trim(),
+          amcYears: amcYearsLabel.trim(),
+          amcDate: amcDateLabel.trim(),
         }
       },
       stages: {
@@ -379,6 +407,52 @@ export default function SettingsPage() {
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                     <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ width: "38px", height: "38px", border: "none", borderRadius: "8px", cursor: "pointer", background: "none" }} />
                     <input type="text" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ flex: 1, padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", fontFamily: "var(--font-mono)" }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Vocabulary / Labels */}
+              <div style={{ marginTop: "25px", borderTop: "1px solid var(--border-glass)", paddingTop: "20px" }}>
+                <h4 style={{ fontSize: "15px", fontWeight: "bold", color: "var(--text-primary)", marginBottom: "5px" }}>Domain Vocabulary & Dynamic Labels</h4>
+                <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "15px" }}>Customize text labels to fit your specific industry domain (e.g. Fire Safety vs. HVAC vs. IT Services).</p>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Asset Serial/Tag Label</label>
+                      <input type="text" value={serialNumberLabel} onChange={e => setSerialNumberLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Equipment Capacity Label</label>
+                      <input type="text" value={capacityLabel} onChange={e => setCapacityLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Equipment Type Label</label>
+                      <input type="text" value={extinguisherTypeLabel} onChange={e => setExtinguisherTypeLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Item Description Label</label>
+                      <input type="text" value={itemDescriptionLabel} onChange={e => setItemDescriptionLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Delivered/Setup Date Label</label>
+                      <input type="text" value={deliveredDateLabel} onChange={e => setDeliveredDateLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Coverage Years (AMC) Label</label>
+                      <input type="text" value={amcYearsLabel} onChange={e => setAmcYearsLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Next Renewal/Refill Date Label</label>
+                    <input type="text" value={amcDateLabel} onChange={e => setAmcDateLabel(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)" }} />
                   </div>
                 </div>
               </div>

@@ -11,6 +11,8 @@ datasource db {
 
 model Employee {
   id             String             @id @default(uuid())
+  tenantId       String?
+  tenant         Tenant?            @relation(fields: [tenantId], references: [id])
   mobileNumber   String             @unique // Serving as the unique login username
   passwordHash   String
   role           String             // "ADMIN" | "TECHNICIAN"
@@ -26,10 +28,14 @@ model Employee {
   deletedAt      DateTime?
   createdBy      String?
   updatedBy      String?
+  
+  @@index([tenantId])
 }
 
 model Customer {
   id             String             @id @default(uuid())
+  tenantId       String?
+  tenant         Tenant?            @relation(fields: [tenantId], references: [id])
   companyName    String?
   contactName    String
   primaryPhone   String
@@ -42,10 +48,14 @@ model Customer {
   deletedAt      DateTime?
   createdBy      String?
   updatedBy      String?
+
+  @@index([tenantId])
 }
 
 model Ticket {
   id                    String             @id @default(uuid())
+  tenantId              String?
+  tenant                Tenant?            @relation(fields: [tenantId], references: [id])
   ticketNumber          String             @unique // Unique identifier, e.g., EQ001
   customerId            String?
   customer              Customer?          @relation(fields: [customerId], references: [id])
@@ -95,6 +105,7 @@ model Ticket {
   @@index([customerId])
   @@index([currentStage])
   @@index([currentStatus])
+  @@index([tenantId])
 }
 
 model TicketFollowUp {
@@ -150,9 +161,25 @@ model TicketHistory {
 
 model SystemConfig {
   id        String   @id @default("default")
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   config    String   // JSON string of the EmsConfig
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String?
   updatedBy String?
+
+  @@index([tenantId])
+}
+
+model Tenant {
+  id        String         @id @default(uuid())
+  name      String
+  subdomain String         @unique
+  configs   SystemConfig[]
+  employees Employee[]
+  customers Customer[]
+  tickets   Ticket[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }

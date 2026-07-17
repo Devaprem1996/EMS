@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
 import { EMS_CONFIG, EmsConfig } from "@/config/ems-config";
 
-export async function getDbConfig(): Promise<EmsConfig> {
+export async function getDbConfig(tenantId?: string | null): Promise<EmsConfig> {
   try {
-    const record = await prisma.systemConfig.findUnique({
-      where: { id: "default" },
+    const record = await prisma.systemConfig.findFirst({
+      where: tenantId ? { tenantId } : { id: "default" },
     });
     if (record && record.config) {
       const dbConfig = JSON.parse(record.config);

@@ -7,6 +7,7 @@ export interface SessionData {
   mobileNumber: string;
   fullName: string;
   role: "ADMIN" | "TECHNICIAN";
+  tenantId?: string | null;
 }
 
 const SESSION_SECRET = process.env.SESSION_SECRET || "safeway_ems_super_secure_fallback_key_for_dev_32_chars";

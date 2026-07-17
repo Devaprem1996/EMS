@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getAuthSession, isAdmin } from "@/lib/auth-helpers";
+import { getAuthSession } from "@/lib/auth-helpers";
 import { getDbConfig } from "@/lib/config-loader";
 import { serverCache } from "@/lib/cache";
 import { rateLimit } from "@/lib/rate-limiter";
+import { getTenantIdFromRequest } from "@/lib/tenant-resolver";
 
 const CONFIG_CACHE_KEY = "system_config";
 const CONFIG_CACHE_TTL = 3600000; // 1 hour
 
-// GET /api/config - Retrieve the system configuration (Public)
+// GET /api/config - Retrieve the system configuration (Public / Tenant Specific)
 export async function GET(req: NextRequest) {
   try {
     // 1. Rate Limiting Check
@@ -24,15 +25,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const tenantId = await getTenantIdFromRequest(req);
+    const cacheKey = tenantId ? `${CONFIG_CACHE_KEY}_${tenantId}` : CONFIG_CACHE_KEY;
+
     // 2. Cache hit check
-    const cachedConfig = serverCache.get(CONFIG_CACHE_KEY);
+    const cachedConfig = serverCache.get(cacheKey);
     if (cachedConfig) {
       return NextResponse.json(cachedConfig);
     }
 
     // Cache miss, load from DB
-    const config = await getDbConfig();
-    serverCache.set(CONFIG_CACHE_KEY, config, CONFIG_CACHE_TTL);
+    const config = await getDbConfig(tenantId);
+    serverCache.set(cacheKey, config, CONFIG_CACHE_TTL);
     
     return NextResponse.json(config);
   } catch (error) {
@@ -41,7 +45,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/config - Save system configuration (Admin Only)
+// POST /api/config - Save system configuration (Admin Only / Tenant Specific)
 export async function POST(req: NextRequest) {
   try {
     // 1. Rate Limiting Check
@@ -62,30 +66,58 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized. Admin role required." }, { status: 401 });
     }
 
+    const tenantId = session.tenantId;
+
     const body = await req.json();
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "Invalid configuration payload" }, { status: 400 });
     }
 
     // Persist config stringified in DB
-    const updatedRecord = await prisma.systemConfig.upsert({
-      where: { id: "default" },
-      update: {
-        config: JSON.stringify(body),
-        updatedBy: session.userId,
-      },
-      create: {
-        id: "default",
-        config: JSON.stringify(body),
-        createdBy: session.userId,
-        updatedBy: session.userId,
-      },
-    });
+    let updatedRecord;
+    if (tenantId) {
+      const existing = await prisma.systemConfig.findFirst({
+        where: { tenantId }
+      });
+      if (existing) {
+        updatedRecord = await prisma.systemConfig.update({
+          where: { id: existing.id },
+          data: {
+            config: JSON.stringify(body),
+            updatedBy: session.userId,
+          }
+        });
+      } else {
+        updatedRecord = await prisma.systemConfig.create({
+          data: {
+            tenantId,
+            config: JSON.stringify(body),
+            createdBy: session.userId,
+            updatedBy: session.userId,
+          }
+        });
+      }
+    } else {
+      updatedRecord = await prisma.systemConfig.upsert({
+        where: { id: "default" },
+        update: {
+          config: JSON.stringify(body),
+          updatedBy: session.userId,
+        },
+        create: {
+          id: "default",
+          config: JSON.stringify(body),
+          createdBy: session.userId,
+          updatedBy: session.userId,
+        },
+      });
+    }
 
     const config = JSON.parse(updatedRecord.config);
 
     // Invalidate and refresh cache
-    serverCache.set(CONFIG_CACHE_KEY, config, CONFIG_CACHE_TTL);
+    const cacheKey = tenantId ? `${CONFIG_CACHE_KEY}_${tenantId}` : CONFIG_CACHE_KEY;
+    serverCache.set(cacheKey, config, CONFIG_CACHE_TTL);
 
     return NextResponse.json(config);
   } catch (error) {

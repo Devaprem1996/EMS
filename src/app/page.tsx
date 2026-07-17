@@ -27,7 +27,15 @@ export default function LoginPage() {
           const data = await res.json();
           if (data.authenticated && data.user) {
             if (data.user.role === "ADMIN") {
-              router.push("/admin/enquiry");
+              let targetPath = "/admin/employees";
+              if (!config || config.stages?.ENQUIRY?.enabled !== false) {
+                targetPath = "/admin/enquiry";
+              } else if (config.stages?.REFILLING?.enabled !== false) {
+                targetPath = "/admin/refilling";
+              } else if (config.stages?.SERVICES?.enabled !== false) {
+                targetPath = "/admin/services";
+              }
+              router.push(targetPath);
             } else {
               router.push("/technician/tasks");
             }
@@ -60,7 +68,15 @@ export default function LoginPage() {
 
       // Successful login
       if (data.user.role === "ADMIN") {
-        router.push("/admin/enquiry");
+        let targetPath = "/admin/employees";
+        if (!config || config.stages?.ENQUIRY?.enabled !== false) {
+          targetPath = "/admin/enquiry";
+        } else if (config.stages?.REFILLING?.enabled !== false) {
+          targetPath = "/admin/refilling";
+        } else if (config.stages?.SERVICES?.enabled !== false) {
+          targetPath = "/admin/services";
+        }
+        router.push(targetPath);
       } else {
         router.push("/technician/tasks");
       }

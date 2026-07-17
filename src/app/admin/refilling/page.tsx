@@ -554,8 +554,8 @@ export default function RefillingDashboardPage() {
                 <th>Contact Name</th>
                 <th>Contact Phone</th>
                 <th>Category</th>
-                <th>Delivery Date</th>
-                <th>Refilling Date</th>
+                <th>{config?.brand?.labels?.deliveredDate || "Delivery Date"}</th>
+                <th>{config?.brand?.labels?.amcDate || "Refilling Date"}</th>
                 <th>Status</th>
                 <th>Technicians</th>
                 <th style={{ textAlign: "center" }}>Actions</th>
@@ -785,11 +785,11 @@ export default function RefillingDashboardPage() {
                     <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                       <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Tag / Serial No</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.serialNumber || "Cylinder Tag / Serial No"}</label>
                           <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. CYL-99823" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Extinguisher Type</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.extinguisherType || "Extinguisher Type"}</label>
                           <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
                             <option value="">Select Type</option>
                             <option value="CO2">CO2</option>
@@ -802,11 +802,11 @@ export default function RefillingDashboardPage() {
                       </div>
                       <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Cylinder Capacity</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.capacity || "Cylinder Capacity"}</label>
                           <input type="text" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g. 2 Kg, 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Item Description</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.itemDescription || "Item Description"}</label>
                           <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Fire Extinguisher DCP 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                       </div>
@@ -831,11 +831,11 @@ export default function RefillingDashboardPage() {
                     <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                       <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Delivered Date*</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.deliveredDate || "Delivered Date"}*</label>
                           <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>No. of Years*</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcYears || "No. of Years"}*</label>
                           <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                               <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
@@ -845,7 +845,7 @@ export default function RefillingDashboardPage() {
                       </div>
                       <div className="responsive-form-grid">
                         <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Next Refilling Date (Calculated)*</label>
+                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcDate || "Next Refilling Date (Calculated)"}*</label>
                           <input type="date" value={calculatedAmcDate} readOnly style={{ width: "100%", padding: "7px", borderRadius: "6px", color: "#10b981", fontWeight: "bold", cursor: "not-allowed" }} />
                         </div>
                         <div>

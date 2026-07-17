@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       mobileNumber: employee.mobileNumber,
       fullName: employee.fullName || employee.mobileNumber,
       role: employee.role as "ADMIN" | "TECHNICIAN",
+      tenantId: employee.tenantId,
     };
 
     // Create a response

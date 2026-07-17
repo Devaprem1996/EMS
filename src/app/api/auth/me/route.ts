@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
         mobileNumber: sessionData.mobileNumber,
         fullName: sessionData.fullName,
         role: sessionData.role,
+        tenantId: sessionData.tenantId,
       },
     });
   } catch (error) {

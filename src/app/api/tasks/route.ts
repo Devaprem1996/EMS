@@ -25,12 +25,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const tenantId = session.tenantId;
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
 
     // 2. Cache Hit Check
     const cacheScope = session.role === "TECHNICIAN" ? session.userId : "all";
-    const cacheKey = `tasks:${cacheScope}:${search}`;
+    const cacheKey = tenantId ? `tasks:${cacheScope}:${search}:tenant:${tenantId}` : `tasks:${cacheScope}:${search}`;
     const cachedData = serverCache.get(cacheKey);
     if (cachedData) {
       return NextResponse.json(cachedData);
@@ -40,33 +41,44 @@ export async function GET(req: NextRequest) {
       deletedAt: null,
     };
 
+    if (tenantId) {
+      whereClause.ticket = {
+        tenantId: tenantId
+      };
+    }
+
     if (session.role === "TECHNICIAN") {
       whereClause.employeeId = session.userId;
     }
 
     if (search) {
-      whereClause.OR = [
+      whereClause.AND = [
+        tenantId ? { ticket: { tenantId } } : {},
         {
-          employee: {
-            fullName: { contains: search },
-          },
-        },
-        {
-          ticket: {
-            OR: [
-              { ticketNumber: { contains: search } },
-              {
-                customer: {
-                  OR: [
-                    { companyName: { contains: search } },
-                    { contactName: { contains: search } },
-                    { primaryPhone: { contains: search } },
-                  ],
-                },
+          OR: [
+            {
+              employee: {
+                fullName: { contains: search },
               },
-            ],
-          },
-        },
+            },
+            {
+              ticket: {
+                OR: [
+                  { ticketNumber: { contains: search } },
+                  {
+                    customer: {
+                      OR: [
+                        { companyName: { contains: search } },
+                        { contactName: { contains: search } },
+                        { primaryPhone: { contains: search } },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ]
+        }
       ];
     }
 

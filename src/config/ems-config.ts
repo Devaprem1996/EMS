@@ -22,6 +22,15 @@ export interface EmsConfig {
       accentColor: string;
       darkTheme: boolean;
     };
+    labels?: {
+      serialNumber?: string;
+      capacity?: string;
+      extinguisherType?: string;
+      itemDescription?: string;
+      deliveredDate?: string;
+      amcYears?: string;
+      amcDate?: string;
+    };
   };
   stages: {
     ENQUIRY: StageConfig;
@@ -70,6 +79,15 @@ export const EMS_CONFIG: EmsConfig = {
       primaryColor: "#dc2626", // Fire Engine Red
       accentColor: "#ef4444",
       darkTheme: false,
+    },
+    labels: {
+      serialNumber: "Cylinder Tag / Serial No",
+      capacity: "Cylinder Capacity",
+      extinguisherType: "Extinguisher Type",
+      itemDescription: "Item Description",
+      deliveredDate: "Delivered Date",
+      amcYears: "No. of Years",
+      amcDate: "Next Refilling Date (Calculated)",
     },
   },
   stages: {

@@ -21,17 +21,20 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!isAdmin(req)) {
+    const session = getAuthSession(req);
+    if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Access restricted to admins" }, { status: 403 });
     }
+
+    const tenantId = session.tenantId;
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "all"; // "all" | "active" | "inactive"
 
-    // Construct Cache Key for active technicians/employees (which is queried frequently on all dashboards)
+    // Construct Cache Key for active technicians/employees
     const isCacheable = status === "active";
-    const cacheKey = `employees:active:search:${search}`;
+    const cacheKey = tenantId ? `employees:active:tenant:${tenantId}:search:${search}` : `employees:active:search:${search}`;
     
     if (isCacheable) {
       const cachedData = serverCache.get(cacheKey);
@@ -42,6 +45,9 @@ export async function GET(req: NextRequest) {
 
     // Construct query filters
     const whereClause: any = {};
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
 
     if (status === "active") {
       whereClause.isActive = true;
@@ -159,6 +165,7 @@ export async function POST(req: NextRequest) {
     // Create employee record
     const newEmployee = await prisma.employee.create({
       data: {
+        tenantId: session.tenantId,
         mobileNumber: phone, // phone is used as mobileNumber (login)
         passwordHash,
         role,

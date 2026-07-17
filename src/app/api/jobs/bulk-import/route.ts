@@ -30,13 +30,13 @@ function parseCSVDate(dateStr: string | null | undefined): Date | null {
   return isNaN(fallback.getTime()) ? null : fallback;
 }
 
-async function resolveTechnicians(techNamesOrPhones: string | null | undefined): Promise<string[]> {
+async function resolveTechnicians(techNamesOrPhones: string | null | undefined, tenantId?: string | null): Promise<string[]> {
   if (!techNamesOrPhones) return [];
   const items = techNamesOrPhones.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
   if (items.length === 0) return [];
 
   const technicians = await prisma.employee.findMany({
-    where: { role: "TECHNICIAN" },
+    where: { role: "TECHNICIAN", tenantId: tenantId ?? undefined },
   });
 
   const matchedIds: string[] = [];
@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const tenantId = session.tenantId;
+
     const body = await req.json();
     const { rows } = body;
 
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid data format: rows must be an array" }, { status: 400 });
     }
 
-    const dbConfig = await getDbConfig();
+    const dbConfig = await getDbConfig(tenantId);
 
     const results = {
       created: 0,
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
         ticketNumber: {
           startsWith: "EQ",
         },
+        tenantId,
       },
       orderBy: {
         ticketNumber: "desc",
@@ -126,7 +129,7 @@ export async function POST(req: NextRequest) {
         let customer = null;
         if (phone) {
           customer = await prisma.customer.findFirst({
-            where: { primaryPhone: phone },
+            where: { primaryPhone: phone, tenantId },
           });
         }
 
@@ -134,6 +137,7 @@ export async function POST(req: NextRequest) {
           customer = await prisma.customer.findFirst({
             where: {
               companyName: customerName,
+              tenantId,
             },
           });
         }
@@ -157,6 +161,7 @@ export async function POST(req: NextRequest) {
           // Create new customer
           customer = await prisma.customer.create({
             data: {
+              tenantId,
               companyName: customerName,
               contactName: mappedRow.contactPerson || customerName,
               primaryPhone: phone || `TEMP-${Date.now()}-${index}`,
@@ -190,7 +195,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Resolve Assigned Technicians
-        const techIds = await resolveTechnicians(mappedRow.assignedTechnicians);
+        const techIds = await resolveTechnicians(mappedRow.assignedTechnicians, tenantId);
 
         // Check if there is an existing ticket matching serialNumber + customerName combination
         let existingJob = null;
@@ -198,8 +203,10 @@ export async function POST(req: NextRequest) {
           existingJob = await prisma.ticket.findFirst({
             where: {
               serialNumber,
+              tenantId,
               customer: {
                 companyName: customerName,
+                tenantId,
               },
             },
             include: { customer: true },
@@ -312,6 +319,7 @@ export async function POST(req: NextRequest) {
           // Create new ticket with the resolved stage
           const newJob = await prisma.ticket.create({
             data: {
+              tenantId,
               ticketNumber: nextJobNumber,
               customerId: customer.id,
               currentStage: finalStage,

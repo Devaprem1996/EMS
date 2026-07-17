@@ -26,14 +26,14 @@ const { chromium } = require('@playwright/test');
 
     // Register new enquiry
     console.log("STEP 3: Registering new enquiry...");
-    await page.click('button[title="Add Enquiry"]');
+    await page.click('button:has-text("Register Enquiry")');
     await page.waitForTimeout(1500);
     await page.fill('input[placeholder="e.g. Siva Clinicals"]', 'Test Logistics Corp');
     await page.fill('input[placeholder="e.g. Manikrishnan"]', 'David');
     await page.fill('input[placeholder="e.g. 9944332106"]', '9333333333');
     await page.fill('input[type="date"]', today);
-    await page.locator('form select').first().selectOption('New Fire Extinguisher');
-    await page.locator('form select').last().selectOption('Phone Call');
+    await page.locator('label:has-text("Requirement Category") + select').selectOption('New Fire Extinguisher');
+    await page.locator('label:has-text("Source of Enquiry") + select').selectOption('Phone Call');
     await page.click('form button:has-text("Register")');
     await page.waitForTimeout(3000);
     console.log("✅ Enquiry registered!");

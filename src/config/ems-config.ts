@@ -100,7 +100,7 @@ export const EMS_CONFIG: EmsConfig = {
           label: "Source",
           type: "select",
           options: ["Walk-in", "Phone Call", "Email Enquiry", "Field Agent", "Website"],
-          required: true,
+          required: false,
         },
         {
           key: "urgency",

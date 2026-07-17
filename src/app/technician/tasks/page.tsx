@@ -174,6 +174,10 @@ export default function TechnicianTasksPage() {
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   const paginatedAssignments = filteredAssignments.slice(startIndex, endIndex);
 
+  const totalAsgs = filteredAssignments.length;
+  const completedAsgs = filteredAssignments.filter(a => a.status === "Completed").length;
+  const pendingAsgs = totalAsgs - completedAsgs;
+
   return (
     <div style={{ padding: "20px", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
@@ -183,6 +187,46 @@ export default function TechnicianTasksPage() {
       {/* Page Title */}
       <div style={{ marginBottom: "20px", position: "relative", zIndex: 1 }}>
         <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "var(--text-primary)", margin: 0 }}>Technician View</h1>
+      </div>
+
+      {/* KPI Summary Cards */}
+      <div className="kpi-grid" style={{ marginBottom: "25px", position: "relative", zIndex: 1 }}>
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>Assigned Tasks</div>
+          </div>
+          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>📋</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> Needs Attention
+            </div>
+          </div>
+          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>⚡</span>
+          </div>
+        </div>
+
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
+          <div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Done & Verified
+            </div>
+          </div>
+          <div style={{ background: "rgba(16, 185, 129, 0.15)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+            <span style={{ fontSize: "20px" }}>🚛</span>
+          </div>
+        </div>
       </div>
 
       {/* Notifications */}

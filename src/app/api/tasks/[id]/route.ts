@@ -41,6 +41,12 @@ export async function PUT(
 
     // 2. Perform updates in a transaction
     const updatedAssignment = await prisma.$transaction(async (tx) => {
+      // Fetch parent ticket detail to inspect current status and stage
+      const ticket = await tx.ticket.findUnique({
+        where: { id: assignment.ticketId },
+        select: { currentStage: true, currentStatus: true },
+      });
+
       // Update TicketAssignment record
       const updatedAsg = await tx.ticketAssignment.update({
         where: { id },
@@ -60,22 +66,52 @@ export async function PUT(
       };
       ticketUpdateData.updatedBy = session.userId;
 
-      // AUTO-TRANSITION: "Assign For Service" → move ticket from REFILLING to SERVICES stage
-      if (status === "Assign For Service") {
-        const ticket = await tx.ticket.findUnique({
-          where: { id: assignment.ticketId },
-          select: { currentStage: true },
-        });
-        if (ticket?.currentStage === "REFILLING") {
-          ticketUpdateData.currentStage = "SERVICES";
-          // Log the stage transition in TicketHistory
+      if (ticket) {
+        // Sync parent ticket status based on assignment status
+        if (status === "Completed") {
+          if (ticket.currentStage === "SERVICES") {
+            ticketUpdateData.currentStatus = "Completed";
+          } else {
+            ticketUpdateData.currentStatus = "Order Delivered";
+          }
+        } else if (status === "Assign For Service") {
+          if (ticket.currentStage === "REFILLING") {
+            ticketUpdateData.currentStage = "SERVICES";
+            ticketUpdateData.currentStatus = "Pending Service";
+            // Log the stage transition in TicketHistory
+            await tx.ticketHistory.create({
+              data: {
+                ticketId: assignment.ticketId,
+                changedById: assignment.employeeId,
+                fromStage: "REFILLING",
+                toStage: "SERVICES",
+                fromStatus: ticket.currentStatus,
+                toStatus: "Pending Service",
+                remarks: "Auto-transitioned: Technician set status to 'Assign For Service'",
+                createdBy: session.userId,
+                updatedBy: session.userId,
+              },
+            });
+          }
+        } else if (status === "Pending") {
+          if (ticket.currentStage === "SERVICES") {
+            ticketUpdateData.currentStatus = "Pending Service";
+          } else {
+            ticketUpdateData.currentStatus = "Order Confirmed";
+          }
+        }
+
+        // Write status history record if changed
+        if (ticketUpdateData.currentStatus && ticketUpdateData.currentStatus !== ticket.currentStatus) {
           await tx.ticketHistory.create({
             data: {
               ticketId: assignment.ticketId,
-              changedById: assignment.employeeId,
-              fromStage: "REFILLING",
-              toStage: "SERVICES",
-              remarks: "Auto-transitioned: Technician set status to 'Assign For Service'",
+              changedById: session.userId,
+              fromStage: ticket.currentStage,
+              toStage: ticketUpdateData.currentStage || ticket.currentStage,
+              fromStatus: ticket.currentStatus,
+              toStatus: ticketUpdateData.currentStatus,
+              remarks: `Assignment status updated to '${status}' by technician`,
               createdBy: session.userId,
               updatedBy: session.userId,
             },

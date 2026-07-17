@@ -18,7 +18,8 @@ import {
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
-  ChevronsRight
+  ChevronsRight,
+  Settings
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 
@@ -130,6 +131,7 @@ export default function RefillingDashboardPage() {
   const [isFollowUpCardOpen, setIsFollowUpCardOpen] = useState(true);
   const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(true);
   const [isEquipmentCardOpen, setIsEquipmentCardOpen] = useState(true);
+  const [isCustomFieldsCardOpen, setIsCustomFieldsCardOpen] = useState(true);
 
   // --- Form Fields ---
   // Update Refilling Form fields
@@ -202,6 +204,7 @@ export default function RefillingDashboardPage() {
     setIsFollowUpCardOpen(true);
     setIsCustomerCardOpen(true);
     setIsEquipmentCardOpen(true);
+    setIsCustomFieldsCardOpen(true);
     
     // Initialize cylinder specs
     setSerialNumber(job.serialNumber || "");
@@ -920,33 +923,45 @@ export default function RefillingDashboardPage() {
 
                 {/* Custom Fields in Edit modal */}
                 {config?.stages?.REFILLING?.fields && config.stages.REFILLING.fields.length > 0 && (
-                  <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-glass)", borderRadius: "8px" }}>
-                    <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "8px" }}>Custom Fields</h3>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {config.stages.REFILLING.fields.map(field => {
-                        const val = customFieldsData[field.key] ?? "";
-                        const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
-                        return (
-                          <div key={field.key}>
-                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>
-                              {field.label} {field.required ? "*" : ""}
-                            </label>
-                            {field.type === "boolean" ? (
-                              <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
-                            ) : field.type === "select" ? (
-                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
-                                <option value="">SELECT</option>
-                                {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                              </select>
-                            ) : field.type === "multi-select" ? (
-                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                            ) : (
-                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                            )}
-                          </div>
-                        );
-                      })}
+                  <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+                    <div 
+                      onClick={() => setIsCustomFieldsCardOpen(!isCustomFieldsCardOpen)}
+                      style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <Settings size={16} style={{ color: "var(--accent)" }} />
+                        <span style={{ fontWeight: "600", fontSize: "13px" }}>Custom Fields</span>
+                      </div>
+                      {isCustomFieldsCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </div>
+
+                    {isCustomFieldsCardOpen && (
+                      <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
+                        {config.stages.REFILLING.fields.map(field => {
+                          const val = customFieldsData[field.key] ?? "";
+                          const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
+                          return (
+                            <div key={field.key}>
+                              <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>
+                                {field.label} {field.required ? "*" : ""}
+                              </label>
+                              {field.type === "boolean" ? (
+                                <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
+                              ) : field.type === "select" ? (
+                                <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                                  <option value="">SELECT</option>
+                                  {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                              ) : field.type === "multi-select" ? (
+                                <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                              ) : (
+                                <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -32,7 +32,7 @@ function parseCSVDate(dateStr: string | null | undefined): Date | null {
 
 async function resolveTechnicians(techNamesOrPhones: string | null | undefined, tenantId?: string | null): Promise<string[]> {
   if (!techNamesOrPhones) return [];
-  const items = techNamesOrPhones.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+  const items = techNamesOrPhones.split(",").map((t: string) => t.trim().toLowerCase()).filter(Boolean);
   if (items.length === 0) return [];
 
   const technicians = await prisma.employee.findMany({
@@ -41,7 +41,7 @@ async function resolveTechnicians(techNamesOrPhones: string | null | undefined, 
 
   const matchedIds: string[] = [];
   for (const item of items) {
-    const match = technicians.find(t => 
+    const match = technicians.find((t: any) => 
       (t.fullName && t.fullName.toLowerCase().includes(item)) || 
       (t.contactPhone && t.contactPhone.includes(item)) ||
       t.mobileNumber.toLowerCase() === item
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         const mappings = dbConfig.importMappings;
 
         for (const [key, aliases] of Object.entries(mappings)) {
-          const matchKey = Object.keys(rawRow).find(k => 
+          const matchKey = Object.keys(rawRow).find((k: string) => 
             aliases.includes(k.toLowerCase().trim())
           );
           mappedRow[key] = matchKey !== undefined && rawRow[matchKey] !== null && rawRow[matchKey] !== undefined
@@ -256,7 +256,7 @@ export async function POST(req: NextRequest) {
           if (techIds.length > 0) {
             await prisma.ticketAssignment.deleteMany({ where: { ticketId: updatedJob.id } });
             await prisma.ticketAssignment.createMany({
-              data: techIds.map(techId => ({
+              data: techIds.map((techId: string) => ({
                 ticketId: updatedJob.id,
                 employeeId: techId,
                 status: "ASSIGNED",
@@ -350,7 +350,7 @@ export async function POST(req: NextRequest) {
           // Add assignments if specified
           if (techIds.length > 0) {
             await prisma.ticketAssignment.createMany({
-              data: techIds.map(techId => ({
+              data: techIds.map((techId: string) => ({
                 ticketId: newJob.id,
                 employeeId: techId,
                 status: "ASSIGNED",

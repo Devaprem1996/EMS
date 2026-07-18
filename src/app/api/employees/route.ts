@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const mapped = employees.map(emp => ({
+    const mapped = employees.map((emp: any) => ({
       ...emp,
       username: emp.mobileNumber,
       phone: emp.contactPhone,

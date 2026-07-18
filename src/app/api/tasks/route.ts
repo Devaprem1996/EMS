@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const mappedAssignments = assignments.map(asg => ({
+    const mappedAssignments = assignments.map((asg: any) => ({
       id: asg.id,
       technicianId: asg.employeeId,
       technician: asg.employee ? {
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
           phone: asg.ticket.customer.primaryPhone,
           phone2: asg.ticket.customer.secondaryPhone,
         } : null,
-        assignments: asg.ticket.assignments.map(otherAsg => ({
+        assignments: asg.ticket.assignments.map((otherAsg: any) => ({
           id: otherAsg.id,
           technicianId: otherAsg.employeeId,
           technician: otherAsg.employee ? {

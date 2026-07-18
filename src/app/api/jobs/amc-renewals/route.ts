@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const formattedRenewals = renewals.map(ticket => ({
+    const formattedRenewals = renewals.map((ticket: any) => ({
       id: ticket.id,
       jobNumber: ticket.ticketNumber,
       companyName: ticket.customer?.companyName || "N/A",

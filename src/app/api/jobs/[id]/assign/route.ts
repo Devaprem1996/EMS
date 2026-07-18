@@ -41,7 +41,7 @@ export async function POST(
     }
 
     // 2. Perform Transaction to update assignments and ticket details
-    const updatedJob = await prisma.$transaction(async (tx) => {
+    const updatedJob = await prisma.$transaction(async (tx: any) => {
       // Soft-delete existing assignments for this ticket
       await tx.ticketAssignment.updateMany({
         where: { ticketId: id, deletedAt: null },
@@ -142,7 +142,7 @@ export async function POST(
         phone: updatedJob.customer.primaryPhone,
         phone2: updatedJob.customer.secondaryPhone,
       } : null,
-      assignments: updatedJob.assignments.map(a => ({
+      assignments: updatedJob.assignments.map((a: any) => ({
         id: a.id,
         technicianId: a.employeeId,
         technician: a.employee ? {

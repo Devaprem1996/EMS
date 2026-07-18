@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const skippedTickets: string[] = [];
 
     // Perform transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const id of jobIds) {
         // 1. Find job (ticket)
         const job = await tx.ticket.findUnique({

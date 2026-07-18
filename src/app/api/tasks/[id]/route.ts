@@ -41,7 +41,7 @@ export async function PUT(
     }
 
     // 2. Perform updates in a transaction
-    const updatedAssignment = await prisma.$transaction(async (tx) => {
+    const updatedAssignment = await prisma.$transaction(async (tx: any) => {
       // Fetch parent ticket detail to inspect current status and stage
       const ticket = await tx.ticket.findUnique({
         where: { id: assignment.ticketId },

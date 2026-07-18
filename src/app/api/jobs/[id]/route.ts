@@ -236,7 +236,7 @@ export async function PUT(
         phone: updatedJob.customer.primaryPhone,
         phone2: updatedJob.customer.secondaryPhone,
       } : null,
-      assignments: updatedJob.assignments.map(a => ({
+      assignments: updatedJob.assignments.map((a: any) => ({
         id: a.id,
         technicianId: a.employeeId,
         technician: a.employee ? {

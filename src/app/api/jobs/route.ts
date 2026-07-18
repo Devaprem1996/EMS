@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const mappedJobs = jobs.map(job => ({
+    const mappedJobs = jobs.map((job: any) => ({
       ...job,
       jobNumber: job.ticketNumber,
       visitDate: job.scheduledVisitDate,
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
         phone: job.customer.primaryPhone,
         phone2: job.customer.secondaryPhone,
       } : null,
-      assignments: job.assignments.map(a => ({
+      assignments: job.assignments.map((a: any) => ({
         id: a.id,
         technicianId: a.employeeId,
         technician: a.employee ? {

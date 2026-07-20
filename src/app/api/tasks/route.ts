@@ -116,6 +116,17 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const employees = await prisma.employee.findMany({ select: { id: true, fullName: true } });
+    const empMap = new Map(employees.map(e => [e.id, e.fullName || "Admin User"]));
+
+    const resolveAssignedBy = (createdBy?: string | null) => {
+      if (!createdBy) return "Admin User";
+      if (empMap.has(createdBy)) return empMap.get(createdBy)!;
+      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(createdBy) || (createdBy.length >= 32 && createdBy.includes("-") && !createdBy.includes(" "));
+      if (isUuid) return "Admin User";
+      return createdBy;
+    };
+
     const mappedAssignments = assignments.map((asg: any) => ({
       id: asg.id,
       technicianId: asg.employeeId,
@@ -141,6 +152,8 @@ export async function GET(req: NextRequest) {
         assignments: asg.ticket.assignments.map((otherAsg: any) => ({
           id: otherAsg.id,
           technicianId: otherAsg.employeeId,
+          assignedBy: resolveAssignedBy(otherAsg.createdBy),
+          assignedAt: otherAsg.assignedAt || otherAsg.createdAt,
           technician: otherAsg.employee ? {
             id: otherAsg.employee.id,
             fullName: otherAsg.employee.fullName,
@@ -148,6 +161,7 @@ export async function GET(req: NextRequest) {
         })),
       } : null,
       status: asg.status,
+      assignedBy: resolveAssignedBy(asg.createdBy),
       assignedAt: asg.assignedAt,
       completedAt: asg.completedAt,
     }));

@@ -45,14 +45,15 @@ export async function POST(req: NextRequest) {
         });
 
         // 3. Create new assignments
+        const assignerName = session.fullName || session.username || "Admin User";
         if (technicianIds.length > 0) {
           await tx.ticketAssignment.createMany({
             data: technicianIds.map((techId: string) => ({
               ticketId: id,
               employeeId: techId,
               status: "ASSIGNED",
-              createdBy: session.userId,
-              updatedBy: session.userId,
+              createdBy: assignerName,
+              updatedBy: assignerName,
             })),
           });
         }
@@ -79,9 +80,9 @@ export async function POST(req: NextRequest) {
             toStage: job.currentStage,
             fromStatus: job.currentStatus,
             toStatus: job.currentStatus,
-            remarks: `Technician assignments bulk updated. Assigned technicians: ${technicianIds.length}`,
-            createdBy: session.userId,
-            updatedBy: session.userId,
+            remarks: `Technician assignments bulk updated by ${assignerName}. Assigned technicians: ${technicianIds.length}`,
+            createdBy: assignerName,
+            updatedBy: assignerName,
           },
         });
       }

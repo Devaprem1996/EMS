@@ -52,6 +52,7 @@ export async function POST(
       });
 
       // Create or restore assignments
+      const assignerName = session.fullName || session.username || "Admin User";
       for (const techId of technicianIds) {
         const existing = await tx.ticketAssignment.findFirst({
           where: { ticketId: id, employeeId: techId },
@@ -65,7 +66,8 @@ export async function POST(
               status: "ASSIGNED",
               completedAt: null,
               notes: null,
-              updatedBy: session.userId,
+              createdBy: assignerName,
+              updatedBy: assignerName,
             },
           });
         } else {
@@ -74,8 +76,8 @@ export async function POST(
               ticketId: id,
               employeeId: techId,
               status: "ASSIGNED",
-              createdBy: session.userId,
-              updatedBy: session.userId,
+              createdBy: assignerName,
+              updatedBy: assignerName,
             },
           });
         }
@@ -119,9 +121,9 @@ export async function POST(
           toStage: job.currentStage,
           fromStatus: job.currentStatus,
           toStatus: job.currentStatus,
-          remarks: `Technician assignments updated. Assigned technicians: ${technicianIds.length}`,
-          createdBy: session.userId,
-          updatedBy: session.userId,
+          remarks: `Technician assignments updated by ${assignerName}. Assigned technicians: ${technicianIds.length}`,
+          createdBy: assignerName,
+          updatedBy: assignerName,
         },
       });
 
@@ -145,6 +147,8 @@ export async function POST(
       assignments: updatedJob.assignments.map((a: any) => ({
         id: a.id,
         technicianId: a.employeeId,
+        assignedBy: a.createdBy || session.fullName || "Admin User",
+        assignedAt: a.assignedAt || a.createdAt,
         technician: a.employee ? {
           id: a.employee.id,
           fullName: a.employee.fullName,

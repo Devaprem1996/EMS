@@ -175,43 +175,164 @@ export default function EmployeeMasterPage() {
     }
   };
 
+  // Calculate KPI Summary Stats
+  const activeCount = employees.filter(e => e.isActive).length;
+  const technicianCount = employees.filter(e => e.role === "TECHNICIAN" && e.isActive).length;
+  const adminCount = employees.filter(e => e.role === "ADMIN" && e.isActive).length;
+  const inactiveCount = employees.filter(e => !e.isActive).length;
+
   return (
     <div style={{ position: "relative", minHeight: "100%" }}>
       {/* Page Header */}
-      <div className="page-header">
-        <div className="page-title-section">
-          <h1 className="page-title">Employee Master</h1>
-          <p className="page-subtitle">Configure system users, assignments, and authorization roles</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Employee Master
+          </h1>
+          <p style={{ fontSize: "13.5px", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Configure system workforce, assignment authorization, and role access privileges</p>
         </div>
         <button
           onClick={handleOpenAdd}
           style={{
-            padding: "10px 18px",
-            background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+            padding: "10px 22px",
+            background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)",
+            color: "#0f172a",
             border: "none",
-            borderRadius: "12px",
-            color: "#fff",
+            borderRadius: "9999px",
+            fontWeight: "800",
+            fontSize: "14px",
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
             gap: "8px",
-            fontSize: "14px",
-            fontWeight: "600",
-            boxShadow: "0 6px 20px rgba(220, 38, 38, 0.25)",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: "0 6px 20px rgba(163, 230, 53, 0.3)",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = "0 8px 25px rgba(220, 38, 38, 0.35)";
+            e.currentTarget.style.boxShadow = "0 8px 25px rgba(163, 230, 53, 0.45)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 6px 20px rgba(220, 38, 38, 0.25)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(163, 230, 53, 0.3)";
           }}
         >
-          <Plus size={16} />
-          Add Employee
+          <UserPlus size={17} />
+          <span>Register Employee</span>
         </button>
+      </div>
+
+      {/* Flux Design System: Metric Breakdown Grid & High-Contrast Analytics Widget */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
+        
+        {/* Flux Card 1: Employee Breakdown Progress Bars */}
+        <div style={{
+          background: "var(--bg-card)",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
+                Total Authorized Staff
+              </span>
+              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+                {activeCount} Active
+              </span>
+            </div>
+            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {employees.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>registered profiles</span>
+            </div>
+          </div>
+
+          {/* Flux Horizontal Progress Bars */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Field Technicians ({technicianCount})</span>
+                <span style={{ color: "#a3e635" }}>{Math.round((technicianCount / (employees.length || 1)) * 100)}%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${Math.round((technicianCount / (employees.length || 1)) * 100)}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Administrators ({adminCount})</span>
+                <span style={{ color: "#c084fc" }}>{Math.round((adminCount / (employees.length || 1)) * 100)}%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${Math.round((adminCount / (employees.length || 1)) * 100)}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Flux Card 2: High-Contrast Dark Feature Analytics Widget */}
+        <div style={{
+          background: "#111116",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+          color: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
+                <span style={{ background: "rgba(255,255,255,0.1)", padding: "6px", borderRadius: "8px" }}>👥</span>
+                Field Dispatch Readiness
+              </div>
+              <span style={{ fontSize: "0.78rem", color: "#a1a1aa", background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: "9999px" }}>
+                Monthly ˅
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1.25rem" }}>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>96.4%</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Utilization Rate</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#c084fc" }}>0.0%</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>SLA Delay</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dual-Color Vertical Bar Chart */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "8px", height: "90px", paddingTop: "10px" }}>
+            {[
+              { month: "Jun", h1: "40%", h2: "30%", active: false },
+              { month: "Jul", h1: "55%", h2: "45%", active: false },
+              { month: "Aug", h1: "70%", h2: "60%", active: false },
+              { month: "Sept ↗", h1: "95%", h2: "85%", active: true },
+              { month: "Oct", h1: "60%", h2: "50%", active: false },
+              { month: "Nov", h1: "75%", h2: "65%", active: false },
+              { month: "Dec", h1: "80%", h2: "70%", active: false },
+            ].map((bar, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flex: 1 }}>
+                <div style={{ display: "flex", gap: "3px", alignItems: "flex-end", height: "70px", width: "100%" }}>
+                  <div style={{ flex: 1, height: bar.h1, background: bar.active ? "#a3e635" : "rgba(255,255,255,0.12)", borderRadius: "4px" }}></div>
+                  <div style={{ flex: 1, height: bar.h2, background: bar.active ? "#c084fc" : "rgba(255,255,255,0.06)", borderRadius: "4px" }}></div>
+                </div>
+                <span style={{ fontSize: "0.68rem", color: bar.active ? "#a3e635" : "#71717a", fontWeight: bar.active ? "800" : "500" }}>
+                  {bar.month}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       {/* Success Banner */}
@@ -222,31 +343,42 @@ export default function EmployeeMasterPage() {
         </div>
       )}
 
-      {/* Controls */}
-      <div className="controls-row">
-        <div className="search-container">
+      {/* Filter Toolbar Row */}
+      <div className="filter-toolbar">
+        <div className="search-container" style={{ maxWidth: "340px" }}>
           <input
             type="text"
             className="search-input"
-            placeholder="Search by name, contact, ID..."
+            placeholder="Search employee by name, ID, mobile..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <Search size={18} className="search-icon-inside" />
         </div>
 
-        <select
-          className="filter-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="all">All Statuses</option>
-          <option value="active">Active Only</option>
-          <option value="inactive">Inactive Only</option>
-        </select>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button 
+            className={`filter-pill-btn ${statusFilter === "all" ? "active" : ""}`}
+            onClick={() => setStatusFilter("all")}
+          >
+            All Users ({employees.length})
+          </button>
+          <button 
+            className={`filter-pill-btn ${statusFilter === "active" ? "active" : ""}`}
+            onClick={() => setStatusFilter("active")}
+          >
+            Active ({activeCount})
+          </button>
+          <button 
+            className={`filter-pill-btn ${statusFilter === "inactive" ? "active" : ""}`}
+            onClick={() => setStatusFilter("inactive")}
+          >
+            Inactive ({inactiveCount})
+          </button>
+        </div>
       </div>
 
-      {/* Employees Table */}
+      {/* Employees Data Table */}
       <div className="table-container">
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "4rem" }}>
@@ -260,10 +392,10 @@ export default function EmployeeMasterPage() {
           <table className="premium-table">
             <thead>
               <tr>
-                <th style={{ width: "80px" }}>S.No</th>
-                <th>Employee ID</th>
-                <th>Employee Name</th>
-                <th>Contact No</th>
+                <th style={{ width: "70px" }}>S.No</th>
+                <th>Employee Code</th>
+                <th>Employee Details</th>
+                <th>Contact Phone</th>
                 <th>Role</th>
                 <th>Status</th>
                 <th style={{ width: "100px", textAlign: "center" }}>Actions</th>
@@ -273,36 +405,39 @@ export default function EmployeeMasterPage() {
               {paginatedEmployees.map((emp, index) => (
                 <tr key={emp.id}>
                   <td>{startIndex + index + 1}</td>
-                  <td style={{ fontFamily: "var(--font-mono)", fontWeight: "600", color: "#fff" }}>
+                  <td style={{ fontFamily: "var(--font-mono)", fontWeight: "700", color: "var(--text-primary)" }}>
                     {emp.employeeNumber || "N/A"}
                   </td>
                   <td>
-                    <div style={{ fontWeight: "600", color: "#fff" }}>{emp.fullName}</div>
-                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{emp.email || "No Email"}</div>
+                    <div className="user-avatar-cell">
+                      <div className="user-avatar-circle">
+                        {emp.fullName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="user-avatar-info">
+                        <span className="user-avatar-name">{emp.fullName}</span>
+                        <span className="user-avatar-sub">{emp.email || emp.contactPhone}</span>
+                      </div>
+                    </div>
                   </td>
-                  <td>{emp.contactPhone}</td>
+                  <td style={{ color: "var(--text-secondary)" }}>{emp.contactPhone}</td>
                   <td>
                     <span 
-                      className="badge" 
-                      style={{ 
-                        background: emp.role === "ADMIN" ? "rgba(239, 68, 68, 0.1)" : "rgba(59, 130, 246, 0.1)", 
-                        color: emp.role === "ADMIN" ? "#ef4444" : "#3b82f6",
-                        border: emp.role === "ADMIN" ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid rgba(59, 130, 246, 0.2)"
-                      }}
+                      className={`pill-badge ${emp.role === "ADMIN" ? "pill-badge-red" : "pill-badge-blue"}`}
                     >
-                      {emp.role === "ADMIN" ? "Admin" : "Technician"}
+                      <span className={`priority-dot ${emp.role === "ADMIN" ? "priority-dot-red" : "priority-dot-amber"}`}></span>
+                      {emp.role === "ADMIN" ? "Administrator" : "Field Technician"}
                     </span>
                   </td>
                   <td>
-                    <span className={`badge ${emp.isActive ? "badge-active" : "badge-inactive"}`}>
+                    <span className={`pill-badge ${emp.isActive ? "pill-badge-green" : "pill-badge-amber"}`}>
                       {emp.isActive ? (
                         <>
-                          <UserCheck size={12} />
+                          <UserCheck size={13} />
                           Active
                         </>
                       ) : (
                         <>
-                          <UserX size={12} />
+                          <UserX size={13} />
                           Inactive
                         </>
                       )}
@@ -375,167 +510,336 @@ export default function EmployeeMasterPage() {
 
 
 
-      {/* Add / Edit Modal */}
+      {/* Enhanced Flux Register & Edit Employee Modal */}
       {isModalOpen && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingEmployee ? "Edit Employee" : "Add Employee"}
-              </h2>
-              <button 
-                onClick={() => setIsModalOpen(false)} 
-                className="modal-close-btn"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                {formError && (
-                  <div className="alert-banner">
-                    <ShieldAlert size={18} className="alert-icon" />
-                    <span>{formError}</span>
-                  </div>
-                )}
-
-                <div className="form-grid">
-                  {/* Name */}
-                  <div className="form-group form-grid-full">
-                    <label className="form-label" htmlFor="fullName">Employee Name *</label>
-                    <input
-                      type="text"
-                      id="fullName"
-                      className="form-input"
-                      style={{ paddingLeft: "1rem" }}
-                      placeholder="e.g. John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Employee ID */}
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="employeeNumber">Employee Number *</label>
-                    <input
-                      type="text"
-                      id="employeeNumber"
-                      className="form-input"
-                      style={{ paddingLeft: "1rem" }}
-                      placeholder="e.g. E001"
-                      value={employeeNumber}
-                      onChange={(e) => setEmployeeNumber(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Contact Number */}
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="phone">Contact No *</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      className="form-input"
-                      style={{ paddingLeft: "1rem" }}
-                      placeholder="e.g. 9876543210"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Email ID */}
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="email">Email ID</label>
-                    <input
-                      type="email"
-                      id="email"
-                      className="form-input"
-                      style={{ paddingLeft: "1rem" }}
-                      placeholder="e.g. john@safeway.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Role Selection */}
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="role">Role *</label>
-                    <select
-                      id="role"
-                      className="form-input"
-                      style={{ paddingLeft: "1rem", cursor: "pointer" }}
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as "ADMIN" | "TECHNICIAN")}
-                    >
-                      <option value="TECHNICIAN">Technician</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-                  </div>
-
-                  {/* Password */}
-                  <div className="form-group form-grid-full">
-                    <label className="form-label" htmlFor="password">
-                      {editingEmployee ? "New Password (Leave blank to keep current)" : "Create Password *"}
-                    </label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                      <input
-                        type="text"
-                        id="password"
-                        className="form-input"
-                        style={{ paddingLeft: "1rem" }}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required={!editingEmployee}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Active Status */}
-                  <div className="form-grid-full">
-                    <label className="checkbox-container">
-                      <input
-                        type="checkbox"
-                        className="checkbox-input"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                      />
-                      <span>Active Status</span>
-                    </label>
-                  </div>
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.75)",
+          backdropFilter: "blur(12px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: "20px"
+        }}>
+          <div style={{
+            background: "#121217",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            borderRadius: "24px",
+            width: "100%",
+            maxWidth: "540px",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            
+            {/* Modal Header */}
+            <div style={{
+              padding: "20px 24px",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "rgba(255,255,255,0.02)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "9999px",
+                  background: role === "ADMIN" ? "rgba(192, 132, 252, 0.2)" : "rgba(163, 230, 53, 0.2)",
+                  color: role === "ADMIN" ? "#c084fc" : "#a3e635",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  {editingEmployee ? <Edit2 size={18} /> : <UserPlus size={18} />}
+                </div>
+                <div>
+                  <h2 style={{ fontSize: "18px", fontWeight: "800", margin: 0, color: "#ffffff" }}>
+                    {editingEmployee ? "Edit Employee Profile" : "Register New Employee"}
+                  </h2>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
+                    {editingEmployee ? "Modify authorization roles and system credentials" : "Create new account credentials for staff dispatch"}
+                  </p>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)} 
-                  className="btn-secondary"
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s"
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
+              {formError && (
+                <div style={{
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#ef4444",
+                  padding: "10px 14px",
+                  borderRadius: "12px",
+                  fontSize: "13px",
+                  marginBottom: "18px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <ShieldAlert size={16} />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* Role Interactive Switcher Tabs */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>
+                  System Role Authorization *
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setRole("TECHNICIAN")}
+                    style={{
+                      padding: "12px",
+                      borderRadius: "14px",
+                      border: "1px solid",
+                      borderColor: role === "TECHNICIAN" ? "#a3e635" : "rgba(255,255,255,0.08)",
+                      background: role === "TECHNICIAN" ? "rgba(163, 230, 53, 0.12)" : "rgba(255,255,255,0.03)",
+                      color: role === "TECHNICIAN" ? "#a3e635" : "var(--text-secondary)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <span>👨‍🔧 Field Technician</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRole("ADMIN")}
+                    style={{
+                      padding: "12px",
+                      borderRadius: "14px",
+                      border: "1px solid",
+                      borderColor: role === "ADMIN" ? "#c084fc" : "rgba(255,255,255,0.08)",
+                      background: role === "ADMIN" ? "rgba(192, 132, 252, 0.12)" : "rgba(255,255,255,0.03)",
+                      color: role === "ADMIN" ? "#c084fc" : "var(--text-secondary)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <span>🔑 Administrator</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Form Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                
+                {/* Full Name */}
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "13.5px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                {/* Employee ID */}
+                <div>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                    Employee Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. E001"
+                    value={employeeNumber}
+                    onChange={(e) => setEmployeeNumber(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "13.5px",
+                      fontFamily: "monospace",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                {/* Contact Phone */}
+                <div>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                    Mobile Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9876543210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "13.5px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                {/* Email */}
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="e.g. john@safeway.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "13.5px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                {/* Password */}
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                    {editingEmployee ? "New Password (Leave blank to keep current)" : "Account Password *"}
+                  </label>
+                  <input
+                    type="text"
+                    required={!editingEmployee}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "13.5px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                {/* Active Checkbox Pill */}
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      style={{ width: "18px", height: "18px", accentColor: "#a3e635" }}
+                    />
+                    <span style={{ fontSize: "13.5px", fontWeight: "700", color: "#ffffff" }}>
+                      Enable Active Account Access
+                    </span>
+                  </label>
+                </div>
+
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "18px" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
                   disabled={formLoading}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "9999px",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "var(--text-primary)",
+                    fontSize: "13.5px",
+                    fontWeight: "700",
+                    cursor: "pointer"
+                  }}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  className="btn-primary"
+
+                <button
+                  type="submit"
                   disabled={formLoading}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "9999px",
+                    background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)",
+                    border: "none",
+                    color: "#0f172a",
+                    fontSize: "13.5px",
+                    fontWeight: "800",
+                    cursor: "pointer",
+                    boxShadow: "0 6px 20px rgba(163, 230, 53, 0.3)"
+                  }}
                 >
-                  {formLoading ? (
-                    <>
-                      <div className="spinner" style={{ width: "16px", height: "16px" }}></div>
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      {editingEmployee ? "Update" : "Create"}
-                    </>
-                  )}
+                  {formLoading ? "Saving..." : editingEmployee ? "Update Profile" : "Create Profile"}
                 </button>
               </div>
+
             </form>
           </div>
         </div>

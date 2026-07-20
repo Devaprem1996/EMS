@@ -17,7 +17,10 @@ import {
   Settings,
   Bell,
   AlertTriangle,
-  Check
+  Check,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PieChart
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 
@@ -28,6 +31,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const { config, loading: configLoading } = useConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Load sidebar collapsed preference
+  useEffect(() => {
+    const saved = localStorage.getItem("ems_sidebar_collapsed");
+    if (saved === "true") setIsCollapsed(true);
+  }, []);
+
+  const toggleSidebar = () => {
+    const nextState = !isCollapsed;
+    setIsCollapsed(nextState);
+    localStorage.setItem("ems_sidebar_collapsed", String(nextState));
+  };
 
   // Notifications State
   const [amcRenewals, setAmcRenewals] = useState<any[]>([]);
@@ -42,7 +58,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           const data = await res.json();
           setAmcRenewals(data);
           
-          // Show on Friday (5) or if test mode is requested (?test_notification=true)
           const isFriday = new Date().getDay() === 5;
           const urlParams = new URLSearchParams(window.location.search);
           const isTestMode = urlParams.get("test_notification") === "true";
@@ -88,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     }
     checkAuth();
-  }, [router]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -111,6 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Build dynamic menu items based on configurations
   const menuItems = [
+    { name: "Overview Center", path: "/admin", icon: PieChart },
     { name: "Employee Master", path: "/admin/employees", icon: Users },
   ];
 
@@ -147,271 +163,409 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const logoUrl = config?.brand?.logoUrl;
 
   return (
-    <div className="dashboard-container" style={{ flexDirection: "column" }}>
-      {/* Top Header Navigation */}
-      <header className="top-nav-header">
-        {/* Left Side: Logo/Brand */}
-        <Link href="/admin/enquiry" className="top-nav-logo">
-          {logoUrl ? (
-            <img src={logoUrl} alt={brandTitle} />
-          ) : (
-            <div style={{ background: "rgba(220,38,38,0.1)", padding: "6px", borderRadius: "8px", display: "inline-flex", border: "1px solid rgba(220,38,38,0.2)", color: "var(--accent)" }}>
-              <Flame size={18} fill="currentColor" />
+    <div className="dashboard-container" style={{ display: "flex", flexDirection: "row", minHeight: "100vh" }}>
+      {/* Left Collapsible Sidebar Navigation */}
+      <aside className={`dashboard-sidebar ${isMobileMenuOpen ? "mobile-open" : ""}`} style={{
+        width: isCollapsed ? "74px" : "250px",
+        background: "var(--bg-card)",
+        borderRight: "1px solid var(--border-glass)",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        zIndex: 100,
+        transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+      }}>
+        {/* Brand Header */}
+        <div className="sidebar-logo" style={{
+          padding: isCollapsed ? "1.25rem 0.5rem" : "1.25rem 1.5rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isCollapsed ? "center" : "space-between",
+          borderBottom: "1px solid var(--border-glass)",
+          transition: "all 0.3s"
+        }}>
+          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none", color: "var(--text-primary)" }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={brandTitle} style={{ height: "32px", width: "auto" }} />
+            ) : (
+              <div style={{ background: "rgba(220,38,38,0.12)", padding: "8px", borderRadius: "10px", color: "var(--accent)", display: "flex", border: "1px solid rgba(220,38,38,0.25)" }}>
+                <Flame size={20} fill="currentColor" />
+              </div>
+            )}
+            {!isCollapsed && <span style={{ fontWeight: "800", fontSize: "1.1rem", letterSpacing: "-0.02em" }}>{brandTitle}</span>}
+          </Link>
+
+          {/* Toggle Sidebar Collapse Button */}
+          <button 
+            onClick={toggleSidebar}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              borderRadius: "8px",
+              padding: "5px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s"
+            }}
+          >
+            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        </div>
+
+        {/* Navigation Section */}
+        <nav style={{ padding: isCollapsed ? "1.25rem 0.5rem" : "1.25rem 0.85rem", flexGrow: 1, display: "flex", flexDirection: "column", gap: "0.45rem", overflowY: "auto" }}>
+          {!isCollapsed && (
+            <div style={{ fontSize: "0.72rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", padding: "0.5rem 0.75rem", marginBottom: "0.25rem" }}>
+              Main Menu
             </div>
           )}
-          <span style={{ fontSize: "15px", fontWeight: "bold" }}>{brandTitle}</span>
-        </Link>
-
-        {/* Center: Desktop Navigation links */}
-        <nav className="top-nav-menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;
+            const badgeCounts: { [key: string]: number } = {
+              "/admin/enquiry": 3,
+              "/admin/refilling": 4,
+              "/admin/tasks": 2
+            };
+            const badgeCount = badgeCounts[item.path];
+
             return (
               <Link 
                 key={item.path} 
                 href={item.path}
-                className={`top-nav-link ${isActive ? "active" : ""}`}
+                prefetch={false}
+                title={isCollapsed ? item.name : undefined}
+                className={`menu-link ${isActive ? "active" : ""}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: isCollapsed ? "center" : "space-between",
+                  padding: isCollapsed ? "0.75rem 0" : "0.7rem 1.1rem",
+                  borderRadius: "9999px",
+                  fontSize: "0.9rem",
+                  fontWeight: isActive ? "700" : "500",
+                  color: isActive ? "#000000" : "var(--text-secondary)",
+                  background: isActive ? "#ffffff" : "transparent",
+                  boxShadow: isActive ? "0 4px 14px rgba(0, 0, 0, 0.15)" : "none",
+                  textDecoration: "none",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
               >
-                <Icon size={14} style={{ color: isActive ? "var(--accent)" : "#6b7280" }} />
-                <span>{item.name}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: isCollapsed ? 0 : "0.85rem", justifyContent: "center" }}>
+                  <Icon size={18} style={{ color: isActive ? "#000000" : "var(--text-muted)" }} />
+                  {!isCollapsed && <span>{item.name}</span>}
+                </div>
+                {!isCollapsed && badgeCount && (
+                  <span style={{
+                    background: isActive ? "#a3e635" : "rgba(163, 230, 53, 0.15)",
+                    color: isActive ? "#000000" : "#a3e635",
+                    fontSize: "0.72rem",
+                    fontWeight: "800",
+                    padding: "2px 8px",
+                    borderRadius: "9999px"
+                  }}>
+                    {badgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right: Profile & Mobile Toggle */}
-        <div className="top-nav-right">
-          {/* Notifications Bell Icon Button */}
-          <div style={{ position: "relative", marginRight: "12px", display: "inline-flex" }}>
-            <button
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        {/* Bottom Status Card */}
+        <div style={{ padding: isCollapsed ? "0.5rem" : "0.85rem", borderTop: "1px solid var(--border-glass)" }}>
+          {isCollapsed ? (
+            <div 
+              title="EMS Dispatch Pro Active"
               style={{
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: "8px",
-                padding: "8px",
-                cursor: "pointer",
-                position: "relative",
-                display: "inline-flex",
+                background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)",
+                borderRadius: "9999px",
+                width: "40px",
+                height: "40px",
+                margin: "0 auto",
+                display: "flex",
                 alignItems: "center",
-                color: isNotificationsOpen ? "var(--accent)" : "var(--text-secondary)",
-                transition: "all 0.2s"
+                justifyContent: "center",
+                color: "#0f172a",
+                fontWeight: "800"
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; }}
-              title="Notifications"
             >
-              <Bell size={16} />
-              {amcRenewals.length > 0 && (
-                <span style={{
-                  position: "absolute",
-                  top: "-2px",
-                  right: "-2px",
-                  background: "var(--accent)",
-                  color: "#fff",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  borderRadius: "50%",
-                  width: "16px",
-                  height: "16px",
+              ⚡
+            </div>
+          ) : (
+            <div style={{
+              background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)",
+              borderRadius: "18px",
+              padding: "1.15rem 1rem",
+              color: "#0f172a",
+              position: "relative",
+              overflow: "hidden"
+            }}>
+              <div style={{ fontWeight: "800", fontSize: "0.95rem", marginBottom: "0.25rem", color: "#000000" }}>
+                EMS Dispatch Pro
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#0f172a", fontWeight: "600", lineHeight: "1.35", marginBottom: "0.85rem" }}>
+                Intelligent telemetry & dispatch tracking enabled.
+              </div>
+              <button style={{
+                width: "100%",
+                background: "#0f172a",
+                color: "#a3e635",
+                border: "none",
+                borderRadius: "9999px",
+                padding: "0.55rem 1rem",
+                fontSize: "0.78rem",
+                fontWeight: "700",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
+              }}>
+                System Active ⚡
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="dashboard-main" style={{ flexGrow: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100vh", overflow: "hidden" }}>
+        {/* Top Header Bar with Breadcrumb Navigation */}
+        <header className="dashboard-header" style={{
+          height: "64px",
+          background: "var(--bg-card)",
+          borderBottom: "1px solid var(--border-glass)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 2rem",
+          zIndex: 10
+        }}>
+          {/* Breadcrumb & Mobile Hamburger */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="hamburger-btn"
+              aria-label="Toggle Navigation"
+              style={{ display: "none", background: "none", border: "none", color: "var(--text-primary)", cursor: "pointer" }}
+            >
+              <Menu size={20} />
+            </button>
+
+            {/* Breadcrumb Navigation Trail */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.88rem", color: "var(--text-secondary)" }}>
+              <span>Dashboard</span>
+              <span>/</span>
+              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>
+                {menuItems.find(m => m.path === pathname)?.name || "Master"}
+              </span>
+            </div>
+          </div>
+
+          {/* Right Header Utilities: Notifications & Profile */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* Notification Bell Popover */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                style={{
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-glass)",
+                  borderRadius: "10px",
+                  padding: "8px 12px",
+                  cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 0 10px var(--accent)"
-                }}>
-                  {amcRenewals.length}
-                </span>
-              )}
-            </button>
+                  gap: "0.5rem",
+                  color: isNotificationsOpen ? "var(--accent)" : "var(--text-primary)",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  transition: "all 0.2s"
+                }}
+                title="Notifications"
+              >
+                <Bell size={16} />
+                <span>Alerts</span>
+                {amcRenewals.length > 0 && (
+                  <span style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    borderRadius: "100px",
+                    padding: "1px 6px"
+                  }}>
+                    {amcRenewals.length}
+                  </span>
+                )}
+              </button>
 
-            {/* Notifications Dropdown Panel */}
-            {isNotificationsOpen && (
-              <div 
-                className="theme-modal-card" 
-                style={{
-                  position: "absolute",
-                  top: "40px",
-                  right: 0,
-                  width: "320px",
-                  maxHeight: "400px",
-                  overflowY: "auto",
-                  zIndex: 1000,
-                  padding: "15px",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+              {/* Notifications Dropdown Panel */}
+              {isNotificationsOpen && (
+                <div 
+                  className="theme-modal-card" 
+                  style={{
+                    position: "absolute",
+                    top: "44px",
+                    right: 0,
+                    width: "340px",
+                    maxHeight: "420px",
+                    overflowY: "auto",
+                    zIndex: 1000,
+                    padding: "16px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border-glass)"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "8px" }}>
+                    <span style={{ fontWeight: "700", fontSize: "14px", color: "var(--text-primary)" }}>Notification Center</span>
+                    <span className="pill-badge pill-badge-blue" style={{ fontSize: "10px" }}>{amcRenewals.length} updates</span>
+                  </div>
+                  {amcRenewals.length === 0 ? (
+                    <div style={{ padding: "20px 0", textAlign: "center", color: "var(--text-secondary)", fontSize: "13px" }}>
+                      No new renewal notifications.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {amcRenewals.map((item) => (
+                        <div 
+                          key={item.id}
+                          style={{
+                            padding: "12px",
+                            borderRadius: "10px",
+                            background: "var(--bg-input)",
+                            border: "1px solid var(--border-glass)",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "all 0.2s ease"
+                          }}
+                          onClick={() => {
+                            setIsNotificationsOpen(false);
+                            router.push("/admin/services");
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
+                            <span>{item.companyName}</span>
+                            <span style={{ color: "var(--accent)", fontFamily: "var(--font-mono)" }}>{item.jobNumber}</span>
+                          </div>
+                          <div style={{ color: "var(--text-secondary)" }}>
+                            AMC Renewal Date: <span style={{ fontWeight: "bold", color: "#10b981" }}>{new Date(item.amcDate).toLocaleDateString()}</span>
+                          </div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                            Type: {item.itemDescription}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Combined User Profile & Logout Component */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              background: "var(--bg-input)",
+              border: "1px solid var(--border-glass)",
+              padding: "4px 6px 4px 10px",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+              transition: "all 0.2s ease"
+            }}>
+              {/* User Profile Avatar Icon */}
+              <div style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg, var(--primary, #3b82f6) 0%, var(--accent, #a3e635) 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
+              }}>
+                <UserIcon size={17} style={{ color: "#ffffff" }} />
+              </div>
+
+              {/* User Info Label */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)", lineHeight: "1.1" }}>
+                  {user?.fullName || "Admin User"}
+                </span>
+                <span style={{ fontSize: "0.68rem", fontWeight: "600", color: "var(--accent, #a3e635)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  {user?.role || "ADMIN"}
+                </span>
+              </div>
+
+              {/* Integrated Divider */}
+              <div style={{ width: "1px", height: "22px", background: "var(--border-glass)", margin: "0 4px" }} />
+
+              {/* Integrated Logout Button */}
+              <button 
+                onClick={handleLogout} 
+                title="Log Out"
+                aria-label="Log Out"
+                style={{ 
+                  padding: "6px 12px", 
+                  background: "rgba(239, 68, 68, 0.12)", 
+                  border: "1px solid rgba(239, 68, 68, 0.25)", 
+                  borderRadius: "8px",
+                  color: "#ef4444", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center",
+                  gap: "5px",
+                  fontSize: "0.78rem",
+                  fontWeight: "700",
+                  transition: "all 0.2s ease"
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "8px" }}>
-                  <span style={{ fontWeight: "700", fontSize: "14px", color: "var(--text-primary)" }}>Notification Center</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{amcRenewals.length} updates</span>
-                </div>
-                {amcRenewals.length === 0 ? (
-                  <div style={{ padding: "20px 0", textAlign: "center", color: "var(--text-secondary)", fontSize: "13px" }}>
-                    No new renewal notifications.
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {amcRenewals.map((item) => (
-                      <div 
-                        key={item.id}
-                        style={{
-                          padding: "10px",
-                          borderRadius: "8px",
-                          background: "rgba(255, 255, 255, 0.02)",
-                          border: "1px solid var(--border-glass)",
-                          fontSize: "12px",
-                          cursor: "pointer",
-                          textAlign: "left"
-                        }}
-                        onClick={() => {
-                          setIsNotificationsOpen(false);
-                          router.push("/admin/services");
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
-                          <span>{item.companyName}</span>
-                          <span style={{ color: "var(--accent)" }}>{item.jobNumber}</span>
-                        </div>
-                        <div style={{ color: "var(--text-secondary)" }}>
-                          AMC Renewal Date: <span style={{ fontWeight: "bold", color: "#10b981" }}>{new Date(item.amcDate).toLocaleDateString()}</span>
-                        </div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
-                          Type: {item.itemDescription}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                <LogOut size={14} />
+                <span>Log Out</span>
+              </button>
+            </div>
           </div>
+        </header>
 
-          <div className="header-user" style={{ marginRight: "10px" }}>
-            <span className="header-user-icon">
-              <UserIcon size={14} />
-            </span>
-            <span style={{ fontSize: "13px" }}>{user?.fullName || "Admin User"}</span>
-          </div>
-
-          <button 
-            onClick={handleLogout} 
-            className="header-logout-btn" 
-            title="Log Out"
-            aria-label="Log Out"
-            style={{ 
-              padding: "6px 12px", 
-              background: "rgba(239, 68, 68, 0.08)", 
-              border: "1px solid rgba(239, 68, 68, 0.15)", 
-              borderRadius: "6px",
-              color: "#ef4444", 
-              cursor: "pointer", 
-              display: "flex", 
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "12px",
-              fontWeight: "600",
-              marginLeft: "8px"
-            }}
-          >
-            <LogOut size={14} />
-            <span>Log Out</span>
-          </button>
-
-          {/* Mobile hamburger menu toggle */}
-          <button 
-            className="hamburger-btn" 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle Menu"
-            style={{ display: "none", background: "none", border: "none", color: "var(--text-primary)", cursor: "pointer", padding: "0.5rem" }}
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Menu Drawer */}
-        {isMobileMenuOpen && (
-          <nav className="top-nav-menu-mobile">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.path;
-              return (
-                <Link 
-                  key={item.path} 
-                  href={item.path}
-                  className={`top-nav-link ${isActive ? "active" : ""}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  style={{ width: "100%" }}
-                >
-                  <Icon size={14} style={{ color: isActive ? "var(--accent)" : "#6b7280" }} />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-
-            {/* Logout item in mobile drawer */}
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                handleLogout();
-              }}
-              className="top-nav-link"
-              style={{ 
-                width: "100%", 
-                textAlign: "left", 
-                background: "rgba(239, 68, 68, 0.08)", 
-                border: "1px solid rgba(239, 68, 68, 0.15)", 
-                borderRadius: "6px",
-                display: "flex", 
-                alignItems: "center", 
-                gap: "0.5rem", 
-                padding: "0.5rem 1rem", 
-                color: "#ef4444",
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "13px",
-                marginTop: "4px"
-              }}
-            >
-              <LogOut size={14} />
-              <span>Log Out</span>
-            </button>
-          </nav>
-        )}
-      </header>
-
-      {/* Main Content Pane */}
-      <div className="layout-top-nav-main">
-        <main className="layout-top-nav-content animated-page">
+        {/* Content Body */}
+        <main className="dashboard-content animated-page" style={{ flexGrow: 1, padding: "2rem", overflowY: "auto" }}>
           {children}
         </main>
       </div>
-      
+
       {/* Friday AMC Renewal Reminder Modal */}
       {showFridayModal && (
         <div className="slide-over-backdrop" style={{ zIndex: 2000 }} onClick={() => setShowFridayModal(false)}>
-          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "550px", margin: "10% auto", animation: "premiumSlideIn 0.3s ease-out" }} onClick={(e) => e.stopPropagation()}>
+          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "550px", margin: "10% auto", animation: "premiumSlideIn 0.3s ease-out", height: "auto", borderRadius: "20px" }} onClick={(e) => e.stopPropagation()}>
             <div className="slide-over-header theme-modal-card-header" style={{ background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#fff" }}>
                 <AlertTriangle size={20} />
-                <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>Friday AMC Renewal Summary Reminder</h2>
+                <h2 style={{ fontSize: "16px", margin: 0, fontWeight: "bold", color: "#fff" }}>Friday AMC Renewal Reminder</h2>
               </div>
               <button onClick={() => setShowFridayModal(false)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", display: "inline-flex" }}><X size={20} /></button>
             </div>
             
             <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
               <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                Happy Friday! The following client service contracts have AMC renewal dates coming up within the next 30 days. Please inspect and schedule maintenance visits.
+                Happy Friday! The following client service contracts have AMC renewal dates coming up within the next 30 days.
               </p>
               
-              <div style={{ maxHeight: "200px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "10px", background: "rgba(0,0,0,0.15)" }}>
+              <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid var(--border-glass)", borderRadius: "12px", padding: "10px", background: "var(--bg-input)" }}>
                 {amcRenewals.map((item) => (
-                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", borderBottom: "1px solid rgba(255,255,255,0.02)", fontSize: "12.5px" }}>
+                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", borderBottom: "1px solid var(--border-glass)", fontSize: "12.5px" }}>
                     <div style={{ textAlign: "left" }}>
                       <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{item.companyName}</div>
                       <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{item.itemDescription} ({item.jobNumber})</div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700" }}>
+                    <div>
+                      <span className="pill-badge pill-badge-green" style={{ fontSize: "11px" }}>
                         {new Date(item.amcDate).toLocaleDateString()}
                       </span>
                     </div>
@@ -420,10 +574,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
             
-            <div style={{ padding: "15px 20px", borderTop: "1px solid var(--border-glass)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-input)" }}>
+            <div style={{ padding: "15px 20px", borderTop: "1px solid var(--border-glass)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-card)" }}>
               <button 
                 onClick={() => setShowFridayModal(false)}
-                style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer", fontSize: "13px" }}
+                className="btn-secondary"
               >
                 Close Summary
               </button>
@@ -432,7 +586,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   setShowFridayModal(false);
                   router.push("/admin/services");
                 }}
-                style={{ padding: "8px 16px", background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: "600" }}
+                className="btn-primary"
               >
                 Go to Services Dashboard
               </button>
@@ -441,14 +595,66 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* Mobile media query hamburger control style inject */}
+      {/* Native Mobile Bottom Application Bar */}
+      <div className="mobile-bottom-nav">
+        {menuItems.slice(0, 5).map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              href={item.path}
+              prefetch={false}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "3px",
+                textDecoration: "none",
+                color: isActive ? "#a3e635" : "var(--text-secondary, #94a3b8)",
+                fontSize: "10.5px",
+                fontWeight: isActive ? "800" : "500",
+                transition: "all 0.2s",
+                padding: "6px 0"
+              }}
+            >
+              <div style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "32px",
+                height: "28px",
+                borderRadius: "12px",
+                background: isActive ? "rgba(163, 230, 53, 0.15)" : "transparent"
+              }}>
+                <Icon size={18} style={{ color: isActive ? "#a3e635" : "inherit" }} />
+              </div>
+              <span>{item.name.replace(" Dashboard", "").replace(" Center", "")}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Mobile Sidebar Media Query CSS */}
       <style jsx global>{`
         @media (max-width: 768px) {
-          .top-nav-menu {
-            display: none !important;
+          .dashboard-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+          }
+          .dashboard-sidebar.mobile-open {
+            transform: translateX(0);
+          }
+          .mobile-sidebar-close {
+            display: flex !important;
           }
           .hamburger-btn {
-            display: block !important;
+            display: flex !important;
           }
         }
       `}</style>

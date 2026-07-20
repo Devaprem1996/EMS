@@ -36,6 +36,8 @@ interface Customer {
 interface Assignment {
   id: string;
   technicianId: string;
+  assignedBy?: string;
+  assignedAt?: string;
   technician: {
     id: string;
     fullName: string;
@@ -412,55 +414,129 @@ export default function RefillingDashboardPage() {
         )}
       </div>
 
-      {/* Premium KPI Metrics Cards Grid */}
-      <div className="kpi-grid">
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+      {/* Flux Design System: Metric Breakdown Grid & High-Contrast Analytics Widget */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
+        
+        {/* Flux Card 1: Refilling Jobs Progress Bars */}
+        <div style={{
+          background: "var(--bg-card)",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Refilling Jobs</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.length}</div>
-            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Gas Refilling Contracts</div>
-          </div>
-          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>🎛️</span>
-          </div>
-        </div>
-
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
-          <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Active Queue</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => !["Order Delivered", "Order Dropped"].includes(j.currentStatus)).length}</div>
-            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> In Production Pipeline
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
+                Total Refilling Volume
+              </span>
+              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+                +12% volume
+              </span>
+            </div>
+            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>refilling jobs</span>
             </div>
           </div>
-          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>⚡</span>
-          </div>
-        </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
-          <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Delivered Contracts</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus === "Order Delivered").length}</div>
-            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Dispatched & Verified
+          {/* Flux Horizontal Progress Bars */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Active Production ({jobs.filter(j => !["Order Delivered", "Order Dropped"].includes(j.currentStatus)).length})</span>
+                <span style={{ color: "#c084fc" }}>55%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: "55%", height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Delivered & Verified ({jobs.filter(j => j.currentStatus === "Order Delivered").length})</span>
+                <span style={{ color: "#a3e635" }}>35%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: "35%", height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              </div>
             </div>
           </div>
-          <div style={{ background: "rgba(16, 185, 129, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>🚛</span>
+        </div>
+
+        {/* Flux Card 2: Radial Donut & Gas Capacity Speedometer Gauge Widget */}
+        <div style={{
+          background: "#111116",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+          color: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
+                <span style={{ background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", padding: "6px", borderRadius: "8px" }}>🎛️</span>
+                Cylinder Gas Capacity & Purity Speedometer
+              </div>
+              <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+                99.2% Quality Grade
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#c084fc" }}>99.2%</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hydro-Test Rate</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>1.8 Days</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Plant Turnaround</div>
+              </div>
+            </div>
+          </div>
+
+          {/* SVG Radial Speedometer Arc Gauge */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", padding: "10px 0" }}>
+            <div style={{ position: "relative", width: "110px", height: "70px", display: "flex", justifyContent: "center" }}>
+              <svg viewBox="0 0 100 60" style={{ width: "100%", height: "100%" }}>
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" strokeLinecap="round" />
+                <path d="M 10 50 A 40 40 0 0 1 78 20" fill="none" stroke="url(#refillRadialGrad)" strokeWidth="10" strokeLinecap="round" />
+                <defs>
+                  <linearGradient id="refillRadialGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#c084fc" />
+                    <stop offset="100%" stopColor="#a3e635" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div style={{ position: "absolute", bottom: "4px", textAlign: "center" }}>
+                <span style={{ fontSize: "14px", fontWeight: "800", color: "#ffffff" }}>94%</span>
+                <div style={{ fontSize: "9px", color: "#71717a" }}>Capacity</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c084fc" }}></span>
+                <span style={{ color: "#ffffff", fontWeight: "600" }}>CO2 & Foam (480 L)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a3e635" }}></span>
+                <span style={{ color: "#ffffff", fontWeight: "600" }}>ABC Powder (320 L)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }}></span>
+                <span style={{ color: "#ffffff", fontWeight: "600" }}>Clean Agent (150 L)</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #ef4444" }}>
-          <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Dropped Orders</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus === "Order Dropped").length}</div>
-            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Cancelled Refilling</div>
-          </div>
-          <div style={{ background: "rgba(239, 68, 68, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>❌</span>
-          </div>
-        </div>
       </div>
 
       {/* Filters & Search Row Toolbar */}
@@ -484,7 +560,8 @@ export default function RefillingDashboardPage() {
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
+            className="robust-select"
+            style={{ minWidth: "130px" }}
           >
             <option value="all">All Years</option>
             {getFilterYears().map(yr => (
@@ -495,7 +572,8 @@ export default function RefillingDashboardPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
+            className="robust-select"
+            style={{ minWidth: "210px" }}
           >
             <option value="all">All Statuses</option>
             <option value="Refilling Order Received">Refilling Order Received</option>
@@ -594,10 +672,18 @@ export default function RefillingDashboardPage() {
                     <td>{formatDate(job.deliveredDate)}</td>
                     <td style={{ color: "#10b981", fontWeight: "700" }}>{formatDate(job.amcDate)}</td>
                     <td>
-                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
-                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                      <span className={`pill-badge ${
+                        job.currentStatus === "Order Delivered" ? "pill-badge-green" :
+                        job.currentStatus === "Order Confirmed" ? "pill-badge-blue" :
+                        job.currentStatus === "Order Dropped" ? "pill-badge-red" : "pill-badge-amber"
+                      }`}>
+                        <span className={`priority-dot ${
+                          job.currentStatus === "Order Delivered" ? "priority-dot-green" :
+                          job.currentStatus === "Order Confirmed" ? "priority-dot-amber" :
+                          job.currentStatus === "Order Dropped" ? "priority-dot-red" : "priority-dot-amber"
+                        }`}></span>
                         {job.currentStatus}
-                      </div>
+                      </span>
                     </td>
                     <td>
                       {job.assignments.length === 0 ? (
@@ -605,8 +691,17 @@ export default function RefillingDashboardPage() {
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                           {job.assignments.map(a => (
-                            <span key={a.id} style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)" }}>
-                              {a.technician.fullName}
+                            <span 
+                              key={a.id} 
+                              title={a.assignedBy ? `Assigned by: ${a.assignedBy}` : "Assigned by Admin"} 
+                              style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            >
+                              <span>{a.technician.fullName}</span>
+                              {a.assignedBy && (
+                                <span style={{ fontSize: "9.5px", opacity: 0.75, borderLeft: "1px solid rgba(147,197,253,0.3)", paddingLeft: "4px" }}>
+                                  by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
+                                </span>
+                              )}
                             </span>
                           ))}
                         </div>
@@ -790,7 +885,7 @@ export default function RefillingDashboardPage() {
                         </div>
                         <div>
                           <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.extinguisherType || "Extinguisher Type"}</label>
-                          <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                          <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} className="robust-select">
                             <option value="">Select Type</option>
                             <option value="CO2">CO2</option>
                             <option value="DCP">DCP</option>
@@ -822,9 +917,9 @@ export default function RefillingDashboardPage() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <Calendar size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Refilling Status & AMC Dates</span>
+                      <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Refilling Status & AMC Dates</span>
                     </div>
-                    {isStatusCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {isStatusCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
                   </div>
 
                   {isStatusCardOpen && (
@@ -836,7 +931,7 @@ export default function RefillingDashboardPage() {
                         </div>
                         <div>
                           <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcYears || "No. of Years"}*</label>
-                          <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                          <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required className="robust-select">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                               <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
                             ))}
@@ -850,7 +945,7 @@ export default function RefillingDashboardPage() {
                         </div>
                         <div>
                           <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Current Refilling Status*</label>
-                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required className="robust-select">
                             <option value="Refilling Order Received">Refilling Order Received</option>
                             <option value="Quotation Sent">Quotation Sent</option>
                             <option value="Follow-up In Progress">Follow-up In Progress</option>

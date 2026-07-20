@@ -15,6 +15,15 @@ export interface RateLimitResult {
  * @param windowMs Time window in milliseconds (default: 60000ms = 1 minute)
  */
 export function rateLimit(ip: string, limit = 100, windowMs = 60000): RateLimitResult {
+  // Disable rate limiting in development mode to prevent 429 retry loops during HMR
+  if (process.env.NODE_ENV === "development") {
+    return {
+      isLimited: false,
+      remaining: limit,
+      reset: Date.now() + windowMs,
+    };
+  }
+
   const cacheKey = `ratelimit:${ip}`;
   const now = Date.now();
   

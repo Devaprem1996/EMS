@@ -53,6 +53,7 @@ interface Assignment {
   jobId: string;
   technicianId: string;
   status: string;
+  assignedBy?: string;
   assignedAt: string;
   technician: {
     id: string;
@@ -230,10 +231,18 @@ export default function TechnicianViewPage() {
   const pendingAsgs = totalAsgs - completedAsgs;
 
   return (
-    <div style={{ padding: "10px", color: "#e2e8f0" }}>
-      {/* Title */}
-      <div style={{ marginBottom: "20px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>Technician View</h1>
+    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+      {/* Background Accent Glow Spots */}
+      <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "20%" }}></div>
+
+      {/* Page Title & Subtitle */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
+        <div>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Technician Task Monitor
+          </h1>
+          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time field operations oversight, technician dispatches, and work order completion logs</p>
+        </div>
       </div>
 
       {/* KPI Summary Cards */}
@@ -242,7 +251,7 @@ export default function TechnicianViewPage() {
           <div>
             <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
             <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
-            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>Assigned Tasks</div>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>Active Dispatch Work Orders</div>
           </div>
           <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
             <span style={{ fontSize: "20px" }}>📋</span>
@@ -253,8 +262,8 @@ export default function TechnicianViewPage() {
           <div>
             <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
             <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
-            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> Needs Attention
+            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> In Progress / Pending Field Visit
             </div>
           </div>
           <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
@@ -266,8 +275,8 @@ export default function TechnicianViewPage() {
           <div>
             <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
             <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
-            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Done & Verified
+            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Verified & Signed Off
             </div>
           </div>
           <div style={{ background: "rgba(16, 185, 129, 0.15)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
@@ -290,20 +299,24 @@ export default function TechnicianViewPage() {
         </div>
       )}
 
-      {/* Search Input */}
-      <div style={{ position: "relative", width: "100%", marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: "100%", padding: "12px 15px 12px 40px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", color: "var(--text-primary)", fontSize: "14px" }}
-        />
-        <Search size={18} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+      {/* Floating Search Input */}
+      <div className="floating-toolbar" style={{ gap: "15px", marginBottom: "20px" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: "260px" }}>
+          <input
+            type="text"
+            placeholder="Search client, technician name, location..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", fontSize: "13.5px", transition: "all 0.2s" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 10px rgba(220, 38, 38, 0.15)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = "none"; }}
+          />
+          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+        </div>
       </div>
 
       {/* Assignment Type Filter Tabs */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "12px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "20px", overflowX: "auto", paddingBottom: "5px" }}>
         {[
           { key: "all", label: "All Assignments" },
           { key: "DELIVERY", label: "Delivery" },
@@ -313,33 +326,52 @@ export default function TechnicianViewPage() {
           <button
             key={tab.key}
             onClick={() => setSelectedType(tab.key)}
-            className={`premium-tab-btn ${selectedType === tab.key ? "active" : ""}`}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "1px solid " + (selectedType === tab.key ? "var(--primary)" : "rgba(255,255,255,0.06)"),
+              background: selectedType === tab.key ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
+              color: selectedType === tab.key ? "#fff" : "#94a3b8",
+              cursor: "pointer",
+              fontSize: "12.5px",
+              fontWeight: "600",
+              boxShadow: selectedType === tab.key ? "0 4px 10px rgba(var(--primary-rgb), 0.2)" : "none",
+              transition: "all 0.2s"
+            }}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Centralized Grid table */}
-      <div className="table-container" style={{ overflowX: "auto" }}>
+      {/* Table Data Grid */}
+      <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>Loading assignments...</div>
+          <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+            <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <div style={{ marginTop: "10px", fontSize: "14px" }}>Loading field tasks...</div>
+          </div>
         ) : filteredAssignments.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>No assignments found matching this type.</div>
+          <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
+            <span style={{ fontSize: "28px" }}>📭</span>
+            <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No assignments found</div>
+            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Try adjusting your search criteria or category filter tab</div>
+          </div>
         ) : (
-          <table className="premium-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
+          <table className="glass-table">
             <thead>
-              <tr style={{ borderBottom: "1px solid var(--border-glass)" }}>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>S.No</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Client Name</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Contact No1</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Employee Name</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Completed Status</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Technician Names</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Assignment Type</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Customer Location</th>
-                <th style={{ padding: "15px", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Assigned On</th>
-                <th style={{ padding: "15px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, background: "var(--bg-input)", borderBottom: "1px solid var(--border-glass)" }}>Actions</th>
+              <tr>
+                <th>S.No</th>
+                <th>Client Name</th>
+                <th>Contact Phone</th>
+                <th>Employee Name</th>
+                <th>Status</th>
+                <th>Assigned Field Techs</th>
+                <th>Assigned By</th>
+                <th>Type</th>
+                <th>Customer Location</th>
+                <th>Assigned On</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -349,34 +381,27 @@ export default function TechnicianViewPage() {
                 const locUrl = asg.job.customerLocation;
 
                 return (
-                  <tr key={asg.id} style={{ borderBottom: "1px solid var(--border-glass)" }}>
-                    <td style={{ padding: "15px" }}>{startIndex + index + 1}</td>
-                    <td style={{ padding: "15px" }}>{asg.job.customer?.companyName || "N/A"}</td>
-                    <td style={{ padding: "15px" }}>{asg.job.customer?.phone}</td>
-                    <td style={{ padding: "15px", fontWeight: "600" }}>{asg.technician.fullName}</td>
-                    <td style={{ padding: "15px" }}>
-                      <span style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        background: 
-                          displayStatus === "Completed" 
-                            ? "rgba(16, 185, 129, 0.15)" 
-                            : displayStatus === "Assign For Service" 
-                              ? "rgba(59, 130, 246, 0.15)" 
-                              : "rgba(245, 158, 11, 0.15)",
-                        color:
-                          displayStatus === "Completed" 
-                            ? "#10b981" 
-                            : displayStatus === "Assign For Service" 
-                              ? "#3b82f6" 
-                              : "#f59e0b",
-                      }}>
+                  <tr key={asg.id}>
+                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
+                    <td style={{ fontWeight: "600", color: "#fff" }}>{asg.job.customer?.companyName || "N/A"}</td>
+                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{asg.job.customer?.phone}</td>
+                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{asg.technician.fullName}</td>
+                    <td>
+                      <span className={`pill-badge ${
+                        displayStatus === "Completed" ? "pill-badge-green" :
+                        displayStatus === "Assign For Service" ? "pill-badge-blue" : "pill-badge-amber"
+                      }`}>
+                        <span className={`priority-dot ${
+                          displayStatus === "Completed" ? "priority-dot-green" :
+                          displayStatus === "Assign For Service" ? "priority-dot-amber" : "priority-dot-amber"
+                        }`}></span>
                         {displayStatus}
                       </span>
                     </td>
                     <td style={{ padding: "15px" }}>{siblingNames || "N/A"}</td>
+                    <td style={{ padding: "15px", fontWeight: "600", color: "var(--accent, #a3e635)" }}>
+                      {(!asg.assignedBy || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(asg.assignedBy) || (asg.assignedBy.length >= 32 && asg.assignedBy.includes("-") && !asg.assignedBy.includes(" "))) ? "Admin User" : asg.assignedBy}
+                    </td>
                     <td style={{ padding: "15px", fontWeight: "bold", color: "#a0aec0" }}>{asg.job.assignFor || "DELIVERY"}</td>
                     <td style={{ padding: "15px" }}>
                       {locUrl ? (

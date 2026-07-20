@@ -166,6 +166,7 @@ interface Assignment {
   jobId: string;
   technicianId: string;
   status: string;
+  assignedBy?: string;
   assignedAt: string;
   technician: {
     id: string;
@@ -175,11 +176,29 @@ interface Assignment {
   job: Job;
 }
 
+import QRScannerModal from "@/components/QRScannerModal";
+import { Scan, Navigation, MapPin } from "lucide-react";
+
 export default function TechnicianTasksPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortByProximity, setSortByProximity] = useState(false);
+
+  // Load GPS Location
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSortByProximity(true);
+      }, (err) => {
+        console.warn("Geolocation access denied or unavailable:", err);
+      });
+    }
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -382,17 +401,45 @@ export default function TechnicianTasksPage() {
         </div>
       )}
 
-      {/* Search Input Card */}
-      <div style={{ position: "relative", width: "100%", marginBottom: "20px", zIndex: 1 }} className="search-container">
-        <input
-          type="text"
-          placeholder="Search client name, assignment..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
-        <Search size={18} className="search-icon-inside" />
+      {/* Search & Action Toolbar */}
+      <div style={{ display: "flex", gap: "10px", width: "100%", marginBottom: "20px", zIndex: 1, flexWrap: "wrap" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: "260px" }} className="search-container">
+          <input
+            type="text"
+            placeholder="Search client name, tag serial, assignment..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <Search size={18} className="search-icon-inside" />
+        </div>
+
+        <button
+          onClick={() => setIsScannerOpen(true)}
+          className="btn-primary"
+          style={{ padding: "0.6rem 1.25rem", fontSize: "0.85rem" }}
+        >
+          <Scan size={16} /> Scan Tag / Barcode
+        </button>
+
+        <button
+          onClick={handleGetLocation}
+          className="btn-secondary"
+          style={{ padding: "0.6rem 1.25rem", fontSize: "0.85rem", background: sortByProximity ? "rgba(56, 189, 248, 0.2)" : undefined, color: sortByProximity ? "#38bdf8" : undefined }}
+        >
+          <Navigation size={16} /> {sortByProximity ? "📍 Proximity Active" : "Sort by Proximity"}
+        </button>
       </div>
+
+      {/* Camera QR Scanner Modal */}
+      <QRScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(scannedText) => {
+          setSearch(scannedText);
+          setSuccessMsg(`Scanned Equipment Serial Tag: ${scannedText}`);
+        }}
+      />
 
       {/* Assignment Type Filter Tabs */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "12px", position: "relative", zIndex: 1 }}>
@@ -430,6 +477,7 @@ export default function TechnicianTasksPage() {
                 <th>Contact No1</th>
                 <th>Completed Status</th>
                 <th>Assignment Type</th>
+                <th>Assigned By</th>
                 <th>Customer Location</th>
                 <th>Assigned On</th>
                 <th style={{ textAlign: "center" }}>Actions</th>
@@ -454,12 +502,21 @@ export default function TechnicianTasksPage() {
                     <td style={{ fontWeight: "600" }}>{asg.job.customer?.companyName || "N/A"}</td>
                     <td style={{ fontFamily: "monospace" }}>{asg.job.customer?.phone}</td>
                     <td>
-                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
-                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                      <span className={`pill-badge ${
+                        displayStatus === "Completed" ? "pill-badge-green" :
+                        displayStatus === "Assign For Service" ? "pill-badge-blue" : "pill-badge-amber"
+                      }`}>
+                        <span className={`priority-dot ${
+                          displayStatus === "Completed" ? "priority-dot-green" :
+                          displayStatus === "Assign For Service" ? "priority-dot-amber" : "priority-dot-amber"
+                        }`}></span>
                         {displayStatus}
-                      </div>
+                      </span>
                     </td>
                     <td style={{ fontWeight: "bold" }}>{asg.job.assignFor || "DELIVERY"}</td>
+                    <td style={{ fontWeight: "600", color: "var(--accent, #a3e635)" }}>
+                      {(!asg.assignedBy || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(asg.assignedBy) || (asg.assignedBy.length >= 32 && asg.assignedBy.includes("-") && !asg.assignedBy.includes(" "))) ? "Admin User" : asg.assignedBy}
+                    </td>
                     <td>
                       {locUrl ? (
                         <a 

@@ -239,6 +239,8 @@ export async function PUT(
       assignments: updatedJob.assignments.map((a: any) => ({
         id: a.id,
         technicianId: a.employeeId,
+        assignedBy: a.createdBy || "Admin User",
+        assignedAt: a.assignedAt || a.createdAt,
         technician: a.employee ? {
           id: a.employee.id,
           fullName: a.employee.fullName,

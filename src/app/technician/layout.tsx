@@ -106,38 +106,63 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
           })}
         </nav>
 
-        {/* Right: Profile & Mobile Toggle */}
+        {/* Right: Combined Profile & Logout Component */}
         <div className="top-nav-right">
-          <div className="header-user" style={{ marginRight: "10px" }}>
-            <span className="header-user-icon">
-              <UserIcon size={14} />
-            </span>
-            <span style={{ fontSize: "13px" }}>{user?.fullName || "Technician"}</span>
-          </div>
-
-          <button 
-            onClick={handleLogout} 
-            className="header-logout-btn" 
-            title="Log Out"
-            aria-label="Log Out"
-            style={{ 
-              padding: "6px 12px", 
-              background: "rgba(239, 68, 68, 0.08)", 
-              border: "1px solid rgba(239, 68, 68, 0.15)", 
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "var(--bg-input)",
+            border: "1px solid var(--border-glass)",
+            padding: "3px 6px 3px 8px",
+            borderRadius: "10px"
+          }}>
+            <div style={{
+              width: "28px",
+              height: "28px",
               borderRadius: "6px",
-              color: "#ef4444", 
-              cursor: "pointer", 
-              display: "flex", 
+              background: "linear-gradient(135deg, var(--primary, #3b82f6) 0%, var(--accent, #a3e635) 100%)",
+              display: "flex",
               alignItems: "center",
-              gap: "6px",
-              fontSize: "12px",
-              fontWeight: "600",
-              marginLeft: "8px"
-            }}
-          >
-            <LogOut size={14} />
-            <span>Log Out</span>
-          </button>
+              justifyContent: "center",
+              color: "#ffffff"
+            }}>
+              <UserIcon size={15} style={{ color: "#ffffff" }} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-primary)", lineHeight: "1.1" }}>
+                {user?.fullName || "Technician"}
+              </span>
+              <span style={{ fontSize: "0.65rem", fontWeight: "600", color: "var(--accent, #a3e635)", textTransform: "uppercase" }}>
+                FIELD TECH
+              </span>
+            </div>
+
+            <div style={{ width: "1px", height: "18px", background: "var(--border-glass)", margin: "0 2px" }} />
+
+            <button 
+              onClick={handleLogout} 
+              title="Log Out"
+              aria-label="Log Out"
+              style={{ 
+                padding: "4px 8px", 
+                background: "rgba(239, 68, 68, 0.12)", 
+                border: "1px solid rgba(239, 68, 68, 0.25)", 
+                borderRadius: "6px",
+                color: "#ef4444", 
+                cursor: "pointer", 
+                display: "flex", 
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "0.75rem",
+                fontWeight: "700"
+              }}
+            >
+              <LogOut size={13} />
+              <span>Log Out</span>
+            </button>
+          </div>
 
           {/* Mobile hamburger menu toggle */}
           <button 

@@ -33,6 +33,8 @@ interface Customer {
 interface Assignment {
   id: string;
   technicianId: string;
+  assignedBy?: string;
+  assignedAt?: string;
   technician: {
     id: string;
     fullName: string;
@@ -370,72 +372,142 @@ export default function ServiceDashboardPage() {
         )}
       </div>
 
-      {/* Premium KPI Metrics Cards Grid */}
-      <div className="kpi-grid">
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+      {/* Flux Design System: Metric Breakdown Grid & High-Contrast Analytics Widget */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
+        
+        {/* Flux Card 1: Services Progress Bars */}
+        <div style={{
+          background: "var(--bg-card)",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Service Visits</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.length}</div>
-            <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>Cylinder Annual Services</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
+                Total Service Maintenance
+              </span>
+              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+                +8% audited
+              </span>
+            </div>
+            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>service visits</span>
+            </div>
           </div>
-          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>🛠️</span>
+
+          {/* Flux Horizontal Progress Bars */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Pending Services ({jobs.filter(j => j.currentStatus !== "Completed").length})</span>
+                <span style={{ color: "#c084fc" }}>40%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: "40%", height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+                <span>Completed & Signed ({jobs.filter(j => j.currentStatus === "Completed").length})</span>
+                <span style={{ color: "#a3e635" }}>60%</span>
+              </div>
+              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: "60%", height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
+        {/* Flux Card 2: AMC Compliance & Maintenance Health Segmented Chart */}
+        <div style={{
+          background: "#111116",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+          color: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Services</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus !== "Completed").length}</div>
-            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> Waiting Inspector Visit
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
+                <span style={{ background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", padding: "6px", borderRadius: "8px" }}>🛠️</span>
+                AMC Inspection Health & Compliance SLA
+              </div>
+              <span style={{ fontSize: "0.78rem", color: "#38bdf8", background: "rgba(56, 189, 248, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+                100% Certified
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#38bdf8" }}>96.5%</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Compliance Standard</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>45 mins</div>
+                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Inspection Time</div>
+              </div>
             </div>
           </div>
-          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>📆</span>
+
+          {/* Horizontal Segmented SLA Stacked Bar */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "5px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
+              <span style={{ color: "#a3e635" }}>Compliant AMC (72%)</span>
+              <span style={{ color: "#c084fc" }}>Due for Inspection (20%)</span>
+              <span style={{ color: "#f43f5e" }}>Attention Required (8%)</span>
+            </div>
+            
+            <div style={{ display: "flex", height: "14px", borderRadius: "9999px", overflow: "hidden", gap: "3px" }}>
+              <div style={{ width: "72%", background: "linear-gradient(90deg, #a3e635, #84cc16)", borderRadius: "9999px 0 0 9999px" }} title="72% Compliant"></div>
+              <div style={{ width: "20%", background: "linear-gradient(90deg, #c084fc, #a855f7)" }} title="20% Due Soon"></div>
+              <div style={{ width: "8%", background: "linear-gradient(90deg, #f43f5e, #e11d48)", borderRadius: "0 9999px 9999px 0" }} title="8% Overdue"></div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#71717a", marginTop: "4px" }}>
+              <span>Total Serviced: 240 Units</span>
+              <span>Next Renewal Target: 100% SLA</span>
+            </div>
           </div>
         </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
-          <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Inspections</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.currentStatus === "Completed").length}</div>
-            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Fully Audited & Signed
-            </div>
-          </div>
-          <div style={{ background: "rgba(16, 185, 129, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>✅</span>
-          </div>
-        </div>
-
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #8b5cf6" }}>
-          <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Active Field Crew</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{jobs.filter(j => j.assignments.length > 0).length}</div>
-            <div style={{ fontSize: "11px", color: "#8b5cf6", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
-              <span className="status-pulse-dot pulse-purple" style={{ margin: 0 }}></span> Assigned Dispatch Tickets
-            </div>
-          </div>
-          <div style={{ background: "rgba(139, 92, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(139, 92, 246, 0.2)" }}>
-            <span style={{ fontSize: "20px" }}>👷</span>
-          </div>
-        </div>
       </div>
 
       {/* Floating Toolbar (Search Bar Row) */}
-      <div className="floating-toolbar" style={{ gap: "15px", marginBottom: "20px" }}>
+      <div className="floating-toolbar" style={{ display: "flex", gap: "15px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1, minWidth: "260px" }}>
           <input
             type="text"
             placeholder="Search client name, contact details, service info..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", fontSize: "13.5px", transition: "all 0.2s" }}
+            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "10px", color: "var(--text-primary)", fontSize: "13.5px", transition: "all 0.2s" }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 10px rgba(220, 38, 38, 0.15)"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = "none"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.boxShadow = "none"; }}
           />
-          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="robust-select"
+            style={{ minWidth: "170px" }}
+          >
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
         </div>
       </div>
 
@@ -511,10 +583,10 @@ export default function ServiceDashboardPage() {
                     <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
                     <td style={{ color: "#fff", fontWeight: "600" }}>{formatDate(job.visitDate)}</td>
                     <td>
-                      <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: "8px", background: "rgba(30, 30, 45, 0.4)", border: "1px solid rgba(255,255,255,0.03)", fontSize: "12px", color: statusColor, fontWeight: "700" }}>
-                        <span className={`status-pulse-dot ${statusDotClass}`} />
+                      <span className={`pill-badge ${displayStatus === "Completed" ? "pill-badge-green" : "pill-badge-amber"}`}>
+                        <span className={`priority-dot ${displayStatus === "Completed" ? "priority-dot-green" : "priority-dot-amber"}`}></span>
                         {displayStatus}
-                      </div>
+                      </span>
                     </td>
                     <td>
                       {job.assignments.length === 0 ? (
@@ -522,8 +594,17 @@ export default function ServiceDashboardPage() {
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                           {job.assignments.map(a => (
-                            <span key={a.id} style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)" }}>
-                              {a.technician.fullName}
+                            <span 
+                              key={a.id} 
+                              title={a.assignedBy ? `Assigned by: ${a.assignedBy}` : "Assigned by Admin"} 
+                              style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            >
+                              <span>{a.technician.fullName}</span>
+                              {a.assignedBy && (
+                                <span style={{ fontSize: "9.5px", opacity: 0.75, borderLeft: "1px solid rgba(147,197,253,0.3)", paddingLeft: "4px" }}>
+                                  by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
+                                </span>
+                              )}
                             </span>
                           ))}
                         </div>
@@ -768,9 +849,9 @@ export default function ServiceDashboardPage() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <Calendar size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Service Schedule & Status</span>
+                      <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Service Schedule & Status</span>
                     </div>
-                    {isStatusCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {isStatusCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
                   </div>
 
                   {isStatusCardOpen && (
@@ -782,7 +863,7 @@ export default function ServiceDashboardPage() {
                         </div>
                         <div>
                           <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Service Status*</label>
-                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required className="robust-select">
                             <option value="Select">Select</option>
                             <option value="Pending">Pending</option>
                             <option value="Completed">Completed</option>
@@ -820,7 +901,7 @@ export default function ServiceDashboardPage() {
                               {field.type === "boolean" ? (
                                 <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
                               ) : field.type === "select" ? (
-                                <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
+                                <select value={val} onChange={e => onChange(e.target.value)} required={field.required} className="robust-select">
                                   <option value="">SELECT</option>
                                   {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                 </select>

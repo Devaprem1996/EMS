@@ -92,6 +92,21 @@ export default function ServiceDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Table Density View Minimization State
+  const [tableDensity, setTableDensity] = useState<"compact" | "normal">("compact");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ems_table_density");
+    if (saved === "compact" || saved === "normal") {
+      setTableDensity(saved);
+    }
+  }, []);
+
+  const toggleTableDensity = (density: "compact" | "normal") => {
+    setTableDensity(density);
+    localStorage.setItem("ems_table_density", density);
+  };
+
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -373,7 +388,7 @@ export default function ServiceDashboardPage() {
       </div>
 
       {/* Flux Design System: Metric Breakdown Grid & High-Contrast Analytics Widget */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
+      <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
         
         {/* Flux Card 1: Services Progress Bars */}
         <div style={{
@@ -497,7 +512,47 @@ export default function ServiceDashboardPage() {
           <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Table View Density Control */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("compact")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "compact" ? "var(--accent)" : "transparent",
+                color: tableDensity === "compact" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Minimize table row view"
+            >
+              ⚡ Compact
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("normal")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "normal" ? "var(--accent)" : "transparent",
+                color: tableDensity === "normal" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard table view"
+            >
+              📑 Standard
+            </button>
+          </div>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -536,20 +591,20 @@ export default function ServiceDashboardPage() {
       </div>
 
       {/* Data Table */}
-      <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
+      <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying dispatch databases...</div>
           </div>
         ) : filteredJobs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
+          <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No services records matched</div>
-            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Adjust search terms to find client inspect lists</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Adjust search terms to find client inspect lists</div>
           </div>
         ) : (
-          <table className="glass-table">
+          <table className={`glass-table table-density-${tableDensity}`}>
             <thead>
               <tr>
                 <th>S.No</th>

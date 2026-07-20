@@ -113,6 +113,21 @@ export default function EnquiryDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Table Density View Minimization State
+  const [tableDensity, setTableDensity] = useState<"compact" | "normal">("compact");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ems_table_density");
+    if (saved === "compact" || saved === "normal") {
+      setTableDensity(saved);
+    }
+  }, []);
+
+  const toggleTableDensity = (density: "compact" | "normal") => {
+    setTableDensity(density);
+    localStorage.setItem("ems_table_density", density);
+  };
+
   const filteredEnquiries = enquiries.filter(enq => {
     if (selectedCategoryTab === "all") return true;
     return enq.requirementCategory === selectedCategoryTab;
@@ -969,18 +984,58 @@ export default function EnquiryDashboardPage() {
             placeholder="Search client name, contact, enquiry ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", fontSize: "13.5px", transition: "all 0.2s" }}
+            style={{ width: "100%", padding: "11px 12px 11px 38px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "10px", color: "var(--text-primary)", fontSize: "13.5px", transition: "all 0.2s" }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 0 10px rgba(220, 38, 38, 0.15)"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.boxShadow = "none"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.boxShadow = "none"; }}
           />
-          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+          <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Table View Density Control */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("compact")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "compact" ? "var(--accent)" : "transparent",
+                color: tableDensity === "compact" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Minimize table row view"
+            >
+              ⚡ Compact
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("normal")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "normal" ? "var(--accent)" : "transparent",
+                color: tableDensity === "normal" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard table view"
+            >
+              📑 Standard
+            </button>
+          </div>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: "11px 15px", background: "rgba(30, 30, 42, 0.7)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#fff", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
+            style={{ padding: "11px 15px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "10px", color: "var(--text-primary)", cursor: "pointer", fontSize: "13.5px", outline: "none" }}
           >
             <option value="all">All Pipeline Stages</option>
             <option value="Enquiry Registered">Enquiry Registered</option>
@@ -1260,20 +1315,20 @@ export default function EnquiryDashboardPage() {
       </div>
 
       {/* Table Data Grid */}
-      <div style={{ background: "rgba(18, 18, 26, 0.45)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", overflowX: "auto", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)" }}>
+      <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying telemetry systems...</div>
           </div>
         ) : filteredEnquiries.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "45px 20px", color: "#94a3b8" }}>
+          <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No telemetry records available</div>
-            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Register a new client enquiry or import a bulk batch file</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Register a new client enquiry or import a bulk batch file</div>
           </div>
         ) : (
-          <table className="glass-table">
+          <table className={`glass-table table-density-${tableDensity}`}>
             <thead>
               <tr>
                 <th style={{ width: "40px", textAlign: "left" }}>

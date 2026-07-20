@@ -204,6 +204,21 @@ export default function TechnicianTasksPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
+  // Table Density View Minimization State
+  const [tableDensity, setTableDensity] = useState<"compact" | "normal">("compact");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ems_table_density");
+    if (saved === "compact" || saved === "normal") {
+      setTableDensity(saved);
+    }
+  }, []);
+
+  const toggleTableDensity = (density: "compact" | "normal") => {
+    setTableDensity(density);
+    localStorage.setItem("ems_table_density", density);
+  };
+
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -351,8 +366,8 @@ export default function TechnicianTasksPage() {
       <div className="kpi-grid" style={{ marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>Assigned Tasks</div>
           </div>
           <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
@@ -362,8 +377,8 @@ export default function TechnicianTasksPage() {
 
         <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
               <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> Needs Attention
             </div>
@@ -375,8 +390,8 @@ export default function TechnicianTasksPage() {
 
         <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
               <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Done & Verified
             </div>
@@ -402,7 +417,7 @@ export default function TechnicianTasksPage() {
       )}
 
       {/* Search & Action Toolbar */}
-      <div style={{ display: "flex", gap: "10px", width: "100%", marginBottom: "20px", zIndex: 1, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "10px", width: "100%", marginBottom: "20px", zIndex: 1, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1, minWidth: "260px" }} className="search-container">
           <input
             type="text"
@@ -412,6 +427,46 @@ export default function TechnicianTasksPage() {
             className="search-input"
           />
           <Search size={18} className="search-icon-inside" />
+        </div>
+
+        {/* Table View Density Control */}
+        <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+          <button
+            type="button"
+            onClick={() => toggleTableDensity("compact")}
+            style={{
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "700",
+              borderRadius: "7px",
+              border: "none",
+              background: tableDensity === "compact" ? "var(--accent)" : "transparent",
+              color: tableDensity === "compact" ? "#0f172a" : "var(--text-secondary)",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+            title="Minimize table row view"
+          >
+            ⚡ Compact
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleTableDensity("normal")}
+            style={{
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "700",
+              borderRadius: "7px",
+              border: "none",
+              background: tableDensity === "normal" ? "var(--accent)" : "transparent",
+              color: tableDensity === "normal" ? "#0f172a" : "var(--text-secondary)",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+            title="Standard table view"
+          >
+            📑 Standard
+          </button>
         </div>
 
         <button
@@ -455,7 +510,18 @@ export default function TechnicianTasksPage() {
               setSelectedType(tab.key);
               setCurrentPage(1); // Reset page to 1 when changing tabs
             }}
-            className={`premium-tab-btn ${selectedType === tab.key ? "active" : ""}`}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "1px solid " + (selectedType === tab.key ? "var(--primary)" : "rgba(255,255,255,0.06)"),
+              background: selectedType === tab.key ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
+              color: selectedType === tab.key ? "#fff" : "#94a3b8",
+              cursor: "pointer",
+              fontSize: "12.5px",
+              fontWeight: "600",
+              boxShadow: selectedType === tab.key ? "0 4px 10px rgba(var(--primary-rgb), 0.2)" : "none",
+              transition: "all 0.2s"
+            }}
           >
             {tab.label}
           </button>
@@ -469,7 +535,7 @@ export default function TechnicianTasksPage() {
         ) : paginatedAssignments.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>No assignments found matching this type.</div>
         ) : (
-          <table className="premium-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
+          <table className={`premium-table table-density-${tableDensity}`} style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
             <thead>
               <tr>
                 <th>S.No</th>

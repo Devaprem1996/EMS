@@ -33,10 +33,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Load sidebar collapsed preference
+  // Load sidebar collapsed preference and handle medium laptop viewports
   useEffect(() => {
     const saved = localStorage.getItem("ems_sidebar_collapsed");
-    if (saved === "true") setIsCollapsed(true);
+    if (saved === "true") {
+      setIsCollapsed(true);
+    } else if (window.innerWidth >= 768 && window.innerWidth <= 1180) {
+      setIsCollapsed(true);
+    }
   }, []);
 
   const toggleSidebar = () => {
@@ -164,6 +168,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="dashboard-container" style={{ display: "flex", flexDirection: "row", minHeight: "100vh" }}>
+      {/* Mobile Drawer Backdrop Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="mobile-sidebar-backdrop"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 999,
+          }}
+        />
+      )}
+
       {/* Left Collapsible Sidebar Navigation */}
       <aside className={`dashboard-sidebar ${isMobileMenuOpen ? "mobile-open" : ""}`} style={{
         width: isCollapsed ? "74px" : "250px",
@@ -247,23 +266,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   justifyContent: isCollapsed ? "center" : "space-between",
                   padding: isCollapsed ? "0.75rem 0" : "0.7rem 1.1rem",
                   borderRadius: "9999px",
-                  fontSize: "0.9rem",
+                  fontSize: "var(--font-sm)",
                   fontWeight: isActive ? "700" : "500",
-                  color: isActive ? "#000000" : "var(--text-secondary)",
-                  background: isActive ? "#ffffff" : "transparent",
+                  color: isActive ? "var(--nav-active-text)" : "var(--text-secondary)",
+                  background: isActive ? "var(--nav-active-bg)" : "transparent",
                   boxShadow: isActive ? "0 4px 14px rgba(0, 0, 0, 0.15)" : "none",
                   textDecoration: "none",
                   transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: isCollapsed ? 0 : "0.85rem", justifyContent: "center" }}>
-                  <Icon size={18} style={{ color: isActive ? "#000000" : "var(--text-muted)" }} />
+                  <Icon size={18} style={{ color: isActive ? "var(--nav-active-text)" : "var(--text-muted)" }} />
                   {!isCollapsed && <span>{item.name}</span>}
                 </div>
                 {!isCollapsed && badgeCount && (
                   <span style={{
-                    background: isActive ? "#a3e635" : "rgba(163, 230, 53, 0.15)",
-                    color: isActive ? "#000000" : "#a3e635",
+                    background: isActive ? "var(--accent)" : "rgba(163, 230, 53, 0.15)",
+                    color: isActive ? "var(--text-on-accent, #0f172a)" : "var(--accent)",
                     fontSize: "0.72rem",
                     fontWeight: "800",
                     padding: "2px 8px",
@@ -495,7 +514,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
 
               {/* User Info Label */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+              <div className="header-user-info-text" style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
                 <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)", lineHeight: "1.1" }}>
                   {user?.fullName || "Admin User"}
                 </span>

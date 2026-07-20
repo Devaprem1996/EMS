@@ -101,14 +101,14 @@ export default function AdminCentralOverviewPage() {
   const currentDataset = timeframeData[timeframe];
 
   return (
-    <div className="dashboard-content" style={{ padding: "2rem", overflowY: "auto", minHeight: "100vh" }}>
+    <div className="dashboard-content" style={{ padding: "var(--padding-container)", overflowY: "auto", minHeight: "100vh" }}>
       
       {/* Central Header */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "2rem",
+        marginBottom: "1.5rem",
         flexWrap: "wrap",
         gap: "1rem"
       }}>
@@ -116,8 +116,8 @@ export default function AdminCentralOverviewPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
             <span style={{
               background: "rgba(163, 230, 53, 0.15)",
-              color: "#a3e635",
-              fontSize: "11px",
+              color: "var(--accent)",
+              fontSize: "var(--font-xs)",
               fontWeight: "800",
               padding: "4px 12px",
               borderRadius: "9999px",
@@ -130,10 +130,10 @@ export default function AdminCentralOverviewPage() {
               <Zap size={13} /> Executive Master Command Center
             </span>
           </div>
-          <h1 style={{ fontSize: "1.85rem", fontWeight: "800", color: "var(--text-primary, #ffffff)", margin: 0 }}>
+          <h1 style={{ fontSize: "var(--font-xl)", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>
             Central Operations & Telemetry
           </h1>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-secondary, #a1a1aa)", margin: "4px 0 0 0" }}>
+          <p style={{ fontSize: "var(--font-sm)", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>
             Unified real-time monitoring across Enquiry, Cylinder Refilling, Field Services & Staff Dispatch.
           </p>
         </div>
@@ -143,21 +143,21 @@ export default function AdminCentralOverviewPage() {
           display: "flex",
           alignItems: "center",
           gap: "6px",
-          background: "rgba(255, 255, 255, 0.05)",
+          background: "var(--bg-input)",
           padding: "5px",
           borderRadius: "9999px",
-          border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)"
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glass)"
         }}>
           <button
             onClick={() => setTimeframe("today")}
             style={{
-              padding: "8px 18px",
+              padding: "6px 16px",
               borderRadius: "9999px",
               border: "none",
-              background: timeframe === "today" ? "#a3e635" : "transparent",
-              color: timeframe === "today" ? "#000000" : "var(--text-secondary, #a1a1aa)",
-              fontSize: "12.5px",
+              background: timeframe === "today" ? "var(--accent)" : "transparent",
+              color: timeframe === "today" ? "var(--text-on-accent, #0f172a)" : "var(--text-secondary)",
+              fontSize: "var(--font-xs)",
               fontWeight: "800",
               cursor: "pointer",
               transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -169,12 +169,12 @@ export default function AdminCentralOverviewPage() {
           <button
             onClick={() => setTimeframe("month")}
             style={{
-              padding: "8px 18px",
+              padding: "6px 16px",
               borderRadius: "9999px",
               border: "none",
               background: timeframe === "month" ? "#c084fc" : "transparent",
-              color: timeframe === "month" ? "#000000" : "var(--text-secondary, #a1a1aa)",
-              fontSize: "12.5px",
+              color: timeframe === "month" ? "#000000" : "var(--text-secondary)",
+              fontSize: "var(--font-xs)",
               fontWeight: "800",
               cursor: "pointer",
               transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -186,12 +186,12 @@ export default function AdminCentralOverviewPage() {
           <button
             onClick={() => setTimeframe("year")}
             style={{
-              padding: "8px 18px",
+              padding: "6px 16px",
               borderRadius: "9999px",
               border: "none",
               background: timeframe === "year" ? "#38bdf8" : "transparent",
-              color: timeframe === "year" ? "#000000" : "var(--text-secondary, #a1a1aa)",
-              fontSize: "12.5px",
+              color: timeframe === "year" ? "#000000" : "var(--text-secondary)",
+              fontSize: "var(--font-xs)",
               fontWeight: "800",
               cursor: "pointer",
               transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -206,37 +206,37 @@ export default function AdminCentralOverviewPage() {
       {/* Cross-Module Executive Telemetry Cards (Flux Grid) */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-        gap: "1.25rem",
-        marginBottom: "2rem"
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: "var(--gap-grid)",
+        marginBottom: "1.5rem"
       }}>
         {/* Card 1: Enquiry */}
         <Link href="/admin/enquiry" style={{ textDecoration: "none" }}>
           <div style={{
-            background: "var(--card-bg, #111116)",
-            border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-glass)",
             borderRadius: "20px",
-            padding: "1.35rem",
+            padding: "var(--padding-card)",
             transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
             cursor: "pointer",
-            boxShadow: "0 15px 30px rgba(0,0,0,0.3)"
+            boxShadow: "var(--shadow-glass)"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#a3e635"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass, rgba(255, 255, 255, 0.1))"; e.currentTarget.style.transform = "translateY(0)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary, #a1a1aa)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
+              <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Client Enquiries
               </span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "rgba(163, 230, 53, 0.15)", color: "#a3e635", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <FileText size={20} />
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(163, 230, 53, 0.15)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <FileText size={18} />
               </div>
             </div>
-            <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--text-primary, #ffffff)", marginBottom: "0.25rem" }}>
+            <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.enquiries}
             </div>
-            <div style={{ fontSize: "12px", color: "#a3e635", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <TrendingUp size={14} /> {currentDataset.leadConv} Lead Conversion Rate
+            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+              <TrendingUp size={13} /> {currentDataset.leadConv} Lead Conversion Rate
             </div>
           </div>
         </Link>
@@ -244,30 +244,30 @@ export default function AdminCentralOverviewPage() {
         {/* Card 2: Refilling */}
         <Link href="/admin/refilling" style={{ textDecoration: "none" }}>
           <div style={{
-            background: "var(--card-bg, #111116)",
-            border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-glass)",
             borderRadius: "20px",
-            padding: "1.35rem",
+            padding: "var(--padding-card)",
             transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
             cursor: "pointer",
-            boxShadow: "0 15px 30px rgba(0,0,0,0.3)"
+            boxShadow: "var(--shadow-glass)"
           }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c084fc"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass, rgba(255, 255, 255, 0.1))"; e.currentTarget.style.transform = "translateY(0)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary, #a1a1aa)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
+              <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Cylinder Refilling
               </span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <RotateCcw size={20} />
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <RotateCcw size={18} />
               </div>
             </div>
-            <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--text-primary, #ffffff)", marginBottom: "0.25rem" }}>
+            <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.refills}
             </div>
-            <div style={{ fontSize: "12px", color: "#c084fc", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <Zap size={14} /> {currentDataset.onTimeRate} Dispatch Efficiency
+            <div style={{ fontSize: "var(--font-xs)", color: "#c084fc", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+              <Zap size={13} /> {currentDataset.onTimeRate} Dispatch Efficiency
             </div>
           </div>
         </Link>
@@ -275,30 +275,30 @@ export default function AdminCentralOverviewPage() {
         {/* Card 3: Services */}
         <Link href="/admin/services" style={{ textDecoration: "none" }}>
           <div style={{
-            background: "var(--card-bg, #111116)",
-            border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-glass)",
             borderRadius: "20px",
-            padding: "1.35rem",
+            padding: "var(--padding-card)",
             transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
             cursor: "pointer",
-            boxShadow: "0 15px 30px rgba(0,0,0,0.3)"
+            boxShadow: "var(--shadow-glass)"
           }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#38bdf8"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass, rgba(255, 255, 255, 0.1))"; e.currentTarget.style.transform = "translateY(0)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary, #a1a1aa)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
+              <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Maintenance & AMC
               </span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Wrench size={20} />
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Wrench size={18} />
               </div>
             </div>
-            <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--text-primary, #ffffff)", marginBottom: "0.25rem" }}>
+            <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.services}
             </div>
-            <div style={{ fontSize: "12px", color: "#38bdf8", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <CheckCircle2 size={14} /> 94.8% AMC SLA Renewal Rate
+            <div style={{ fontSize: "var(--font-xs)", color: "#38bdf8", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+              <CheckCircle2 size={13} /> 94.8% AMC SLA Renewal Rate
             </div>
           </div>
         </Link>
@@ -306,30 +306,30 @@ export default function AdminCentralOverviewPage() {
         {/* Card 4: Staff Fleet */}
         <Link href="/admin/employees" style={{ textDecoration: "none" }}>
           <div style={{
-            background: "var(--card-bg, #111116)",
-            border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-glass)",
             borderRadius: "20px",
-            padding: "1.35rem",
+            padding: "var(--padding-card)",
             transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
             cursor: "pointer",
-            boxShadow: "0 15px 30px rgba(0,0,0,0.3)"
+            boxShadow: "var(--shadow-glass)"
           }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#f43f5e"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass, rgba(255, 255, 255, 0.1))"; e.currentTarget.style.transform = "translateY(0)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary, #a1a1aa)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
+              <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Field Technicians
               </span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "rgba(244, 63, 94, 0.15)", color: "#f43f5e", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Users size={20} />
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(244, 63, 94, 0.15)", color: "#f43f5e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Users size={18} />
               </div>
             </div>
-            <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--text-primary, #ffffff)", marginBottom: "0.25rem" }}>
+            <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.techs}
             </div>
-            <div style={{ fontSize: "12px", color: "#f43f5e", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <Activity size={14} /> Active Fleet Assigned
+            <div style={{ fontSize: "var(--font-xs)", color: "#f43f5e", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+              <Activity size={13} /> Active Fleet Assigned
             </div>
           </div>
         </Link>
@@ -338,15 +338,15 @@ export default function AdminCentralOverviewPage() {
       {/* Main Dual-Widget Dispatch Telemetry Analysis Section */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-        gap: "1.5rem",
-        marginBottom: "2rem"
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: "var(--gap-grid)",
+        marginBottom: "1.5rem"
       }}>
         
         {/* Dispatch SLA & Pipeline Performance Widget */}
         <div style={{
-          background: "var(--card-bg, #111116)",
-          border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border-glass)",
           borderRadius: "24px",
           padding: "1.75rem",
           display: "flex",

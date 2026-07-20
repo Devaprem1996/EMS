@@ -60,6 +60,21 @@ export default function EmployeeMasterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Table Density View Minimization State
+  const [tableDensity, setTableDensity] = useState<"compact" | "normal">("compact");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ems_table_density");
+    if (saved === "compact" || saved === "normal") {
+      setTableDensity(saved);
+    }
+  }, []);
+
+  const toggleTableDensity = (density: "compact" | "normal") => {
+    setTableDensity(density);
+    localStorage.setItem("ems_table_density", density);
+  };
+
   // Fetch employees
   const fetchEmployees = async () => {
     setLoading(true);
@@ -223,7 +238,7 @@ export default function EmployeeMasterPage() {
       </div>
 
       {/* Flux Design System: Metric Breakdown Grid & High-Contrast Analytics Widget */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
+      <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
         
         {/* Flux Card 1: Employee Breakdown Progress Bars */}
         <div style={{
@@ -274,14 +289,14 @@ export default function EmployeeMasterPage() {
           </div>
         </div>
 
-        {/* Flux Card 2: High-Contrast Dark Feature Analytics Widget */}
+        {/* Flux Card 2: High-Contrast Feature Analytics Widget */}
         <div style={{
-          background: "#111116",
+          background: "var(--bg-card)",
           borderRadius: "24px",
           padding: "1.5rem",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          color: "#ffffff",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          color: "var(--text-primary)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between"
@@ -289,43 +304,42 @@ export default function EmployeeMasterPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
-                <span style={{ background: "rgba(255,255,255,0.1)", padding: "6px", borderRadius: "8px" }}>👥</span>
+                <span style={{ background: "var(--bg-input)", padding: "6px", borderRadius: "8px" }}>👥</span>
                 Field Dispatch Readiness
               </div>
-              <span style={{ fontSize: "0.78rem", color: "#a1a1aa", background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: "9999px" }}>
-                Monthly ˅
+              <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", background: "var(--bg-input)", padding: "4px 10px", borderRadius: "9999px" }}>
+                Active Teams
               </span>
             </div>
 
-            <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>96.4%</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Utilization Rate</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#10b981" }}>98.4%</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Service Reliability</div>
               </div>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#c084fc" }}>0.0%</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>SLA Delay</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#a3e635" }}>14 Min</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Avg Response Time</div>
               </div>
             </div>
           </div>
 
-          {/* Dual-Color Vertical Bar Chart */}
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "8px", height: "90px", paddingTop: "10px" }}>
+          {/* Mini Sparkline Bar Viz */}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "42px", paddingTop: "8px" }}>
             {[
-              { month: "Jun", h1: "40%", h2: "30%", active: false },
-              { month: "Jul", h1: "55%", h2: "45%", active: false },
-              { month: "Aug", h1: "70%", h2: "60%", active: false },
-              { month: "Sept ↗", h1: "95%", h2: "85%", active: true },
-              { month: "Oct", h1: "60%", h2: "50%", active: false },
-              { month: "Nov", h1: "75%", h2: "65%", active: false },
-              { month: "Dec", h1: "80%", h2: "70%", active: false },
+              { month: "Jan", h1: "40%", h2: "60%", active: false },
+              { month: "Feb", h1: "55%", h2: "70%", active: false },
+              { month: "Mar", h1: "70%", h2: "85%", active: false },
+              { month: "Apr", h1: "60%", h2: "75%", active: false },
+              { month: "May", h1: "80%", h2: "90%", active: false },
+              { month: "Jun", h1: "95%", h2: "100%", active: true },
             ].map((bar, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flex: 1 }}>
-                <div style={{ display: "flex", gap: "3px", alignItems: "flex-end", height: "70px", width: "100%" }}>
-                  <div style={{ flex: 1, height: bar.h1, background: bar.active ? "#a3e635" : "rgba(255,255,255,0.12)", borderRadius: "4px" }}></div>
-                  <div style={{ flex: 1, height: bar.h2, background: bar.active ? "#c084fc" : "rgba(255,255,255,0.06)", borderRadius: "4px" }}></div>
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" }}>
+                <div style={{ width: "100%", flex: 1, display: "flex", gap: "2px", alignItems: "flex-end" }}>
+                  <div style={{ flex: 1, height: bar.h1, background: bar.active ? "#a3e635" : "var(--border-glass)", borderRadius: "4px" }}></div>
+                  <div style={{ flex: 1, height: bar.h2, background: bar.active ? "#c084fc" : "var(--border-glass)", borderRadius: "4px" }}></div>
                 </div>
-                <span style={{ fontSize: "0.68rem", color: bar.active ? "#a3e635" : "#71717a", fontWeight: bar.active ? "800" : "500" }}>
+                <span style={{ fontSize: "0.68rem", color: bar.active ? "#a3e635" : "var(--text-muted)", fontWeight: bar.active ? "800" : "500" }}>
                   {bar.month}
                 </span>
               </div>
@@ -344,8 +358,8 @@ export default function EmployeeMasterPage() {
       )}
 
       {/* Filter Toolbar Row */}
-      <div className="filter-toolbar">
-        <div className="search-container" style={{ maxWidth: "340px" }}>
+      <div className="filter-toolbar" style={{ display: "flex", gap: "10px", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
+        <div className="search-container" style={{ maxWidth: "340px", flex: 1 }}>
           <input
             type="text"
             className="search-input"
@@ -356,7 +370,47 @@ export default function EmployeeMasterPage() {
           <Search size={18} className="search-icon-inside" />
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Table View Density Control */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("compact")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "compact" ? "var(--accent)" : "transparent",
+                color: tableDensity === "compact" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Minimize table row view"
+            >
+              ⚡ Compact
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleTableDensity("normal")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: tableDensity === "normal" ? "var(--accent)" : "transparent",
+                color: tableDensity === "normal" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard table view"
+            >
+              📑 Standard
+            </button>
+          </div>
+
           <button 
             className={`filter-pill-btn ${statusFilter === "all" ? "active" : ""}`}
             onClick={() => setStatusFilter("all")}
@@ -389,7 +443,7 @@ export default function EmployeeMasterPage() {
             No employees found matching the filters.
           </div>
         ) : (
-          <table className="premium-table">
+          <table className={`premium-table table-density-${tableDensity}`}>
             <thead>
               <tr>
                 <th style={{ width: "70px" }}>S.No</th>

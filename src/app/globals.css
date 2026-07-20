@@ -235,6 +235,7 @@ body {
   line-height: 1.15;
   margin-bottom: 1.5rem;
   background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.03em;
@@ -348,6 +349,7 @@ body {
 
 :root[data-theme="light"] .hero-title-3d {
   background: linear-gradient(135deg, #0f172a 40%, #475569 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: none;

@@ -11,7 +11,7 @@ export function ThemeToggleFloating() {
       onClick={toggleTheme}
       style={{
         position: "fixed",
-        bottom: "20px",
+        top: "20px",
         right: "20px",
         zIndex: 9999,
         background: "rgba(255, 255, 255, 0.05)",

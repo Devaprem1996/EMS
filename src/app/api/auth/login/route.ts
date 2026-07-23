@@ -20,6 +20,48 @@ export async function POST(req: NextRequest) {
     });
 
     if (!employee || !employee.isActive) {
+      // Fallback: Check if it's a customer logging in via their primaryPhone
+      const customer = await prisma.customer.findFirst({
+        where: { primaryPhone: mobileNumber }
+      });
+
+      if (customer) {
+        // For Prototype: Mock password for customers is 'portal123'
+        if (password !== "portal123") {
+          return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+        }
+
+        const sessionData = {
+          userId: customer.id,
+          username: customer.primaryPhone,
+          mobileNumber: customer.primaryPhone,
+          fullName: customer.contactName,
+          role: "CUSTOMER" as const,
+          tenantId: customer.tenantId,
+        };
+
+        const response = NextResponse.json({
+          success: true,
+          user: {
+            id: customer.id,
+            username: customer.primaryPhone,
+            mobileNumber: customer.primaryPhone,
+            fullName: customer.contactName,
+            role: "CUSTOMER",
+          },
+        });
+
+        response.cookies.set("ems_session", signSession(sessionData), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24, // 1 day
+          path: "/",
+          sameSite: "strict",
+        });
+
+        return response;
+      }
+
       return NextResponse.json(
         { error: "Invalid mobile number or inactive account" },
         { status: 401 }

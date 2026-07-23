@@ -39,8 +39,10 @@ export default function LoginPage() {
                 targetPath = "/admin/services";
               }
               router.push(targetPath);
+            } else if (data.user.role === "CUSTOMER") {
+              router.push("/portal");
             } else {
-              router.push("/technician/tasks");
+              router.push("/tech");
             }
           }
         }
@@ -82,8 +84,10 @@ export default function LoginPage() {
           targetPath = "/admin/services";
         }
         router.push(targetPath);
+      } else if (data.user.role === "CUSTOMER") {
+        router.push("/portal");
       } else {
-        router.push("/technician/tasks");
+        router.push("/tech");
       }
     } catch (err: any) {
       setError(err.message || "An error occurred");

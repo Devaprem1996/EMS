@@ -24,6 +24,7 @@ export async function PUT(
       technicianInstructions,
       customerLocation,
       signature,
+      stageData,
     } = body;
 
     const asgWhere: any = { id, deletedAt: null };
@@ -67,8 +68,8 @@ export async function PUT(
       };
       ticketUpdateData.updatedBy = session.userId;
 
-      if (signature !== undefined) {
-        // Fetch current ticket stageData to merge signature
+      if (signature !== undefined || stageData !== undefined) {
+        // Fetch current ticket stageData to merge signature & custom stage fields
         const currentTicket = await tx.ticket.findUnique({
           where: { id: assignment.ticketId },
           select: { stageData: true }
@@ -79,7 +80,15 @@ export async function PUT(
             currentData = JSON.parse(currentTicket.stageData);
           } catch (e) {}
         }
-        currentData.signature = signature;
+        if (signature !== undefined) {
+          currentData.signature = signature;
+        }
+        if (stageData !== undefined && typeof stageData === "object" && stageData !== null) {
+          currentData = {
+            ...currentData,
+            ...stageData
+          };
+        }
         ticketUpdateData.stageData = JSON.stringify(currentData);
       }
 

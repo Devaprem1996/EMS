@@ -14,6 +14,8 @@ import {
   ChevronsRight
 } from "lucide-react";
 import { useRef } from "react";
+import { useConfig } from "@/context/ConfigContext";
+import DynamicForm from "@/components/DynamicForm";
 
 function SignaturePad({ onSave, onClear }: { onSave: (base64: string) => void; onClear: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -180,6 +182,7 @@ import QRScannerModal from "@/components/QRScannerModal";
 import { Scan, Navigation, MapPin } from "lucide-react";
 
 export default function TechnicianTasksPage() {
+  const { config } = useConfig();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -234,6 +237,7 @@ export default function TechnicianTasksPage() {
   const [completedStatus, setCompletedStatus] = useState("Pending");
   const [signature, setSignature] = useState<string | null>(null);
   const [existingSignature, setExistingSignature] = useState<string | null>(null);
+  const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, unknown>>({});
 
   // Fetch data
   const fetchData = async () => {
@@ -270,16 +274,18 @@ export default function TechnicianTasksPage() {
     setCompletedStatus(currentAsgStatus);
 
     let existingSign: string | null = null;
+    let parsedStageData: Record<string, unknown> = {};
     if (asg.job.stageData) {
       try {
-        const parsed = JSON.parse(asg.job.stageData);
-        if (parsed.signature) {
-          existingSign = parsed.signature;
+        parsedStageData = JSON.parse(asg.job.stageData);
+        if (parsedStageData.signature) {
+          existingSign = parsedStageData.signature as string;
         }
       } catch (e) {}
     }
     setExistingSignature(existingSign);
     setSignature(null);
+    setDynamicFormValues(parsedStageData);
     
     setIsModalOpen(true);
   };
@@ -299,6 +305,7 @@ export default function TechnicianTasksPage() {
           technicianInstructions,
           customerLocation,
           signature: signature || undefined,
+          stageData: dynamicFormValues,
         }),
       });
 
@@ -763,6 +770,28 @@ export default function TechnicianTasksPage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Dynamic Config Fields Form */}
+                {(() => {
+                  const stageCode = selectedAsg.job.assignFor || "DELIVERY";
+                  const stagesMap = config?.stages as Record<string, { displayName?: string; fields?: Array<{ key: string; label: string; type: "text" | "number" | "boolean" | "select" | "multi-select"; options?: string[]; required?: boolean }> }> | undefined;
+                  const stageConfig = stagesMap?.[stageCode];
+                  const stageFields = stageConfig?.fields || [];
+                  if (stageFields.length === 0) return null;
+
+                  return (
+                    <div style={{ marginTop: "10px", borderTop: "1px solid var(--border-glass)", paddingTop: "15px" }}>
+                      <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#fff", marginBottom: "12px" }}>
+                        {stageConfig.displayName} Checklist
+                      </h4>
+                      <DynamicForm
+                        fields={stageFields}
+                        values={dynamicFormValues}
+                        onChange={(key, val) => setDynamicFormValues(prev => ({ ...prev, [key]: val }))}
+                      />
+                    </div>
+                  );
+                })()}
 
                 {/* Dynamic Signature Block */}
                 {existingSignature ? (

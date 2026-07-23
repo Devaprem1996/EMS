@@ -160,7 +160,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   menuItems.push(
     { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard },
-    { name: "System Settings", path: "/admin/settings", icon: Settings }
+    { name: "System Settings", path: "/admin/settings", icon: Settings },
+    { name: "Sandbox View (Dev)", path: "/admin/sandbox/dashboard/ENQUIRY", icon: LayoutDashboard }
   );
 
   const brandTitle = config?.brand?.title || "Safeway";

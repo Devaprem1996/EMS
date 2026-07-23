@@ -497,7 +497,12 @@ export default function RefillingDashboardPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
                 <span style={{ background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", padding: "6px", borderRadius: "8px" }}>🎛️</span>
-                Cylinder Gas Capacity & Purity Speedometer
+                <div style={{ padding: "0 10px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase" }}>
+                    {config?.brand?.labels?.capacity || "Capacity"} & Purity Speedometer
+                  </span>
+                  <div style={{ marginTop: "10px", height: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", overflow: "hidden" }}></div>
+                </div>
               </div>
               <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 99.2% Quality Grade
@@ -924,9 +929,9 @@ export default function RefillingDashboardPage() {
                     onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
                     style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Calendar size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Cylinder & Equipment Specifications</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "15px", paddingBottom: "10px", borderBottom: "1px solid var(--border-glass)" }}>
+                      <Zap size={16} style={{ color: "#a855f7" }} />
+                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Item & Equipment Specifications</span>
                     </div>
                     {isEquipmentCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </div>
@@ -957,7 +962,7 @@ export default function RefillingDashboardPage() {
                         </div>
                         <div>
                           <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.itemDescription || "Item Description"}</label>
-                          <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Fire Extinguisher DCP 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
+                          <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Model X-100" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
                         </div>
                       </div>
                     </div>

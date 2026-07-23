@@ -17,16 +17,19 @@ import {
   Flame,
   Building2,
   Monitor,
-  Snowflake
+  Snowflake,
+  Wand2
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import { EmsConfig, DynamicField } from "@/config/ems-config";
 
-const COLOR_SWATCHES = [
-  { name: "Crimson Fire Red", primary: "#dc2626", accent: "#ef4444" },
-  { name: "Vibrant Cobalt Blue", primary: "#2563eb", accent: "#3b82f6" },
-  { name: "Emerald Compliance Green", primary: "#059669", accent: "#10b981" },
-  { name: "Futuristic Tech Violet", primary: "#7c3aed", accent: "#8b5cf6" },
+// --- Preset Color Swatches ---
+const PRESET_SWATCHES = [
+  { name: "Default Safeway Red", primary: "#dc2626", accent: "#ef4444" },
+  { name: "Ocean Blue", primary: "#2563eb", accent: "#3b82f6" },
+  { name: "Forest Green", primary: "#059669", accent: "#10b981" },
+  { name: "Royal Purple", primary: "#7c3aed", accent: "#8b5cf6" },
+  { name: "Sunset Orange", primary: "#ea580c", accent: "#f97316" },
   { name: "Monochrome Steel Gray", primary: "#4b5563", accent: "#6b7280" }
 ];
 
@@ -35,6 +38,7 @@ const INDUSTRY_TEMPLATES = [
   { code: "hvac-repair", name: "HVAC & Air Conditioning", subtitle: "AC maintenance & climate systems", icon: Snowflake, color: "#38bdf8", file: "/config/templates/hvac-repair.json" },
   { code: "elevator-maintenance", name: "Elevator & Lifts", subtitle: "Lift maintenance & inspection", icon: Building2, color: "#8b5cf6", file: "/config/templates/elevator-maintenance.json" },
   { code: "it-helpdesk", name: "IT Helpdesk", subtitle: "IT support & service management", icon: Monitor, color: "#10b981", file: "/config/templates/it-helpdesk.json" },
+  { code: "custom-blank", name: "Custom / Blank", subtitle: "Start from scratch", icon: Wand2, color: "#94a3b8", file: "/config/templates/custom-blank.json" },
 ];
 
 export default function SettingsPage() {
@@ -520,7 +524,7 @@ export default function SettingsPage() {
               <div style={{ marginTop: "15px" }}>
                 <label style={{ fontSize: "13px", color: "#a0aec0", display: "block", marginBottom: "8px" }}>White-Label Preset Theme Swatches</label>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  {COLOR_SWATCHES.map((swatch) => (
+                  {PRESET_SWATCHES.map((swatch) => (
                     <button
                       key={swatch.name}
                       onClick={() => handleApplySwatch(swatch.primary, swatch.accent)}

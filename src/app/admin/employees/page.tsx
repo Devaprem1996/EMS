@@ -798,7 +798,7 @@ export default function EmployeeMasterPage() {
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. john@safeway.com"
+                    placeholder="e.g. user@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     style={{

@@ -228,7 +228,7 @@ export default function AdminCentralOverviewPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Client Enquiries
+                {config?.stages?.ENQUIRY?.displayName || "Client Enquiries"}
               </span>
               <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(163, 230, 53, 0.15)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <FileText size={18} />
@@ -300,7 +300,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.services}
             </div>
             <div style={{ fontSize: "var(--font-xs)", color: "#38bdf8", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <CheckCircle2 size={13} /> 94.8% AMC SLA Renewal Rate
+              <CheckCircle2 size={13} /> 94.8% Completion Rate
             </div>
           </div>
         </Link>
@@ -321,7 +321,7 @@ export default function AdminCentralOverviewPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Field Technicians
+                Field Staff
               </span>
               <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(244, 63, 94, 0.15)", color: "#f43f5e", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Users size={18} />
@@ -331,7 +331,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.techs}
             </div>
             <div style={{ fontSize: "var(--font-xs)", color: "#f43f5e", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
-              <Activity size={13} /> Active Fleet Assigned
+              <Activity size={13} /> Active Staff Assigned
             </div>
           </div>
         </Link>
@@ -391,7 +391,7 @@ export default function AdminCentralOverviewPage() {
               
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Client Enquiry to Order Quote</span>
+                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Enquiry to Conversion</span>
                   <span style={{ color: "#a3e635", fontWeight: "800" }}>{currentDataset.quoteRate}</span>
                 </div>
                 <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
@@ -401,7 +401,7 @@ export default function AdminCentralOverviewPage() {
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Cylinder Refill Dispatches</span>
+                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>{config?.stages?.REFILLING?.displayName || "Refilling"} Dispatches</span>
                   <span style={{ color: "#c084fc", fontWeight: "800" }}>{currentDataset.refillRate}</span>
                 </div>
                 <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
@@ -411,7 +411,7 @@ export default function AdminCentralOverviewPage() {
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Technician Inspection Completion</span>
+                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Task Completion Rate</span>
                   <span style={{ color: "#38bdf8", fontWeight: "800" }}>{currentDataset.inspectionRate}</span>
                 </div>
                 <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
@@ -514,7 +514,7 @@ export default function AdminCentralOverviewPage() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c084fc" }}></span>
-                <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Actual Fleet Execution</span>
+                <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Actual Execution</span>
               </div>
             </div>
           </div>
@@ -545,25 +545,25 @@ export default function AdminCentralOverviewPage() {
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <Link href="/admin/enquiry">
             <button className="btn-primary" style={{ fontSize: "13px" }}>
-              <Plus size={16} /> Register Enquiry
+              <Plus size={16} /> Register {config?.stages?.ENQUIRY?.displayName || "Enquiry"}
             </button>
           </Link>
 
           <Link href="/admin/refilling">
             <button className="btn-secondary" style={{ fontSize: "13px" }}>
-              <RotateCcw size={16} /> Schedule Refill
+              <RotateCcw size={16} /> Schedule {config?.stages?.REFILLING?.displayName || "Refill"}
             </button>
           </Link>
 
           <Link href="/admin/services">
             <button className="btn-secondary" style={{ fontSize: "13px" }}>
-              <Wrench size={16} /> Schedule Inspection
+              <Wrench size={16} /> Schedule {config?.stages?.SERVICES?.displayName || "Service"}
             </button>
           </Link>
 
           <Link href="/admin/employees">
             <button className="btn-secondary" style={{ fontSize: "13px" }}>
-              <Users size={16} /> Manage Tech Fleet
+              <Users size={16} /> Manage Staff
             </button>
           </Link>
         </div>

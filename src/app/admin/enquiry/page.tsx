@@ -647,7 +647,7 @@ export default function EnquiryDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "safeway_bulk_import_template.csv");
+    link.setAttribute("download", "bulk_import_template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1156,7 +1156,7 @@ export default function EnquiryDashboardPage() {
                   <div style={{ fontSize: "12px", fontWeight: "700", color: "#6ee7b7", marginBottom: "6px" }}>💡 Tips</div>
                   <ul style={{ margin: 0, paddingLeft: "16px", color: "#a0aec0", fontSize: "11px", lineHeight: "1.8" }}>
                     <li>Column names are <b style={{ color: "#e2e8f0" }}>case-insensitive</b></li>
-                    <li>Duplicate cylinders are <b style={{ color: "#e2e8f0" }}>updated</b></li>
+                    <li>Duplicate records are <b style={{ color: "#e2e8f0" }}>updated</b></li>
                     <li>Add multiple techs: <b style={{ color: "#e2e8f0" }}>"Ravi, Suresh"</b></li>
                   </ul>
                 </div>
@@ -1183,8 +1183,8 @@ export default function EnquiryDashboardPage() {
                         ["Mobile 2",                "Optional",    "Secondary phone number",                                      "9840135356"],
                         ["Email",                   "Optional",    "Customer email address",                                      "test@abc.com"],
                         ["Address",                 "Optional",    "Customer site address",                                        "Tambaram, Chennai"],
-                        ["Cylinder S/N",            "Optional",    "Serial number of cylinder",                                   "CYL-001"],
-                        ["Weight",                  "Optional",    "Cylinder capacity / weight",                                  "9 Kg"],
+                        [config?.brand?.labels?.serialNumber || "Serial No",            "Optional",    "Serial number of item",                                   "ITEM-001"],
+                        [config?.brand?.labels?.capacity || "Capacity",                  "Optional",    "Item capacity / specification",                                  "9 Kg"],
                         ["Type",                    "Optional",    "Extinguisher type",                                           "DCP / CO2"],
                         ["Description",             "Optional",    "Item notes / description",                                    "Annual refilling"],
                         ["Enquiry Source",          "Optional",    "How enquiry came in",                                         "Phone Call"],
@@ -1415,6 +1415,7 @@ export default function EnquiryDashboardPage() {
                                   by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
                                 </span>
                               )}
+                              {config?.brand?.labels?.serialNumber || "S/N"}
                             </span>
                           ))}
                         </div>
@@ -1826,7 +1827,7 @@ export default function EnquiryDashboardPage() {
                     </div>
                     <div>
                       <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement</label>
-                      <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Cylinder count, medium type..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                      <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Requirement details, item count, specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
                     </div>
                     {/* Custom Fields in Edit modal */}
                     {config?.stages?.ENQUIRY?.fields && config.stages.ENQUIRY.fields.length > 0 && (

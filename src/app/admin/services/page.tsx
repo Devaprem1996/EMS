@@ -349,7 +349,7 @@ export default function ServiceDashboardPage() {
           <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             {config?.stages?.SERVICES?.displayName || "Service"} Dispatch
           </h1>
-          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time inspector tracking, annual visits schedules, and cylinder inspection tasks</p>
+          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time inspector tracking, annual visits schedules, and field inspection tasks</p>
         </div>
       </div>
 

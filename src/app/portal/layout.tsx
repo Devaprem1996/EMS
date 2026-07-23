@@ -12,13 +12,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
-        if (!data.session || data.session.role !== "CUSTOMER") {
+        if (!data.authenticated || !data.user || data.user.role !== "CUSTOMER") {
           router.push("/login");
         } else {
-          setSession(data.session);
+          setSession(data.user);
           setLoading(false);
         }
       })

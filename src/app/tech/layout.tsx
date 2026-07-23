@@ -14,13 +14,13 @@ export default function TechLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     // Check session
-    fetch("/api/auth/session")
+    fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
-        if (!data.session || data.session.role !== "TECHNICIAN") {
+        if (!data.authenticated || !data.user || data.user.role !== "TECHNICIAN") {
           router.push("/login");
         } else {
-          setSession(data.session);
+          setSession(data.user);
           setLoading(false);
         }
       })

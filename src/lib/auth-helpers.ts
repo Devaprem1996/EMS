@@ -6,7 +6,7 @@ export interface SessionData {
   username: string;
   mobileNumber: string;
   fullName: string;
-  role: "ADMIN" | "TECHNICIAN" | "SUPER_ADMIN";
+  role: "ADMIN" | "TECHNICIAN" | "SUPER_ADMIN" | "CUSTOMER";
   tenantId?: string | null;
 }
 

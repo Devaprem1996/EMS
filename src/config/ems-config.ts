@@ -65,6 +65,30 @@ export interface EmsConfig {
     assignedTechnicians: string[];
     targetDashboard: string[];
   };
+  features?: {
+    billingModule: boolean;
+    inventoryManagement: boolean;
+    customerPortal: boolean;
+    advancedAnalytics: boolean;
+  };
+  communications?: {
+    email: {
+      provider: "none" | "smtp" | "sendgrid" | "ses";
+      senderName?: string;
+      senderEmail?: string;
+      smtpHost?: string;
+      smtpPort?: number;
+      smtpUser?: string;
+      smtpPass?: string;
+      apiKey?: string;
+    };
+    sms: {
+      provider: "none" | "twilio" | "messagebird" | "mock";
+      senderId?: string;
+      apiKey?: string;
+      apiSecret?: string;
+    };
+  };
   categories?: string[];
   sources?: string[];
 }

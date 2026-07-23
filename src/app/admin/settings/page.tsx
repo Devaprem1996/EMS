@@ -43,7 +43,7 @@ const INDUSTRY_TEMPLATES = [
 
 export default function SettingsPage() {
   const { config, loading: configLoading, updateConfig } = useConfig();
-  const [activeTab, setActiveTab] = useState<"brand" | "stages" | "categories" | "fields" | "csv">("brand");
+  const [activeTab, setActiveTab] = useState<"brand" | "stages" | "categories" | "fields" | "csv" | "modules" | "communications">("brand");
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
@@ -118,6 +118,27 @@ export default function SettingsPage() {
   // CSV Mappings States (key mapping string inputs)
   const [csvMappings, setCsvMappings] = useState<Record<string, string>>({});
 
+  // Feature Toggles State
+  const [featBilling, setFeatBilling] = useState(false);
+  const [featInventory, setFeatInventory] = useState(false);
+  const [featPortal, setFeatPortal] = useState(false);
+  const [featAnalytics, setFeatAnalytics] = useState(false);
+
+  // Communications State
+  const [emailProvider, setEmailProvider] = useState<"none" | "smtp" | "sendgrid" | "ses">("none");
+  const [emailSenderName, setEmailSenderName] = useState("");
+  const [emailSenderEmail, setEmailSenderEmail] = useState("");
+  const [emailSmtpHost, setEmailSmtpHost] = useState("");
+  const [emailSmtpPort, setEmailSmtpPort] = useState(587);
+  const [emailSmtpUser, setEmailSmtpUser] = useState("");
+  const [emailSmtpPass, setEmailSmtpPass] = useState("");
+  const [emailApiKey, setEmailApiKey] = useState("");
+
+  const [smsProvider, setSmsProvider] = useState<"none" | "twilio" | "messagebird" | "mock">("none");
+  const [smsSenderId, setSmsSenderId] = useState("");
+  const [smsApiKey, setSmsApiKey] = useState("");
+  const [smsApiSecret, setSmsApiSecret] = useState("");
+
   // Load state from context config
   useEffect(() => {
     if (config) {
@@ -164,6 +185,34 @@ export default function SettingsPage() {
         }
       }
       setCsvMappings(mappings);
+
+      // Features
+      if (config.features) {
+        setFeatBilling(config.features.billingModule || false);
+        setFeatInventory(config.features.inventoryManagement || false);
+        setFeatPortal(config.features.customerPortal || false);
+        setFeatAnalytics(config.features.advancedAnalytics || false);
+      }
+
+      // Communications
+      if (config.communications) {
+        if (config.communications.email) {
+          setEmailProvider(config.communications.email.provider || "none");
+          setEmailSenderName(config.communications.email.senderName || "");
+          setEmailSenderEmail(config.communications.email.senderEmail || "");
+          setEmailSmtpHost(config.communications.email.smtpHost || "");
+          setEmailSmtpPort(config.communications.email.smtpPort || 587);
+          setEmailSmtpUser(config.communications.email.smtpUser || "");
+          setEmailSmtpPass(config.communications.email.smtpPass || "");
+          setEmailApiKey(config.communications.email.apiKey || "");
+        }
+        if (config.communications.sms) {
+          setSmsProvider(config.communications.sms.provider || "none");
+          setSmsSenderId(config.communications.sms.senderId || "");
+          setSmsApiKey(config.communications.sms.apiKey || "");
+          setSmsApiSecret(config.communications.sms.apiSecret || "");
+        }
+      }
     }
   }, [config]);
 
@@ -226,6 +275,30 @@ export default function SettingsPage() {
           mappings[key] = Array.isArray(val) ? (val as string[]).join(", ") : "";
         }
         setCsvMappings(mappings);
+      }
+      if (tpl.features) {
+        setFeatBilling(tpl.features.billingModule || false);
+        setFeatInventory(tpl.features.inventoryManagement || false);
+        setFeatPortal(tpl.features.customerPortal || false);
+        setFeatAnalytics(tpl.features.advancedAnalytics || false);
+      }
+      if (tpl.communications) {
+        if (tpl.communications.email) {
+          setEmailProvider(tpl.communications.email.provider || "none");
+          setEmailSenderName(tpl.communications.email.senderName || "");
+          setEmailSenderEmail(tpl.communications.email.senderEmail || "");
+          setEmailSmtpHost(tpl.communications.email.smtpHost || "");
+          setEmailSmtpPort(tpl.communications.email.smtpPort || 587);
+          setEmailSmtpUser(tpl.communications.email.smtpUser || "");
+          setEmailSmtpPass(tpl.communications.email.smtpPass || "");
+          setEmailApiKey(tpl.communications.email.apiKey || "");
+        }
+        if (tpl.communications.sms) {
+          setSmsProvider(tpl.communications.sms.provider || "none");
+          setSmsSenderId(tpl.communications.sms.senderId || "");
+          setSmsApiKey(tpl.communications.sms.apiKey || "");
+          setSmsApiSecret(tpl.communications.sms.apiSecret || "");
+        }
       }
 
       setSuccessMsg(`"${INDUSTRY_TEMPLATES.find(t => t.code === templateCode)?.name}" template loaded! Review the values below and click Save Settings to apply.`);
@@ -343,7 +416,31 @@ export default function SettingsPage() {
       },
       categories,
       sources,
-      importMappings: updatedImportMappings as any
+      importMappings: updatedImportMappings as any,
+      features: {
+        billingModule: featBilling,
+        inventoryManagement: featInventory,
+        customerPortal: featPortal,
+        advancedAnalytics: featAnalytics
+      },
+      communications: {
+        email: {
+          provider: emailProvider,
+          senderName: emailSenderName,
+          senderEmail: emailSenderEmail,
+          smtpHost: emailSmtpHost,
+          smtpPort: emailSmtpPort,
+          smtpUser: emailSmtpUser,
+          smtpPass: emailSmtpPass,
+          apiKey: emailApiKey
+        },
+        sms: {
+          provider: smsProvider,
+          senderId: smsSenderId,
+          apiKey: smsApiKey,
+          apiSecret: smsApiSecret
+        }
+      }
     };
 
     const success = await updateConfig(updatedConfigPayload);
@@ -484,6 +581,7 @@ export default function SettingsPage() {
         {/* Settings Tab Content Panel */}
         <main style={{ background: "var(--bg-card-glass)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "25px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)" }}>
           
+          {activeTab === "brand" && (
           <div>
             <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "10px" }}>Branding & Visual Identity</h3>
             
@@ -617,6 +715,159 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+          )}
+
+          {activeTab === "modules" && (
+          <div>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "10px" }}>Platform Modules & Features</h3>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "20px" }}>Enable or disable advanced SaaS modules for this tenant.</p>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+              <div style={{ background: "var(--bg-input)", padding: "15px", borderRadius: "10px", border: "1px solid var(--border-glass)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", color: "var(--text-primary)" }}>Billing & Invoicing</h4>
+                  <p style={{ margin: 0, fontSize: "11px", color: "var(--text-secondary)" }}>Generate quotes and track payments</p>
+                </div>
+                <button type="button" onClick={() => setFeatBilling(!featBilling)} style={{ background: "none", border: "none", color: featBilling ? "var(--accent)" : "#718096", cursor: "pointer" }}>
+                  {featBilling ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+
+              <div style={{ background: "var(--bg-input)", padding: "15px", borderRadius: "10px", border: "1px solid var(--border-glass)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", color: "var(--text-primary)" }}>Inventory Management</h4>
+                  <p style={{ margin: 0, fontSize: "11px", color: "var(--text-secondary)" }}>Track stock levels for equipment</p>
+                </div>
+                <button type="button" onClick={() => setFeatInventory(!featInventory)} style={{ background: "none", border: "none", color: featInventory ? "var(--accent)" : "#718096", cursor: "pointer" }}>
+                  {featInventory ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+
+              <div style={{ background: "var(--bg-input)", padding: "15px", borderRadius: "10px", border: "1px solid var(--border-glass)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", color: "var(--text-primary)" }}>Customer Self-Service Portal</h4>
+                  <p style={{ margin: 0, fontSize: "11px", color: "var(--text-secondary)" }}>Allow clients to log in and view status</p>
+                </div>
+                <button type="button" onClick={() => setFeatPortal(!featPortal)} style={{ background: "none", border: "none", color: featPortal ? "var(--accent)" : "#718096", cursor: "pointer" }}>
+                  {featPortal ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+
+              <div style={{ background: "var(--bg-input)", padding: "15px", borderRadius: "10px", border: "1px solid var(--border-glass)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", color: "var(--text-primary)" }}>Advanced Analytics</h4>
+                  <p style={{ margin: 0, fontSize: "11px", color: "var(--text-secondary)" }}>Export custom reports and charts</p>
+                </div>
+                <button type="button" onClick={() => setFeatAnalytics(!featAnalytics)} style={{ background: "none", border: "none", color: featAnalytics ? "var(--accent)" : "#718096", cursor: "pointer" }}>
+                  {featAnalytics ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                </button>
+              </div>
+            </div>
+          </div>
+          )}
+
+          {activeTab === "communications" && (
+          <div>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "10px" }}>Communication Providers</h3>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "20px" }}>Configure isolated email and SMS gateways for this tenant.</p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
+              {/* Email Config */}
+              <div style={{ background: "var(--bg-input)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
+                <h4 style={{ fontSize: "15px", fontWeight: "bold", margin: "0 0 15px 0", color: "var(--text-primary)" }}>Email Gateway (SMTP/API)</h4>
+                
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Provider Type</label>
+                  <select value={emailProvider} onChange={e => setEmailProvider(e.target.value as any)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
+                    <option value="none">None (Disabled)</option>
+                    <option value="smtp">Custom SMTP Server</option>
+                    <option value="sendgrid">SendGrid API</option>
+                    <option value="ses">AWS SES API</option>
+                  </select>
+                </div>
+
+                {emailProvider !== "none" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid var(--border-glass)", paddingTop: "15px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>Sender Name (From)</label>
+                        <input type="text" value={emailSenderName} onChange={e => setEmailSenderName(e.target.value)} placeholder="e.g. Acme Support" style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>Sender Email (From)</label>
+                        <input type="email" value={emailSenderEmail} onChange={e => setEmailSenderEmail(e.target.value)} placeholder="e.g. hello@acme.com" style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                      </div>
+                    </div>
+
+                    {emailProvider === "smtp" ? (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "12px" }}>
+                          <div>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>SMTP Host</label>
+                            <input type="text" value={emailSmtpHost} onChange={e => setEmailSmtpHost(e.target.value)} placeholder="smtp.mailgun.org" style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>Port</label>
+                            <input type="number" value={emailSmtpPort} onChange={e => setEmailSmtpPort(Number(e.target.value))} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          <div>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>SMTP User</label>
+                            <input type="text" value={emailSmtpUser} onChange={e => setEmailSmtpUser(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>SMTP Password</label>
+                            <input type="password" value={emailSmtpPass} onChange={e => setEmailSmtpPass(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>API Key</label>
+                        <input type="password" value={emailApiKey} onChange={e => setEmailApiKey(e.target.value)} placeholder="sk_live_..." style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* SMS Config */}
+              <div style={{ background: "var(--bg-input)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
+                <h4 style={{ fontSize: "15px", fontWeight: "bold", margin: "0 0 15px 0", color: "var(--text-primary)" }}>SMS Gateway (API)</h4>
+                
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Provider Type</label>
+                  <select value={smsProvider} onChange={e => setSmsProvider(e.target.value as any)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
+                    <option value="none">None (Disabled)</option>
+                    <option value="mock">Mock SMS (Development)</option>
+                    <option value="twilio">Twilio</option>
+                    <option value="messagebird">MessageBird</option>
+                  </select>
+                </div>
+
+                {smsProvider !== "none" && smsProvider !== "mock" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid var(--border-glass)", paddingTop: "15px" }}>
+                    <div>
+                      <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>Sender ID (From Number or Name)</label>
+                      <input type="text" value={smsSenderId} onChange={e => setSmsSenderId(e.target.value)} placeholder="e.g. +1234567890 or ACME" style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>API Key (Account SID)</label>
+                        <input type="password" value={smsApiKey} onChange={e => setSmsApiKey(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block" }}>API Secret (Auth Token)</label>
+                        <input type="password" value={smsApiSecret} onChange={e => setSmsApiSecret(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          )}
 
         </main>
       </div>

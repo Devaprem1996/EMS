@@ -41,5 +41,30 @@
     "serialNumber": ["lift id", "unit id", "serial", "lift number"],
     "capacity": ["capacity", "persons", "load capacity", "max load"],
     "extinguisherType": ["lift type", "type", "elevator type"]
+  },
+  "features": {
+    "billingModule": false,
+    "inventoryManagement": false,
+    "customerPortal": false,
+    "advancedAnalytics": false
+  },
+  "communications": {
+    "email": {
+      "provider": "none",
+      "senderName": "",
+      "senderEmail": "",
+      "smtpHost": "",
+      "smtpPort": 587,
+      "smtpUser": "",
+      "smtpPass": "",
+      "apiKey": ""
+    },
+    "sms": {
+      "provider": "none",
+      "senderId": "",
+      "apiKey": "",
+      "apiSecret": ""
+    }
   }
 }
+

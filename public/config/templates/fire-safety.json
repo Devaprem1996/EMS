@@ -41,5 +41,30 @@
     "serialNumber": ["cylinder tag", "serial", "serial no", "cylinder number"],
     "capacity": ["capacity", "kg", "weight"],
     "extinguisherType": ["type", "extinguisher type", "ext type"]
+  },
+  "features": {
+    "billingModule": false,
+    "inventoryManagement": false,
+    "customerPortal": false,
+    "advancedAnalytics": false
+  },
+  "communications": {
+    "email": {
+      "provider": "none",
+      "senderName": "",
+      "senderEmail": "",
+      "smtpHost": "",
+      "smtpPort": 587,
+      "smtpUser": "",
+      "smtpPass": "",
+      "apiKey": ""
+    },
+    "sms": {
+      "provider": "none",
+      "senderId": "",
+      "apiKey": "",
+      "apiSecret": ""
+    }
   }
 }
+

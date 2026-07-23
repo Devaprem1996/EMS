@@ -47,8 +47,8 @@ export default async function BillingDashboard() {
     }
   });
 
-  const totalRevenue = invoices.filter(i => i.status === "PAID").reduce((sum, i) => sum + i.totalAmount, 0);
-  const pendingRevenue = invoices.filter(i => i.status === "SENT").reduce((sum, i) => sum + i.totalAmount, 0);
+  const totalRevenue = invoices.filter((i: any) => i.status === "PAID").reduce((sum: number, i: any) => sum + i.totalAmount, 0);
+  const pendingRevenue = invoices.filter((i: any) => i.status === "SENT").reduce((sum: number, i: any) => sum + i.totalAmount, 0);
 
   return (
     <div style={{ padding: "30px", maxWidth: "1400px", margin: "0 auto" }}>
@@ -93,7 +93,7 @@ export default async function BillingDashboard() {
                 <div key={ticket.id} style={{ background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "12px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
-                      {ticket.customer?.companyName || ticket.customer?.contactName || "Unknown Customer"}
+                      {(ticket as any).customer?.companyName || (ticket as any).customer?.contactName || "Unknown Customer"}
                     </div>
                     <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                       {ticket.ticketNumber} • {ticket.itemDescription || "General Service"}
@@ -121,7 +121,7 @@ export default async function BillingDashboard() {
                 No invoices generated yet.
               </div>
             ) : (
-              invoices.map(invoice => (
+              invoices.map((invoice: any) => (
                 <div key={invoice.id} style={{ background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "12px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>

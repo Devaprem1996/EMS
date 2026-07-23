@@ -12,7 +12,12 @@ import {
   AlertCircle, 
   FileSpreadsheet,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Zap,
+  Flame,
+  Building2,
+  Monitor,
+  Snowflake
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import { EmsConfig, DynamicField } from "@/config/ems-config";
@@ -25,11 +30,19 @@ const COLOR_SWATCHES = [
   { name: "Monochrome Steel Gray", primary: "#4b5563", accent: "#6b7280" }
 ];
 
+const INDUSTRY_TEMPLATES = [
+  { code: "fire-safety", name: "Fire Safety", subtitle: "Fire protection & cylinder management", icon: Flame, color: "#ef4444", file: "/config/templates/fire-safety.json" },
+  { code: "hvac-repair", name: "HVAC & Air Conditioning", subtitle: "AC maintenance & climate systems", icon: Snowflake, color: "#38bdf8", file: "/config/templates/hvac-repair.json" },
+  { code: "elevator-maintenance", name: "Elevator & Lifts", subtitle: "Lift maintenance & inspection", icon: Building2, color: "#8b5cf6", file: "/config/templates/elevator-maintenance.json" },
+  { code: "it-helpdesk", name: "IT Helpdesk", subtitle: "IT support & service management", icon: Monitor, color: "#10b981", file: "/config/templates/it-helpdesk.json" },
+];
+
 export default function SettingsPage() {
   const { config, loading: configLoading, updateConfig } = useConfig();
   const [activeTab, setActiveTab] = useState<"brand" | "stages" | "categories" | "fields" | "csv">("brand");
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
 
   // Success/Error toast states
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -154,6 +167,69 @@ export default function SettingsPage() {
   const handleApplySwatch = (primary: string, accent: string) => {
     setPrimaryColor(primary);
     setAccentColor(accent);
+  };
+
+  // Load Industry Template handler
+  const handleLoadTemplate = async (templateCode: string, templateFile: string) => {
+    setLoadingTemplate(templateCode);
+    try {
+      const res = await fetch(templateFile);
+      if (!res.ok) throw new Error("Template file not found");
+      const tpl = await res.json();
+
+      // Apply template values to all form fields
+      if (tpl.brand) {
+        setTitle(tpl.brand.title || "");
+        setSubtitle(tpl.brand.subtitle || "");
+        setLogoUrl(tpl.brand.logoUrl || "");
+        if (tpl.brand.theme) {
+          setPrimaryColor(tpl.brand.theme.primaryColor || "#dc2626");
+          setAccentColor(tpl.brand.theme.accentColor || "#ef4444");
+          setDarkTheme(tpl.brand.theme.darkTheme !== false);
+        }
+        if (tpl.brand.labels) {
+          setSerialNumberLabel(tpl.brand.labels.serialNumber || "Serial Number");
+          setCapacityLabel(tpl.brand.labels.capacity || "Capacity");
+          setExtinguisherTypeLabel(tpl.brand.labels.extinguisherType || "Type");
+          setItemDescriptionLabel(tpl.brand.labels.itemDescription || "Item Description");
+          setDeliveredDateLabel(tpl.brand.labels.deliveredDate || "Delivered Date");
+          setAmcYearsLabel(tpl.brand.labels.amcYears || "No. of Years");
+          setAmcDateLabel(tpl.brand.labels.amcDate || "Next Date");
+        }
+      }
+      if (tpl.stages) {
+        if (tpl.stages.ENQUIRY) {
+          setEnquiryEnabled(tpl.stages.ENQUIRY.enabled !== false);
+          setEnquiryName(tpl.stages.ENQUIRY.displayName || "Enquiry");
+          setEnquiryFields(tpl.stages.ENQUIRY.fields || []);
+        }
+        if (tpl.stages.REFILLING) {
+          setRefillingEnabled(tpl.stages.REFILLING.enabled !== false);
+          setRefillingName(tpl.stages.REFILLING.displayName || "Refilling");
+          setRefillingFields(tpl.stages.REFILLING.fields || []);
+        }
+        if (tpl.stages.SERVICES) {
+          setServicesEnabled(tpl.stages.SERVICES.enabled !== false);
+          setServicesName(tpl.stages.SERVICES.displayName || "Services");
+          setServicesFields(tpl.stages.SERVICES.fields || []);
+        }
+      }
+      if (tpl.categories) setCategoriesText(tpl.categories.join(", "));
+      if (tpl.sources) setSourcesText(tpl.sources.join(", "));
+      if (tpl.importMappings) {
+        const mappings: Record<string, string> = {};
+        for (const [key, val] of Object.entries(tpl.importMappings)) {
+          mappings[key] = Array.isArray(val) ? (val as string[]).join(", ") : "";
+        }
+        setCsvMappings(mappings);
+      }
+
+      setSuccessMsg(`"${INDUSTRY_TEMPLATES.find(t => t.code === templateCode)?.name}" template loaded! Review the values below and click Save Settings to apply.`);
+    } catch (err) {
+      setErrorMsg("Failed to load template file.");
+    } finally {
+      setLoadingTemplate(null);
+    }
   };
 
   // Add Dynamic Custom Field logic
@@ -301,10 +377,10 @@ export default function SettingsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", maxWidth: "800px", margin: "0 auto 25px auto" }}>
         <div>
           <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Settings Control Panel
+            Configuration Control Center
           </h1>
           <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>
-            Configure white-labeled branding properties and dynamic color templates. Pipeline requirements are managed in codebase configuration.
+            Customize branding, stages, labels, fields, and categories. Load an industry template for instant setup.
           </p>
         </div>
         <button
@@ -355,6 +431,52 @@ export default function SettingsPage() {
 
       {/* Settings Grid (Centered Card panel) */}
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        {/* Industry Template Loader */}
+        <div style={{ marginBottom: "25px", background: "var(--bg-card-glass)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "25px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+            <Zap size={18} style={{ color: "var(--accent)" }} />
+            <h3 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Industry Templates</h3>
+          </div>
+          <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 18px 0", lineHeight: "1.5" }}>
+            Select a pre-built industry template to instantly populate all configuration fields. You can further customize after loading.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "12px" }}>
+            {INDUSTRY_TEMPLATES.map((tpl) => {
+              const Icon = tpl.icon;
+              const isLoading = loadingTemplate === tpl.code;
+              return (
+                <button
+                  key={tpl.code}
+                  onClick={() => handleLoadTemplate(tpl.code, tpl.file)}
+                  disabled={isLoading}
+                  style={{
+                    background: "var(--bg-input)",
+                    border: "1px solid var(--border-glass)",
+                    borderRadius: "12px",
+                    padding: "18px 14px",
+                    cursor: isLoading ? "wait" : "pointer",
+                    textAlign: "center",
+                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = tpl.color; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 25px ${tpl.color}25`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: `${tpl.color}20`, color: tpl.color, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px auto" }}>
+                    <Icon size={20} />
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "4px" }}>
+                    {isLoading ? "Loading..." : tpl.name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", lineHeight: "1.3" }}>
+                    {tpl.subtitle}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Settings Tab Content Panel */}
         <main style={{ background: "var(--bg-card-glass)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "25px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)" }}>
           

@@ -128,46 +128,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Build dynamic menu items based on configurations
-  const menuItems = [
-    { name: "Overview Center", path: "/admin", icon: PieChart },
-    { name: "Employee Master", path: "/admin/employees", icon: Users },
-  ];
+  // Build dynamic menu items based on user role
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
-  if (!config || config.stages?.ENQUIRY?.enabled !== false) {
-    menuItems.push({
-      name: `${config?.stages?.ENQUIRY?.displayName || "Enquiry"} Dashboard`,
-      path: "/admin/enquiry",
-      icon: FileText,
-    });
-  }
+  const menuItems = isSuperAdmin
+    ? [
+        // SUPER_ADMIN: Configuration Control Center experience
+        { name: "Configuration Center", path: "/admin/settings", icon: Settings },
+        { name: "Overview Center", path: "/admin", icon: PieChart },
+        { name: "Technician Sandbox", path: "/admin/sandbox/dashboard/ENQUIRY", icon: LayoutDashboard },
+      ]
+    : (() => {
+        // ADMIN: Client operational dashboards
+        const items = [
+          { name: "Overview Center", path: "/admin", icon: PieChart },
+          { name: "Employee Master", path: "/admin/employees", icon: Users },
+        ];
 
-  if (!config || config.stages?.REFILLING?.enabled !== false) {
-    menuItems.push({
-      name: `${config?.stages?.REFILLING?.displayName || "Refilling"} Dashboard`,
-      path: "/admin/refilling",
-      icon: RotateCcw,
-    });
-  }
+        if (!config || config.stages?.ENQUIRY?.enabled !== false) {
+          items.push({
+            name: `${config?.stages?.ENQUIRY?.displayName || "Enquiry"} Dashboard`,
+            path: "/admin/enquiry",
+            icon: FileText,
+          });
+        }
 
-  if (!config || config.stages?.SERVICES?.enabled !== false) {
-    menuItems.push({
-      name: `${config?.stages?.SERVICES?.displayName || "Service"} Dashboard`,
-      path: "/admin/services",
-      icon: Wrench,
-    });
-  }
+        if (!config || config.stages?.REFILLING?.enabled !== false) {
+          items.push({
+            name: `${config?.stages?.REFILLING?.displayName || "Refilling"} Dashboard`,
+            path: "/admin/refilling",
+            icon: RotateCcw,
+          });
+        }
 
-  menuItems.push(
-    { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard }
-  );
+        if (!config || config.stages?.SERVICES?.enabled !== false) {
+          items.push({
+            name: `${config?.stages?.SERVICES?.displayName || "Service"} Dashboard`,
+            path: "/admin/services",
+            icon: Wrench,
+          });
+        }
 
-  if (user && user.role === "SUPER_ADMIN") {
-    menuItems.push(
-      { name: "System Settings", path: "/admin/settings", icon: Settings },
-      { name: "Sandbox View (Dev)", path: "/admin/sandbox/dashboard/ENQUIRY", icon: LayoutDashboard }
-    );
-  }
+        items.push(
+          { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard }
+        );
+
+        return items;
+      })();
 
   const brandTitle = config?.brand?.title || "Safeway";
   const logoUrl = config?.brand?.logoUrl;
@@ -561,23 +568,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Content Body */}
         <main className="dashboard-content animated-page" style={{ flexGrow: 1, padding: "2rem", overflowY: "auto" }}>
-          {user?.role === "SUPER_ADMIN" && !(user as any)?.tenantId && (
-            <div style={{
-              background: "rgba(59, 130, 246, 0.08)",
-              border: "1px solid rgba(59, 130, 246, 0.2)",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginBottom: "20px",
-              color: "#60a5fa",
-              fontSize: "13px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px"
-            }}>
-              <span style={{ fontWeight: "700" }}>🔧 Developer Notice:</span>
-              <span>You are logged in as a Platform Developer. No client tenant context is active, showing the fallback profile (Safeway). To test dynamic client branding, log out and log in as the HVAC Admin (Phone: <b>8888888888</b>, Pass: <b>admin123</b>).</span>
-            </div>
-          )}
           {children}
         </main>
       </div>

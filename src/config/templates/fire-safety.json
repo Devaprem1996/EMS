@@ -1,0 +1,45 @@
+{
+  "categories": ["CCTV", "New Fire Extinguisher", "Refilling", "AMC Renewal", "Safety Audit"],
+  "sources": ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"],
+  "brand": {
+    "title": "Fire Safety Pro",
+    "subtitle": "Fire Protection & Equipment Management",
+    "theme": {
+      "primaryColor": "#dc2626",
+      "accentColor": "#ef4444",
+      "darkTheme": true
+    },
+    "labels": {
+      "serialNumber": "Cylinder Tag / Serial No",
+      "capacity": "Cylinder Capacity",
+      "extinguisherType": "Extinguisher Type",
+      "itemDescription": "Item Description",
+      "deliveredDate": "Delivered Date",
+      "amcYears": "No. of Years",
+      "amcDate": "Next Refilling Date (Calculated)"
+    }
+  },
+  "stages": {
+    "ENQUIRY": {
+      "enabled": true,
+      "displayName": "Client Enquiry"
+    },
+    "REFILLING": {
+      "enabled": true,
+      "displayName": "Cylinder Refilling"
+    },
+    "SERVICES": {
+      "enabled": true,
+      "displayName": "Maintenance & AMC"
+    }
+  },
+  "importMappings": {
+    "jobNumber": ["job no", "job number", "ticket", "ticket no"],
+    "customerName": ["company", "customer", "company name", "customer name"],
+    "contactPerson": ["contact", "contact person", "person name"],
+    "phone": ["phone", "mobile", "contact no", "phone number", "mobile number"],
+    "serialNumber": ["cylinder tag", "serial", "serial no", "cylinder number"],
+    "capacity": ["capacity", "kg", "weight"],
+    "extinguisherType": ["type", "extinguisher type", "ext type"]
+  }
+}

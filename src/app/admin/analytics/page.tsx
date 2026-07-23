@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getAuthSession } from "@/lib/auth-helpers";
+import { verifySession } from "@/lib/auth-helpers";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BarChart2, TrendingUp, Users, Activity } from "lucide-react";
@@ -10,10 +10,23 @@ export const dynamic = "force-dynamic";
 export default async function AnalyticsDashboard() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("ems_session");
-  const sessionValue = sessionCookie?.value;
+  const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 
-  if (!sessionValue) {
+  if (!session) {
     redirect("/login");
+  }
+
+  const systemConfig = await prisma.systemConfig.findFirst({
+    where: { tenantId: session.tenantId }
+  });
+
+  if (systemConfig) {
+    try {
+      const parsedConfig = JSON.parse(systemConfig.config);
+      if (parsedConfig.features && !parsedConfig.features.advancedAnalytics) {
+        return <div style={{ padding: "50px", textAlign: "center", color: "var(--text-secondary)" }}>This module is not enabled for your account.</div>;
+      }
+    } catch(e) {}
   }
 
   // Fetch all tickets for analysis

@@ -532,6 +532,30 @@ export default function SettingsPage() {
 
       {/* Settings Grid (Centered Card panel) */}
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        {/* Navigation Tabs */}
+        <div style={{ display: "flex", gap: "10px", marginBottom: "25px", overflowX: "auto", paddingBottom: "5px" }}>
+          {["brand", "stages", "categories", "fields", "csv"].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              style={{
+                padding: "8px 16px",
+                background: activeTab === tab ? "var(--primary)" : "var(--bg-card-glass)",
+                color: activeTab === tab ? "#fff" : "var(--text-secondary)",
+                border: "1px solid",
+                borderColor: activeTab === tab ? "var(--primary)" : "var(--border-glass)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: activeTab === tab ? "600" : "500",
+                textTransform: "capitalize",
+                transition: "0.2s"
+              }}
+            >
+              {tab === "csv" ? "Data Import Mapping" : tab}
+            </button>
+          ))}
+        </div>
+
         {/* Industry Template Loader */}
         <div style={{ marginBottom: "25px", background: "var(--bg-card-glass)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "25px", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>

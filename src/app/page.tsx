@@ -27,7 +27,7 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user) {
-            if (data.user.role === "ADMIN") {
+            if (data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN") {
               let targetPath = "/admin/employees";
               if (!config || config.stages?.ENQUIRY?.enabled !== false) {
                 targetPath = "/admin/enquiry";
@@ -68,7 +68,7 @@ export default function LoginPage() {
       }
 
       // Successful login
-      if (data.user.role === "ADMIN") {
+      if (data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN") {
         let targetPath = "/admin/employees";
         if (!config || config.stages?.ENQUIRY?.enabled !== false) {
           targetPath = "/admin/enquiry";

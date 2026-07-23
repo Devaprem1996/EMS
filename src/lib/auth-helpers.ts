@@ -91,7 +91,7 @@ export function getAuthSession(req: NextRequest): SessionData | null {
  */
 export function isAdmin(req: NextRequest): boolean {
   const session = getAuthSession(req);
-  return session !== null && session.role === "ADMIN";
+  return session !== null && (session.role === "ADMIN" || session.role === "SUPER_ADMIN");
 }
 
 /**

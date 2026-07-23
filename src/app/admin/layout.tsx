@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           return;
         }
         const data = await res.json();
-        if (!data.authenticated || data.user.role !== "ADMIN") {
+        if (!data.authenticated || (data.user.role !== "ADMIN" && data.user.role !== "SUPER_ADMIN")) {
           router.push(data.user.role === "TECHNICIAN" ? "/technician/tasks" : "/");
           return;
         }

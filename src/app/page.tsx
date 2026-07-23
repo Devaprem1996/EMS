@@ -3,44 +3,23 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/context/ConfigContext";
-import { Phone, Lock, Eye, EyeOff, ArrowRight, Flame, ShieldAlert } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert, ArrowRight, Sun, Moon } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { config } = useConfig();
+  const { config, themeMode, toggleTheme } = useConfig();
   
   // Form State
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
   
   // UI State
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 3D Tilt State
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = ((centerY - y) / centerY) * 8; // max 8 degrees tilt
-    const rotateY = ((x - centerX) / centerX) * 8;
-
-    setTilt({ x: rotateX, y: rotateY });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-  };
-
-  // Check if already authenticated, if so, redirect immediately
+  // Check if already authenticated
   useEffect(() => {
     async function checkSession() {
       try {
@@ -48,7 +27,9 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user) {
-            if (data.user.role === "ADMIN") {
+            if (data.user.role === "SUPER_ADMIN") {
+              router.push("/admin/settings");
+            } else if (data.user.role === "ADMIN") {
               let targetPath = "/admin/employees";
               if (!config || config.stages?.ENQUIRY?.enabled !== false) {
                 targetPath = "/admin/enquiry";
@@ -58,8 +39,10 @@ export default function LoginPage() {
                 targetPath = "/admin/services";
               }
               router.push(targetPath);
+            } else if (data.user.role === "CUSTOMER") {
+              router.push("/portal");
             } else {
-              router.push("/technician/tasks");
+              router.push("/tech");
             }
           }
         }
@@ -68,7 +51,7 @@ export default function LoginPage() {
       }
     }
     checkSession();
-  }, [router, config]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,11 +68,13 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data.error || "Invalid mobile number or password");
       }
 
       // Successful login
-      if (data.user.role === "ADMIN") {
+      if (data.user.role === "SUPER_ADMIN") {
+        router.push("/admin/settings");
+      } else if (data.user.role === "ADMIN") {
         let targetPath = "/admin/employees";
         if (!config || config.stages?.ENQUIRY?.enabled !== false) {
           targetPath = "/admin/enquiry";
@@ -99,8 +84,10 @@ export default function LoginPage() {
           targetPath = "/admin/services";
         }
         router.push(targetPath);
+      } else if (data.user.role === "CUSTOMER") {
+        router.push("/portal");
       } else {
-        router.push("/technician/tasks");
+        router.push("/tech");
       }
     } catch (err: any) {
       setError(err.message || "An error occurred");
@@ -109,135 +96,460 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="login-wrapper premium-fullscreen">
-      {/* Cinematic Fullscreen Background Image */}
-      <div className="cinematic-bg-container">
-        <img
-          src="/login-bg-premium.png"
-          className="cinematic-bg-image"
-          alt="Premium 3D background"
-        />
-        <div className="cinematic-bg-overlay"></div>
-      </div>
+  const brandTitle = config?.brand?.title || "Safeway";
+  const brandSubtitle = config?.brand?.subtitle || "Enquiry Management System";
 
-      <div className="fullscreen-content-container">
-        {/* Left Column: Brand Hero Text */}
-        <div className="hero-pane-3d">
-          <div className="brand-badge-3d">
-            <Flame size={14} fill="currentColor" />
-            Fire Safety Management
+  const isDark = themeMode === "dark";
+
+  return (
+    <div className="login-wrapper framer-entry" style={{
+      minHeight: "100vh",
+      width: "100vw",
+      backgroundImage: isDark ? "url('/login-bg-outer-dark.png')" : "url('/login-bg-outer-light.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundColor: "var(--bg-dark)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px 16px",
+      fontFamily: "var(--font-sans)",
+      boxSizing: "border-box",
+      transition: "background-image 0.5s ease-in-out, background-color 0.5s ease-in-out",
+      position: "relative",
+      overflowX: "hidden"
+    }}>
+      
+      {/* Floating Theme Switcher */}
+      <button
+        onClick={toggleTheme}
+        type="button"
+        aria-label="Toggle Theme"
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          width: "44px",
+          height: "44px",
+          borderRadius: "50%",
+          backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)",
+          border: isDark ? "1px solid rgba(255, 255, 255, 0.15)" : "1px solid rgba(15, 23, 42, 0.1)",
+          backdropFilter: "blur(12px)",
+          color: isDark ? "#facc15" : "#475569",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          zIndex: 100,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.1) rotate(12deg)";
+          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)";
+        }}
+      >
+        {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+
+      {/* Outer Responsive Card Container */}
+      <div className="login-card-container framer-scale" style={{
+        width: "100%",
+        maxWidth: "1060px",
+        minHeight: "620px",
+        backgroundColor: isDark ? "rgba(13, 13, 21, 0.45)" : "rgba(255, 255, 255, 0.8)",
+        borderRadius: "28px",
+        backdropFilter: "blur(20px)",
+        boxShadow: isDark 
+          ? "0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)" 
+          : "0 30px 70px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+        padding: "16px",
+        display: "flex",
+        flexDirection: "row",
+        boxSizing: "border-box",
+        overflow: "hidden",
+        border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(15, 23, 42, 0.08)",
+        transition: "all 0.3s ease"
+      }}>
+        
+        {/* Left Hero Pane */}
+        <div className="login-hero-pane" style={{
+          flex: "1 1 45%",
+          minWidth: "320px",
+          borderRadius: "20px",
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "40px",
+          color: "#ffffff",
+          backgroundImage: isDark ? "url('/login-bg-hero-dark.png')" : "url('/login-bg-hero-light.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transition: "background-image 0.5s ease"
+        }}>
+          {/* Dark Overlay gradient for legible typography */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)",
+            zIndex: 1
+          }} />
+
+          {/* Top-left Brand Logo Badge */}
+          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: "38px",
+              height: "38px",
+              borderRadius: "10px",
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(10px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid rgba(255, 255, 255, 0.2)"
+            }}>
+              {config?.brand?.logoUrl ? (
+                <img src={config.brand.logoUrl} alt={brandTitle} style={{ maxHeight: "22px", objectFit: "contain" }} />
+              ) : (
+                <Flame size={20} color="#ffffff" fill="#ffffff" />
+              )}
+            </div>
+            <span style={{ fontSize: "19px", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff", textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+              {brandTitle}
+            </span>
           </div>
-          <h1 className="hero-title-3d">
-            Streamlining Compliance & Maintenance.
-          </h1>
-          <p className="hero-desc-3d">
-            A comprehensive, customizable ERP tool designed to automate cylinder tracking, pressure test validation, refilling schedules, and field inspections.
-          </p>
+
+          {/* Bottom Hero Text */}
+          <div style={{ position: "relative", zIndex: 2, marginTop: "auto" }}>
+            <h1 className="hero-headline" style={{
+              fontSize: "36px",
+              fontWeight: "800",
+              lineHeight: "1.2",
+              letterSpacing: "-0.03em",
+              marginBottom: "12px",
+              color: "#ffffff",
+              textShadow: "0 2px 8px rgba(0, 0, 0, 0.4)"
+            }}>
+              YOUR SYSTEM AWAITS!
+            </h1>
+            <p className="hero-desc" style={{
+              fontSize: "14.5px",
+              lineHeight: "1.6",
+              color: "rgba(255, 255, 255, 0.85)",
+              margin: 0,
+              maxWidth: "360px",
+              textShadow: "0 1px 4px rgba(0, 0, 0, 0.3)"
+            }}>
+              {brandSubtitle}. Intelligent operations, cylinder refilling schedules, and dispatches.
+            </p>
+          </div>
         </div>
 
-        {/* Right Column: Glass Login Card */}
-        <div className="form-pane-3d">
-          <div 
-            className="login-card-3d"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(10px)`,
-              transition: tilt.x === 0 && tilt.y === 0 ? "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" : "none"
-            }}
-          >
-            <div className="brand-header">
-              <div className="brand-logo-container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                {config?.brand?.logoUrl ? (
-                  <img src={config.brand.logoUrl} alt={config.brand.title || "Safeway"} style={{ maxHeight: "48px", maxWidth: "80px", objectFit: "contain", borderRadius: "6px" }} />
-                ) : (
-                  <Flame size={32} fill="currentColor" />
-                )}
-              </div>
-              <h2 className="brand-name">{config?.brand?.title || "Safeway"}</h2>
-              <p className="brand-tagline">{config?.brand?.subtitle || "Enquiry Management System"}</p>
+        {/* Right Sign-In Form Pane */}
+        <div className="login-form-pane" style={{
+          flex: "1 1 55%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px"
+        }}>
+          <div style={{ width: "100%", maxWidth: "380px" }}>
+            
+            {/* Heading Header */}
+            <div style={{ marginBottom: "32px" }}>
+              <h2 style={{
+                fontSize: "30px",
+                fontWeight: "800",
+                color: isDark ? "#ffffff" : "#0f172a",
+                margin: "0 0 8px 0",
+                letterSpacing: "-0.03em",
+                transition: "color 0.3s"
+              }}>
+                WELCOME BACK !
+              </h2>
+              <p style={{
+                fontSize: "14.5px",
+                color: isDark ? "rgba(255, 255, 255, 0.6)" : "#64748b",
+                margin: 0,
+                transition: "color 0.3s"
+              }}>
+                Welcome back! Please enter your details below.
+              </p>
             </div>
 
+            {/* Error Banner */}
             {error && (
-              <div className="alert-banner">
-                <ShieldAlert size={18} className="alert-icon" />
+              <div style={{
+                padding: "12px 14px",
+                borderRadius: "10px",
+                backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
+                border: isDark ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid #fecaca",
+                color: "#ef4444",
+                fontSize: "13.5px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginBottom: "24px",
+                transition: "all 0.3s"
+              }}>
+                <ShieldAlert size={18} />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              {/* Mobile Number Input */}
-              <div className="form-group">
-                <label htmlFor="username" className="form-label">
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+              
+              {/* Mobile Number Field */}
+              <div>
+                <label htmlFor="username" style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: isDark ? "rgba(255, 255, 255, 0.75)" : "#475569",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em"
+                }}>
                   Mobile Number
                 </label>
-                <div className="input-container">
+                <div style={{ position: "relative" }}>
                   <input
                     type="tel"
                     id="username"
-                    className="form-input"
-                    placeholder="Enter registered mobile"
+                    placeholder="Your mobile number"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     disabled={loading}
+                    style={{
+                      width: "100%",
+                      padding: "13px 14px 13px 40px",
+                      fontSize: "14.5px",
+                      borderRadius: "10px",
+                      border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #cbd5e1",
+                      backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#ffffff",
+                      color: isDark ? "#ffffff" : "#0f172a",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "all 0.2s"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "var(--primary)";
+                      e.target.style.boxShadow = isDark ? "0 0 10px rgba(255, 255, 255, 0.05)" : "0 0 10px rgba(0, 0, 0, 0.05)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = isDark ? "rgba(255, 255, 255, 0.12)" : "#cbd5e1";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
-                  <Phone size={18} className="input-icon" />
+                  <Phone size={16} style={{
+                    position: "absolute",
+                    left: "14px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8"
+                  }} />
                 </div>
               </div>
 
-              {/* Password Input */}
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Password
-                </label>
-                <div className="input-container">
+              {/* Password Field */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label htmlFor="password" style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: isDark ? "rgba(255, 255, 255, 0.75)" : "#475569",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.03em"
+                  }}>
+                    Password
+                  </label>
+                  <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("Please contact your system administrator to reset password."); }} style={{
+                    fontSize: "12.5px",
+                    fontWeight: "600",
+                    color: isDark ? "rgba(255, 255, 255, 0.55)" : "#64748b",
+                    textDecoration: "none",
+                    transition: "color 0.2s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = "var(--primary)"}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isDark ? "rgba(255, 255, 255, 0.55)" : "#64748b"}
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+                <div style={{ position: "relative" }}>
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    className="form-input"
-                    placeholder="••••••••"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
+                    style={{
+                      width: "100%",
+                      padding: "13px 40px 13px 40px",
+                      fontSize: "14.5px",
+                      borderRadius: "10px",
+                      border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #cbd5e1",
+                      backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#ffffff",
+                      color: isDark ? "#ffffff" : "#0f172a",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      transition: "all 0.2s"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "var(--primary)";
+                      e.target.style.boxShadow = isDark ? "0 0 10px rgba(255, 255, 255, 0.05)" : "0 0 10px rgba(0, 0, 0, 0.05)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = isDark ? "rgba(255, 255, 255, 0.12)" : "#cbd5e1";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
-                  <Lock size={18} className="input-icon" />
+                  <Lock size={16} style={{
+                    position: "absolute",
+                    left: "14px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8"
+                  }} />
                   <button
                     type="button"
-                    className="toggle-password-btn"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: "absolute",
+                      right: "14px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center"
+                    }}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Keep me logged in checkbox */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <input
+                  type="checkbox"
+                  id="keepLoggedIn"
+                  checked={keepLoggedIn}
+                  onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "4px",
+                    accentColor: "var(--primary)",
+                    cursor: "pointer"
+                  }}
+                />
+                <label htmlFor="keepLoggedIn" style={{
+                  fontSize: "13.5px",
+                  color: isDark ? "rgba(255, 255, 255, 0.65)" : "#64748b",
+                  cursor: "pointer",
+                  userSelect: "none"
+                }}>
+                  Keep me logged in
+                </label>
+              </div>
+
+              {/* Primary Sign in Button */}
               <button
                 type="submit"
-                className="submit-btn"
                 disabled={loading || !username || !password}
+                style={{
+                  width: "100%",
+                  padding: "13px",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  borderRadius: "10px",
+                  border: "none",
+                  background: loading || !username || !password 
+                    ? (isDark ? "rgba(255, 255, 255, 0.1)" : "#94a3b8") 
+                    : "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+                  color: loading || !username || !password
+                    ? (isDark ? "rgba(255, 255, 255, 0.3)" : "#e2e8f0")
+                    : "#ffffff",
+                  cursor: loading || !username || !password ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  boxShadow: loading || !username || !password 
+                    ? "none" 
+                    : "0 6px 20px rgba(0, 0, 0, 0.15)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  marginTop: "8px"
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading && username && password) {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.2)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading && username && password) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.15)";
+                  }
+                }}
               >
-                {loading ? (
-                  <>
-                    <div className="spinner"></div>
-                    Authenticating...
-                  </>
-                ) : (
-                  <>
-                    Log In
-                    <ArrowRight size={18} />
-                  </>
-                )}
+                {loading ? "Signing in..." : "Sign in"}
               </button>
+
             </form>
           </div>
         </div>
+
       </div>
+
+      {/* Mobile Responsive Login Styles */}
+      <style jsx global>{`
+        @media (max-width: 868px) {
+          .login-card-container {
+            flex-direction: column !important;
+            min-height: auto !important;
+            max-width: 480px !important;
+            padding: 10px !important;
+            border-radius: 20px !important;
+          }
+          .login-hero-pane {
+            min-height: 140px !important;
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            padding: 24px !important;
+            border-radius: 14px !important;
+          }
+          .hero-headline {
+            font-size: 24px !important;
+            margin-bottom: 4px !important;
+          }
+          .hero-desc {
+            display: none !important;
+          }
+          .login-form-pane {
+            padding: 24px 12px 12px 12px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

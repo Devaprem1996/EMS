@@ -21,7 +21,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PieChart,
-  Receipt
+  Receipt,
+  BarChart2
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 
@@ -172,7 +173,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         items.push(
           { name: "Technician View", path: "/admin/tasks", icon: LayoutDashboard },
-          { name: "Billing & Invoices", path: "/admin/billing", icon: Receipt }
+          { name: "Billing & Invoices", path: "/admin/billing", icon: Receipt },
+          { name: "Analytics & Reports", path: "/admin/analytics", icon: BarChart2 }
         );
 
         return items;

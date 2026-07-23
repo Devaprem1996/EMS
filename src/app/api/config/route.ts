@@ -5,6 +5,7 @@ import { getDbConfig } from "@/lib/config-loader";
 import { serverCache } from "@/lib/cache";
 import { rateLimit } from "@/lib/rate-limiter";
 import { getTenantIdFromRequest } from "@/lib/tenant-resolver";
+import { logger } from "@/lib/logger";
 
 const CONFIG_CACHE_KEY = "system_config";
 const CONFIG_CACHE_TTL = 3600000; // 1 hour
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json(config);
   } catch (error) {
-    console.error("[Config GET API] Error:", error);
+    logger.error("Error fetching system configuration", error, { path: "/api/config", method: "GET" });
     return NextResponse.json({ error: "Failed to fetch configuration" }, { status: 500 });
   }
 }
@@ -121,7 +122,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(config);
   } catch (error) {
-    console.error("[Config POST API] Error saving configuration:", error);
+    const session = getAuthSession(req);
+    logger.error("Error saving system configuration", error, { path: "/api/config", method: "POST", tenantId: session?.tenantId, userId: session?.userId });
     return NextResponse.json({ error: "Failed to save configuration" }, { status: 500 });
   }
 }

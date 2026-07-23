@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       username: employee.mobileNumber,
       mobileNumber: employee.mobileNumber,
       fullName: employee.fullName || employee.mobileNumber,
-      role: employee.role as "ADMIN" | "TECHNICIAN",
+      role: employee.role as "ADMIN" | "TECHNICIAN" | "SUPER_ADMIN",
       tenantId: employee.tenantId,
     };
 

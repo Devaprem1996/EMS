@@ -8,12 +8,29 @@ export async function getDbConfig(tenantId?: string | null): Promise<EmsConfig> 
     });
     if (record && record.config) {
       const dbConfig = JSON.parse(record.config);
-      // Merge: load dynamic branding & theme from DB; keep system requirements (stages, fields, categories, importMappings) strictly from centralized EMS_CONFIG.
+      // Fully merge settings, prioritizing database overrides
       return {
-        ...EMS_CONFIG,
+        categories: dbConfig.categories || EMS_CONFIG.categories,
+        sources: dbConfig.sources || EMS_CONFIG.sources,
+        importMappings: {
+          ...EMS_CONFIG.importMappings,
+          ...(dbConfig.importMappings || {}),
+        },
         brand: {
           ...EMS_CONFIG.brand,
           ...(dbConfig.brand || {}),
+          theme: {
+            ...EMS_CONFIG.brand.theme,
+            ...(dbConfig.brand?.theme || {}),
+          },
+          labels: {
+            ...EMS_CONFIG.brand.labels,
+            ...(dbConfig.brand?.labels || {}),
+          },
+        },
+        stages: {
+          ...EMS_CONFIG.stages,
+          ...(dbConfig.stages || {}),
         },
       };
     }

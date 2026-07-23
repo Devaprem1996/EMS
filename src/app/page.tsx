@@ -42,7 +42,7 @@ export default function LoginPage() {
             } else if (data.user.role === "CUSTOMER") {
               router.push("/portal");
             } else {
-              router.push("/tech");
+              router.push("/technician/tasks");
             }
           }
         }
@@ -87,7 +87,7 @@ export default function LoginPage() {
       } else if (data.user.role === "CUSTOMER") {
         router.push("/portal");
       } else {
-        router.push("/tech");
+        router.push("/technician/tasks");
       }
     } catch (err: any) {
       setError(err.message || "An error occurred");

@@ -20,7 +20,7 @@ export default function DynamicForm({ fields, values, onChange }: DynamicFormPro
   return (
     <div className="dynamic-form-fields" style={{ display: "flex", flexDirection: "column", gap: "1.15rem" }}>
       {fields.map((field) => {
-        const value = values[field.key];
+        const value = values[field.key] as any;
 
         return (
           <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
@@ -31,7 +31,7 @@ export default function DynamicForm({ fields, values, onChange }: DynamicFormPro
             {field.type === "text" && (
               <input
                 type="text"
-                value={value || ""}
+                value={(value as string) || ""}
                 onChange={(e) => onChange(field.key, e.target.value)}
                 required={field.required}
                 style={{

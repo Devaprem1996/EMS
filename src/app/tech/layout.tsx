@@ -53,15 +53,15 @@ export default function TechLayout({ children }: { children: React.ReactNode }) 
         zIndex: 50
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {config?.logoUrl ? (
-            <img src={config.logoUrl} alt="Logo" style={{ height: "30px", objectFit: "contain" }} />
+          {config?.brand?.logoUrl ? (
+            <img src={config.brand.logoUrl} alt="Logo" style={{ height: "30px", objectFit: "contain" }} />
           ) : (
             <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
-              {config?.brandTitle?.charAt(0) || "E"}
+              {config?.brand?.title?.charAt(0) || "E"}
             </div>
           )}
           <span style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", letterSpacing: "0.5px" }}>
-            {config?.brandTitle || "EMS Tech"}
+            {config?.brand?.title || "EMS Tech"}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

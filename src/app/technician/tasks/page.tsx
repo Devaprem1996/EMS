@@ -781,8 +781,8 @@ export default function TechnicianTasksPage() {
 
                   return (
                     <div style={{ marginTop: "10px", borderTop: "1px solid var(--border-glass)", paddingTop: "15px" }}>
-                      <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#fff", marginBottom: "12px" }}>
-                        {stageConfig.displayName} Checklist
+                      <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#fff", margin: "0 0 15px 0" }}>
+                        {stageConfig?.displayName || "Stage"} Checklist
                       </h4>
                       <DynamicForm
                         fields={stageFields}

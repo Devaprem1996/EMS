@@ -6,9 +6,9 @@ export interface SendSmsOptions {
 }
 
 export class SmsAdapter {
-  private config: EmsConfig["communications"]["sms"];
+  private config: NonNullable<EmsConfig["communications"]>["sms"];
 
-  constructor(config: EmsConfig["communications"]["sms"]) {
+  constructor(config: NonNullable<EmsConfig["communications"]>["sms"]) {
     this.config = config;
   }
 

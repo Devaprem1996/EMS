@@ -8,7 +8,7 @@ import ExportButton from "./ExportButton";
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsDashboard() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("ems_session");
   const sessionValue = sessionCookie?.value;
 
@@ -102,7 +102,7 @@ export default async function AnalyticsDashboard() {
               <span>{stageCounts.ENQUIRY} tickets</span>
             </div>
             <div style={{ width: "100%", background: "rgba(255,255,255,0.05)", height: "12px", borderRadius: "6px", overflow: "hidden" }}>
-              <div style={{ width: \`\${totalTickets > 0 ? (stageCounts.ENQUIRY / totalTickets) * 100 : 0}%\`, background: "#3b82f6", height: "100%", borderRadius: "6px" }}></div>
+              <div style={{ width: `${totalTickets > 0 ? (stageCounts.ENQUIRY / totalTickets) * 100 : 0}%`, background: "#3b82f6", height: "100%", borderRadius: "6px" }}></div>
             </div>
           </div>
 
@@ -113,7 +113,7 @@ export default async function AnalyticsDashboard() {
               <span>{stageCounts.REFILLING} tickets</span>
             </div>
             <div style={{ width: "100%", background: "rgba(255,255,255,0.05)", height: "12px", borderRadius: "6px", overflow: "hidden" }}>
-              <div style={{ width: \`\${totalTickets > 0 ? (stageCounts.REFILLING / totalTickets) * 100 : 0}%\`, background: "#f59e0b", height: "100%", borderRadius: "6px" }}></div>
+              <div style={{ width: `${totalTickets > 0 ? (stageCounts.REFILLING / totalTickets) * 100 : 0}%`, background: "#f59e0b", height: "100%", borderRadius: "6px" }}></div>
             </div>
           </div>
 
@@ -124,7 +124,7 @@ export default async function AnalyticsDashboard() {
               <span>{stageCounts.SERVICES} tickets</span>
             </div>
             <div style={{ width: "100%", background: "rgba(255,255,255,0.05)", height: "12px", borderRadius: "6px", overflow: "hidden" }}>
-              <div style={{ width: \`\${totalTickets > 0 ? (stageCounts.SERVICES / totalTickets) * 100 : 0}%\`, background: "#8b5cf6", height: "100%", borderRadius: "6px" }}></div>
+              <div style={{ width: `${totalTickets > 0 ? (stageCounts.SERVICES / totalTickets) * 100 : 0}%`, background: "#8b5cf6", height: "100%", borderRadius: "6px" }}></div>
             </div>
           </div>
         </div>

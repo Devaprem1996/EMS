@@ -8,9 +8,9 @@ export interface SendEmailOptions {
 }
 
 export class EmailAdapter {
-  private config: EmsConfig["communications"]["email"];
+  private config: NonNullable<EmsConfig["communications"]>["email"];
 
-  constructor(config: EmsConfig["communications"]["email"]) {
+  constructor(config: NonNullable<EmsConfig["communications"]>["email"]) {
     this.config = config;
   }
 

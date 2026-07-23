@@ -7,7 +7,7 @@ import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function TechDashboard() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("ems_session");
   const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 

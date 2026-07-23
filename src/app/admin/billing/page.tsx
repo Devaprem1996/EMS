@@ -7,7 +7,7 @@ import { FileText, CheckCircle, Clock, Search, Download } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function BillingDashboard() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("ems_session");
   const sessionValue = sessionCookie?.value;
 

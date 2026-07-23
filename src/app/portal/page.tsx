@@ -6,7 +6,7 @@ import { Calendar, Package, Wrench, CheckCircle, MapPin, Clock } from "lucide-re
 export const dynamic = "force-dynamic";
 
 export default async function CustomerPortalDashboard() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("ems_session");
   const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 

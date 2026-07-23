@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
-  Settings
+  Settings,
+  Zap
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 

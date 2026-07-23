@@ -63,16 +63,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         zIndex: 50
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          {config?.logoUrl ? (
-            <img src={config.logoUrl} alt="Logo" style={{ height: "35px", objectFit: "contain" }} />
+          {config?.brand?.logoUrl ? (
+            <img src={config.brand.logoUrl} alt="Logo" style={{ height: "35px", objectFit: "contain" }} />
           ) : (
             <div style={{ width: "35px", height: "35px", borderRadius: "8px", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
-              {config?.brandTitle?.charAt(0) || "C"}
+              {config?.brand?.title?.charAt(0) || "C"}
             </div>
           )}
           <div>
             <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", letterSpacing: "0.5px" }}>
-              {config?.brandTitle || "Client Portal"}
+              {config?.brand?.title || "Client Portal"}
             </div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Self-Service Dashboard</div>
           </div>
@@ -81,7 +81,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--text-secondary)" }}>
             <User size={18} />
-            <span style={{ fontSize: "14px", fontWeight: "500", display: "none", "@media (min-width: 768px)": { display: "inline" } }}>
+            <span style={{ fontSize: "14px", fontWeight: "500" }} className="portal-user-name">
               {session?.fullName || "Valued Client"}
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
       {/* Footer */}
       <footer style={{ padding: "20px", textAlign: "center", color: "var(--text-secondary)", fontSize: "12px", borderTop: "1px solid var(--border-glass)" }}>
-        &copy; {new Date().getFullYear()} {config?.brandTitle || "EMS"}. All rights reserved.
+        &copy; {new Date().getFullYear()} {config?.brand?.title || "EMS"}. All rights reserved.
       </footer>
 
       <style dangerouslySetInnerHTML={{__html: `

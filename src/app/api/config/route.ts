@@ -123,8 +123,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(config);
   } catch (error) {
     const session = getAuthSession(req);
-    logger.error("Error saving system configuration", error, { path: "/api/config", method: "POST", tenantId: session?.tenantId, userId: session?.userId });
-    return NextResponse.json({ error: "Failed to save configuration" }, { status: 500 });
+    logger.error("Failed to update config", error as Error, { path: "/api/config", method: "POST", tenantId: session?.tenantId || undefined, userId: session?.userId });
+    return NextResponse.json({ error: "Failed to update configuration" }, { status: 500 });
   }
 }
-

@@ -20,7 +20,7 @@ export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: Au
       action: "Status Updated to 'Order Delivered'",
       user: "Admin (Devaprem)",
       role: "ADMINISTRATOR",
-      timestamp: new Date().toLocaleString(),
+      timestamp: "23/07/2026, 11:30:00 AM",
       ip: "192.168.1.45"
     },
     {
@@ -28,7 +28,7 @@ export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: Au
       action: "Technician Assigned: 'Alex Rivera'",
       user: "System Dispatcher",
       role: "SYSTEM",
-      timestamp: new Date(Date.now() - 3600000 * 2).toLocaleString(),
+      timestamp: "23/07/2026, 09:30:00 AM",
       ip: "192.168.1.1"
     },
     {
@@ -36,7 +36,7 @@ export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: Au
       action: "Hydro-Test Result Logged: 99.2% Pressure Passed",
       user: "Alex Rivera",
       role: "TECHNICIAN",
-      timestamp: new Date(Date.now() - 3600000 * 5).toLocaleString(),
+      timestamp: "23/07/2026, 06:30:00 AM",
       ip: "172.16.0.88"
     },
     {
@@ -44,7 +44,7 @@ export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: Au
       action: "Job Record Created",
       user: "Admin (Devaprem)",
       role: "ADMINISTRATOR",
-      timestamp: new Date(Date.now() - 3600000 * 24).toLocaleString(),
+      timestamp: "22/07/2026, 11:30:00 AM",
       ip: "192.168.1.45"
     }
   ];

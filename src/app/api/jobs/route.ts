@@ -137,7 +137,11 @@ export async function GET(req: NextRequest) {
     // Cache results for 1 minute
     serverCache.set(cacheKey, mappedJobs, 60000);
 
-    return NextResponse.json(mappedJobs);
+    return NextResponse.json(mappedJobs, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("[Jobs GET API] Error:", error);
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 });

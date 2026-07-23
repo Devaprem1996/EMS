@@ -94,7 +94,11 @@ export async function GET(req: NextRequest) {
       serverCache.set(cacheKey, mapped, 300000);
     }
 
-    return NextResponse.json(mapped);
+    return NextResponse.json(mapped, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("[Employees API GET] Error:", error);
     return NextResponse.json({ error: "Failed to fetch employees" }, { status: 500 });

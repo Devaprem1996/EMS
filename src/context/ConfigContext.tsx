@@ -32,7 +32,9 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem("theme-mode") as "light" | "dark" | null;
     if (saved) {
-      setThemeMode(saved);
+      setTimeout(() => {
+        setThemeMode(saved);
+      }, 0);
       document.documentElement.setAttribute("data-theme", saved);
     }
   }, []);
@@ -85,7 +87,9 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       // Synchronize data-theme attribute and React state
       const targetTheme = isDarkMode ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", targetTheme);
-      setThemeMode(targetTheme);
+      setTimeout(() => {
+        setThemeMode(targetTheme);
+      }, 0);
     }
   }, [config]);
 

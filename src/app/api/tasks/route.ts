@@ -169,7 +169,11 @@ export async function GET(req: NextRequest) {
     // Cache the tasks list for 1 minute
     serverCache.set(cacheKey, mappedAssignments, 60000);
 
-    return NextResponse.json(mappedAssignments);
+    return NextResponse.json(mappedAssignments, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("[Tasks GET API] Error:", error);
     return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });

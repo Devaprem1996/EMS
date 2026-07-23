@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/context/ConfigContext";
-import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert, ArrowRight } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert, ArrowRight, Sun, Moon } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { config } = useConfig();
+  const { config, themeMode, toggleTheme } = useConfig();
   
   // Form State
   const [username, setUsername] = useState("");
@@ -91,78 +91,116 @@ export default function LoginPage() {
   const brandTitle = config?.brand?.title || "Safeway";
   const brandSubtitle = config?.brand?.subtitle || "Enquiry Management System";
 
+  const isDark = themeMode === "dark";
+
   return (
     <div className="login-wrapper framer-entry" style={{
       minHeight: "100vh",
       width: "100vw",
-      backgroundColor: "var(--bg-dark, #050508)",
+      backgroundImage: isDark ? "url('/login-bg-outer-dark.png')" : "url('/login-bg-outer-light.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundColor: "var(--bg-dark)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "16px",
+      padding: "24px 16px",
       fontFamily: "var(--font-sans)",
-      boxSizing: "border-box"
+      boxSizing: "border-box",
+      transition: "background-image 0.5s ease-in-out, background-color 0.5s ease-in-out",
+      position: "relative",
+      overflowX: "hidden"
     }}>
+      
+      {/* Floating Theme Switcher */}
+      <button
+        onClick={toggleTheme}
+        type="button"
+        aria-label="Toggle Theme"
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          width: "44px",
+          height: "44px",
+          borderRadius: "50%",
+          backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)",
+          border: isDark ? "1px solid rgba(255, 255, 255, 0.15)" : "1px solid rgba(15, 23, 42, 0.1)",
+          backdropFilter: "blur(12px)",
+          color: isDark ? "#facc15" : "#475569",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          zIndex: 100,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.1) rotate(12deg)";
+          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)";
+        }}
+      >
+        {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+
       {/* Outer Responsive Card Container */}
       <div className="login-card-container framer-scale" style={{
         width: "100%",
         maxWidth: "1060px",
-        minHeight: "600px",
-        backgroundColor: "var(--bg-card, #ffffff)",
-        borderRadius: "24px",
-        boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1)",
+        minHeight: "620px",
+        backgroundColor: isDark ? "rgba(13, 13, 21, 0.45)" : "rgba(255, 255, 255, 0.8)",
+        borderRadius: "28px",
+        backdropFilter: "blur(20px)",
+        boxShadow: isDark 
+          ? "0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)" 
+          : "0 30px 70px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
         padding: "16px",
         display: "flex",
         flexDirection: "row",
         boxSizing: "border-box",
         overflow: "hidden",
-        border: "1px solid var(--border-glass, rgba(255,255,255,0.1))"
+        border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(15, 23, 42, 0.08)",
+        transition: "all 0.3s ease"
       }}>
         
         {/* Left Hero Pane */}
-        <div style={{
+        <div className="login-hero-pane" style={{
           flex: "1 1 45%",
           minWidth: "320px",
-          borderRadius: "18px",
+          borderRadius: "20px",
           position: "relative",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: "36px",
-          background: "linear-gradient(180deg, #181825 0%, #0d0d15 100%)",
-          color: "#ffffff"
+          padding: "40px",
+          color: "#ffffff",
+          backgroundImage: isDark ? "url('/login-bg-hero-dark.png')" : "url('/login-bg-hero-light.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transition: "background-image 0.5s ease"
         }}>
-          {/* Dark Atmospheric Background Artwork */}
+          {/* Dark Overlay gradient for legible typography */}
           <div style={{
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage: "radial-gradient(circle at 50% 30%, rgba(163, 230, 53, 0.25) 0%, rgba(0,0,0,0) 70%), url('/login-hero-flux.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.9,
-            filter: "contrast(1.1) brightness(0.95)"
-          }} />
-
-          {/* Dark Overlay gradient */}
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)",
+            background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%)",
             zIndex: 1
           }} />
 
           {/* Top-left Brand Logo Badge */}
           <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{
-              width: "36px",
-              height: "36px",
+              width: "38px",
+              height: "38px",
               borderRadius: "10px",
               backgroundColor: "rgba(255, 255, 255, 0.15)",
               backdropFilter: "blur(10px)",
@@ -172,67 +210,71 @@ export default function LoginPage() {
               border: "1px solid rgba(255, 255, 255, 0.2)"
             }}>
               {config?.brand?.logoUrl ? (
-                <img src={config.brand.logoUrl} alt={brandTitle} style={{ maxHeight: "20px", objectFit: "contain" }} />
+                <img src={config.brand.logoUrl} alt={brandTitle} style={{ maxHeight: "22px", objectFit: "contain" }} />
               ) : (
                 <Flame size={20} color="#ffffff" fill="#ffffff" />
               )}
             </div>
-            <span style={{ fontSize: "18px", fontWeight: "700", letterSpacing: "-0.02em", color: "#ffffff" }}>
+            <span style={{ fontSize: "19px", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff", textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
               {brandTitle}
             </span>
           </div>
 
           {/* Bottom Hero Text */}
           <div style={{ position: "relative", zIndex: 2, marginTop: "auto" }}>
-            <h1 style={{
-              fontSize: "32px",
-              fontWeight: "700",
+            <h1 className="hero-headline" style={{
+              fontSize: "36px",
+              fontWeight: "800",
               lineHeight: "1.2",
               letterSpacing: "-0.03em",
               marginBottom: "12px",
-              color: "#ffffff"
+              color: "#ffffff",
+              textShadow: "0 2px 8px rgba(0, 0, 0, 0.4)"
             }}>
-              Build something amazing today.
+              YOUR SYSTEM AWAITS!
             </h1>
-            <p style={{
-              fontSize: "14px",
-              lineHeight: "1.5",
-              color: "rgba(255, 255, 255, 0.75)",
+            <p className="hero-desc" style={{
+              fontSize: "14.5px",
+              lineHeight: "1.6",
+              color: "rgba(255, 255, 255, 0.85)",
               margin: 0,
-              maxWidth: "340px"
+              maxWidth: "360px",
+              textShadow: "0 1px 4px rgba(0, 0, 0, 0.3)"
             }}>
-              Intelligent lead management, cylinder refilling schedules, and field technician dispatches.
+              {brandSubtitle}. Intelligent operations, cylinder refilling schedules, and dispatches.
             </p>
           </div>
         </div>
 
         {/* Right Sign-In Form Pane */}
-        <div style={{
+        <div className="login-form-pane" style={{
           flex: "1 1 55%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px 20px"
+          padding: "40px"
         }}>
           <div style={{ width: "100%", maxWidth: "380px" }}>
             
             {/* Heading Header */}
-            <div style={{ marginBottom: "28px" }}>
+            <div style={{ marginBottom: "32px" }}>
               <h2 style={{
-                fontSize: "28px",
-                fontWeight: "700",
-                color: "#0f172a",
-                margin: "0 0 6px 0",
-                letterSpacing: "-0.02em"
+                fontSize: "30px",
+                fontWeight: "800",
+                color: isDark ? "#ffffff" : "#0f172a",
+                margin: "0 0 8px 0",
+                letterSpacing: "-0.03em",
+                transition: "color 0.3s"
               }}>
-                Sign in
+                WELCOME BACK !
               </h2>
               <p style={{
-                fontSize: "14px",
-                color: "#64748b",
-                margin: 0
+                fontSize: "14.5px",
+                color: isDark ? "rgba(255, 255, 255, 0.6)" : "#64748b",
+                margin: 0,
+                transition: "color 0.3s"
               }}>
-                Welcome back! Enter your details below.
+                Welcome back! Please enter your details below.
               </p>
             </div>
 
@@ -240,32 +282,35 @@ export default function LoginPage() {
             {error && (
               <div style={{
                 padding: "12px 14px",
-                borderRadius: "8px",
-                backgroundColor: "#fef2f2",
-                border: "1px solid #fecaca",
-                color: "#dc2626",
-                fontSize: "13px",
+                borderRadius: "10px",
+                backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
+                border: isDark ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid #fecaca",
+                color: "#ef4444",
+                fontSize: "13.5px",
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                marginBottom: "20px"
+                gap: "10px",
+                marginBottom: "24px",
+                transition: "all 0.3s"
               }}>
-                <ShieldAlert size={16} />
+                <ShieldAlert size={18} />
                 <span>{error}</span>
               </div>
             )}
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
               
               {/* Mobile Number Field */}
               <div>
                 <label htmlFor="username" style={{
                   display: "block",
                   fontSize: "13px",
-                  fontWeight: "500",
-                  color: "#334155",
-                  marginBottom: "6px"
+                  fontWeight: "600",
+                  color: isDark ? "rgba(255, 255, 255, 0.75)" : "#475569",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em"
                 }}>
                   Mobile Number
                 </label>
@@ -280,47 +325,56 @@ export default function LoginPage() {
                     disabled={loading}
                     style={{
                       width: "100%",
-                      padding: "12px 14px 12px 38px",
-                      fontSize: "14px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      color: "#0f172a",
+                      padding: "13px 14px 13px 40px",
+                      fontSize: "14.5px",
+                      borderRadius: "10px",
+                      border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #cbd5e1",
+                      backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#ffffff",
+                      color: isDark ? "#ffffff" : "#0f172a",
                       outline: "none",
                       boxSizing: "border-box",
                       transition: "all 0.2s"
                     }}
-                    onFocus={(e) => e.target.style.borderColor = "#0f172a"}
-                    onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "var(--primary)";
+                      e.target.style.boxShadow = isDark ? "0 0 10px rgba(255, 255, 255, 0.05)" : "0 0 10px rgba(0, 0, 0, 0.05)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = isDark ? "rgba(255, 255, 255, 0.12)" : "#cbd5e1";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                   <Phone size={16} style={{
                     position: "absolute",
-                    left: "12px",
+                    left: "14px",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "#94a3b8"
+                    color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8"
                   }} />
                 </div>
               </div>
 
               {/* Password Field */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <label htmlFor="password" style={{
                     fontSize: "13px",
-                    fontWeight: "500",
-                    color: "#334155"
+                    fontWeight: "600",
+                    color: isDark ? "rgba(255, 255, 255, 0.75)" : "#475569",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.03em"
                   }}>
                     Password
                   </label>
                   <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("Please contact your system administrator to reset password."); }} style={{
-                    fontSize: "12px",
-                    fontWeight: "500",
-                    color: "#64748b",
-                    textDecoration: "none"
+                    fontSize: "12.5px",
+                    fontWeight: "600",
+                    color: isDark ? "rgba(255, 255, 255, 0.55)" : "#64748b",
+                    textDecoration: "none",
+                    transition: "color 0.2s"
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#0f172a"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
+                  onMouseEnter={(e) => e.currentTarget.style.color = "var(--primary)"}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isDark ? "rgba(255, 255, 255, 0.55)" : "#64748b"}
                   >
                     Forgot password?
                   </a>
@@ -336,25 +390,31 @@ export default function LoginPage() {
                     disabled={loading}
                     style={{
                       width: "100%",
-                      padding: "12px 38px 12px 38px",
-                      fontSize: "14px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      color: "#0f172a",
+                      padding: "13px 40px 13px 40px",
+                      fontSize: "14.5px",
+                      borderRadius: "10px",
+                      border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid #cbd5e1",
+                      backgroundColor: isDark ? "rgba(255, 255, 255, 0.03)" : "#ffffff",
+                      color: isDark ? "#ffffff" : "#0f172a",
                       outline: "none",
                       boxSizing: "border-box",
                       transition: "all 0.2s"
                     }}
-                    onFocus={(e) => e.target.style.borderColor = "#0f172a"}
-                    onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "var(--primary)";
+                      e.target.style.boxShadow = isDark ? "0 0 10px rgba(255, 255, 255, 0.05)" : "0 0 10px rgba(0, 0, 0, 0.05)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = isDark ? "rgba(255, 255, 255, 0.12)" : "#cbd5e1";
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                   <Lock size={16} style={{
                     position: "absolute",
-                    left: "12px",
+                    left: "14px",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "#94a3b8"
+                    color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8"
                   }} />
                   <button
                     type="button"
@@ -362,12 +422,12 @@ export default function LoginPage() {
                     tabIndex={-1}
                     style={{
                       position: "absolute",
-                      right: "12px",
+                      right: "14px",
                       top: "50%",
                       transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
-                      color: "#94a3b8",
+                      color: isDark ? "rgba(255, 255, 255, 0.4)" : "#94a3b8",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center"
@@ -379,23 +439,23 @@ export default function LoginPage() {
               </div>
 
               {/* Keep me logged in checkbox */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <input
                   type="checkbox"
                   id="keepLoggedIn"
                   checked={keepLoggedIn}
                   onChange={(e) => setKeepLoggedIn(e.target.checked)}
                   style={{
-                    width: "16px",
-                    height: "16px",
+                    width: "18px",
+                    height: "18px",
                     borderRadius: "4px",
-                    accentColor: "#0f172a",
+                    accentColor: "var(--primary)",
                     cursor: "pointer"
                   }}
                 />
                 <label htmlFor="keepLoggedIn" style={{
-                  fontSize: "13px",
-                  color: "#64748b",
+                  fontSize: "13.5px",
+                  color: isDark ? "rgba(255, 255, 255, 0.65)" : "#64748b",
                   cursor: "pointer",
                   userSelect: "none"
                 }}>
@@ -409,20 +469,39 @@ export default function LoginPage() {
                 disabled={loading || !username || !password}
                 style={{
                   width: "100%",
-                  padding: "12px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  borderRadius: "8px",
+                  padding: "13px",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  borderRadius: "10px",
                   border: "none",
-                  backgroundColor: loading || !username || !password ? "#94a3b8" : "#0f172a",
-                  color: "#ffffff",
+                  background: loading || !username || !password 
+                    ? (isDark ? "rgba(255, 255, 255, 0.1)" : "#94a3b8") 
+                    : "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+                  color: loading || !username || !password
+                    ? (isDark ? "rgba(255, 255, 255, 0.3)" : "#e2e8f0")
+                    : "#ffffff",
                   cursor: loading || !username || !password ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
-                  boxShadow: "0 4px 12px rgba(15, 23, 42, 0.15)",
-                  transition: "all 0.2s"
+                  gap: "10px",
+                  boxShadow: loading || !username || !password 
+                    ? "none" 
+                    : "0 6px 20px rgba(0, 0, 0, 0.15)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  marginTop: "8px"
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading && username && password) {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.2)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading && username && password) {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.15)";
+                  }
                 }}
               >
                 {loading ? "Signing in..." : "Sign in"}
@@ -436,15 +515,30 @@ export default function LoginPage() {
 
       {/* Mobile Responsive Login Styles */}
       <style jsx global>{`
-        @media (max-width: 768px) {
+        @media (max-width: 868px) {
           .login-card-container {
             flex-direction: column !important;
             min-height: auto !important;
-            padding: 8px !important;
+            max-width: 480px !important;
+            padding: 10px !important;
+            border-radius: 20px !important;
           }
           .login-hero-pane {
-            min-height: 200px !important;
-            padding: 20px !important;
+            min-height: 140px !important;
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            padding: 24px !important;
+            border-radius: 14px !important;
+          }
+          .hero-headline {
+            font-size: 24px !important;
+            margin-bottom: 4px !important;
+          }
+          .hero-desc {
+            display: none !important;
+          }
+          .login-form-pane {
+            padding: 24px 12px 12px 12px !important;
           }
         }
       `}</style>

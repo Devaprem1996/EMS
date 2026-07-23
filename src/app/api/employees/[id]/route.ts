@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { isAdmin, getAuthSession } from "@/lib/auth-helpers";
 import * as bcrypt from "bcryptjs";
+import { serverCache } from "@/lib/cache";
 
 // PUT /api/employees/[id] - Update employee details (Admin Only)
 export async function PUT(
@@ -105,6 +106,9 @@ export async function PUT(
       username: updatedEmployee.mobileNumber,
       phone: updatedEmployee.contactPhone,
     };
+
+    // Invalidate employee caches
+    serverCache.invalidatePattern(/^employees:/);
 
     return NextResponse.json(mapped);
   } catch (error) {

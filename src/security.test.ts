@@ -44,10 +44,8 @@ describe("Security Reinforcements Tests", () => {
 
     it("should reject session cookies that have been tampered with", () => {
       const signedCookie = signSession(dummyAdminSession);
-      const [data, signature] = signedCookie.split(".");
+      const [, signature] = signedCookie.split(".");
       
-      // Tamper with data part
-      const tamperedSession = { ...dummyAdminSession, role: "ADMIN" };
       // User is technician but tries to escalalate by editing payload to ADMIN
       const escalSession = { ...dummyTechSession, role: "ADMIN" };
       const tamperedDataStr = Buffer.from(JSON.stringify(escalSession)).toString("base64");
@@ -93,9 +91,9 @@ describe("Security Reinforcements Tests", () => {
       const ip = "192.168.1.50";
       
       // Make 3 requests
-      let res1 = rateLimit(ip, 5);
-      let res2 = rateLimit(ip, 5);
-      let res3 = rateLimit(ip, 5);
+      const res1 = rateLimit(ip, 5);
+      rateLimit(ip, 5);
+      const res3 = rateLimit(ip, 5);
       
       expect(res1.isLimited).toBe(false);
       expect(res1.remaining).toBe(4);

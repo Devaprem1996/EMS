@@ -45,7 +45,7 @@ export async function PUT(
       // Fetch parent ticket detail to inspect current status and stage
       const ticket = await tx.ticket.findUnique({
         where: { id: assignment.ticketId },
-        select: { currentStage: true, currentStatus: true },
+        select: { currentStage: true, currentStatus: true, assignmentType: true, amcYears: true },
       });
 
       // Update TicketAssignment record
@@ -86,10 +86,23 @@ export async function PUT(
       if (ticket) {
         // Sync parent ticket status based on assignment status
         if (status === "Completed") {
-          if (ticket.currentStage === "SERVICES") {
-            ticketUpdateData.currentStatus = "Completed";
-          } else {
+          ticketUpdateData.currentStage = "COMPLETED";
+          const type = ticket.assignmentType || "DELIVERY";
+          if (type === "REFILLING") {
             ticketUpdateData.currentStatus = "Order Delivered";
+          } else if (type === "SERVICE") {
+            ticketUpdateData.currentStatus = "Service Done";
+          } else {
+            ticketUpdateData.currentStatus = "Completed";
+          }
+
+          // Log delivered date and calculate AMC Date
+          const deliveredDate = new Date();
+          ticketUpdateData.deliveredDate = deliveredDate;
+          if (ticket.amcYears && ticket.amcYears > 0) {
+            const calculatedAmcDate = new Date(deliveredDate);
+            calculatedAmcDate.setFullYear(calculatedAmcDate.getFullYear() + ticket.amcYears);
+            ticketUpdateData.amcDate = calculatedAmcDate;
           }
         } else if (status === "Assign For Service") {
           if (ticket.currentStage === "REFILLING") {

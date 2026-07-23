@@ -16,17 +16,6 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
   const [manualCode, setManualCode] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [isOpen]);
-
   const startCamera = async () => {
     setError(null);
     setIsScanning(true);
@@ -43,7 +32,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
       } else {
         setError("Camera access is not supported by this browser. Use manual input below.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn("Camera access warning:", err);
       setError("Unable to access live camera stream. You can simulate scan or enter tag manually below.");
     }
@@ -56,6 +45,24 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
     }
     setIsScanning(false);
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        startCamera();
+      }, 0);
+    } else {
+      setTimeout(() => {
+        stopCamera();
+      }, 0);
+    }
+    return () => {
+      setTimeout(() => {
+        stopCamera();
+      }, 0);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSimulateScan = () => {
     const sampleSerials = ["CYL-2026-8941", "FE-9921-X4", "SAFE-5582-CO2", "CYL-7740-ABC"];

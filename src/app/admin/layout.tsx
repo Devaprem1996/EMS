@@ -561,6 +561,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Content Body */}
         <main className="dashboard-content animated-page" style={{ flexGrow: 1, padding: "2rem", overflowY: "auto" }}>
+          {user?.role === "SUPER_ADMIN" && !(user as any)?.tenantId && (
+            <div style={{
+              background: "rgba(59, 130, 246, 0.08)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
+              borderRadius: "8px",
+              padding: "12px 16px",
+              marginBottom: "20px",
+              color: "#60a5fa",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px"
+            }}>
+              <span style={{ fontWeight: "700" }}>🔧 Developer Notice:</span>
+              <span>You are logged in as a Platform Developer. No client tenant context is active, showing the fallback profile (Safeway). To test dynamic client branding, log out and log in as the HVAC Admin (Phone: <b>8888888888</b>, Pass: <b>admin123</b>).</span>
+            </div>
+          )}
           {children}
         </main>
       </div>

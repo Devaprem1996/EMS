@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     const session = getAuthSession(req);
-    if (!session || session.role !== "ADMIN") {
+    if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized. Admin role required." }, { status: 401 });
     }
 

@@ -26,13 +26,35 @@ const COLOR_SWATCHES = [
 ];
 
 export default function SettingsPage() {
-  const { config, loading, updateConfig } = useConfig();
+  const { config, loading: configLoading, updateConfig } = useConfig();
   const [activeTab, setActiveTab] = useState<"brand" | "stages" | "categories" | "fields" | "csv">("brand");
+  const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Success/Error toast states
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Load auth state
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            setUser(data.user);
+          }
+        }
+      } catch (err) {
+        console.error("SettingsPage auth check failed:", err);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   // Brand States
   const [title, setTitle] = useState("");
@@ -253,11 +275,22 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
+  if (configLoading || authLoading) {
     return (
       <div style={{ textAlign: "center", padding: "100px", color: "#94a3b8" }}>
         <div style={{ display: "inline-block", width: "40px", height: "40px", border: "3px solid rgba(255,255,255,0.05)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
         <div style={{ marginTop: "15px", fontSize: "15px" }}>Loading settings console...</div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "SUPER_ADMIN") {
+    return (
+      <div style={{ padding: "80px 20px", textAlign: "center", color: "#f87171", maxWidth: "600px", margin: "0 auto" }}>
+        <h2 style={{ fontSize: "24px", fontWeight: "800", marginBottom: "12px", letterSpacing: "-0.02em" }}>Access Restricted</h2>
+        <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.5" }}>
+          This settings control panel is restricted to platform developers. Client administrators do not have access permissions.
+        </p>
       </div>
     );
   }

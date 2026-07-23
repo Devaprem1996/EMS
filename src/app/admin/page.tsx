@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useConfig } from "@/context/ConfigContext";
 import { 
   FileText, 
   RotateCcw, 
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 
 export default function AdminCentralOverviewPage() {
+  const { config } = useConfig();
   const [timeframe, setTimeframe] = useState<"today" | "month" | "year">("month");
   const [loading, setLoading] = useState(false);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
@@ -134,7 +136,7 @@ export default function AdminCentralOverviewPage() {
             Central Operations & Telemetry
           </h1>
           <p style={{ fontSize: "var(--font-sm)", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>
-            Unified real-time monitoring across Enquiry, Cylinder Refilling, Field Services & Staff Dispatch.
+            Unified real-time monitoring across Enquiry, Refilling, Field Services & Staff Dispatch.
           </p>
         </div>
 
@@ -257,7 +259,7 @@ export default function AdminCentralOverviewPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Cylinder Refilling
+                {config?.stages?.REFILLING?.displayName || "Refilling Operations"}
               </span>
               <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <RotateCcw size={18} />
@@ -288,7 +290,7 @@ export default function AdminCentralOverviewPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Maintenance & AMC
+                {config?.stages?.SERVICES?.displayName || "Maintenance & AMC"}
               </span>
               <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Wrench size={18} />

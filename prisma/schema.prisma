@@ -96,6 +96,7 @@ model Ticket {
   
   assignments           TicketAssignment[]
   history               TicketHistory[]
+  invoice               Invoice?
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   deletedAt             DateTime?
@@ -180,6 +181,39 @@ model Tenant {
   employees Employee[]
   customers Customer[]
   tickets   Ticket[]
+  invoices  Invoice[]
+  payments  Payment[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+}
+
+model Invoice {
+  id              String    @id @default(uuid())
+  tenantId        String?
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id])
+  ticketId        String    @unique
+  ticket          Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  invoiceNumber   String    @unique
+  totalAmount     Float
+  status          String    // "DRAFT" | "SENT" | "PAID" | "OVERDUE"
+  dueDate         DateTime?
+  payments        Payment[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([tenantId])
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  tenantId        String?
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id])
+  invoiceId       String
+  invoice         Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount          Float
+  paymentMethod   String    // "CASH" | "CARD" | "BANK_TRANSFER"
+  referenceId     String?
+  createdAt       DateTime  @default(now())
+  
+  @@index([tenantId])
 }

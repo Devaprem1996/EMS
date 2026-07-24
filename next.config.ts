@@ -12,9 +12,6 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    if (process.env.NODE_ENV === "development") {
-      return [];
-    }
     return [
       {
         source: "/:path*",
@@ -38,6 +35,15 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(self), geolocation=(self)",
+          },
+        ],
+      },
+      {
+        source: "/config/templates/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },

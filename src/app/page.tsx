@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/context/ConfigContext";
 import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -184,7 +185,7 @@ export default function LoginPage() {
               border: "1px solid rgba(255, 255, 255, 0.2)"
             }}>
               {config?.brand?.logoUrl ? (
-                <img src={config.brand.logoUrl} alt={brandTitle} style={{ maxHeight: "22px", objectFit: "contain" }} />
+                <Image src={config.brand.logoUrl} alt={brandTitle} width={22} height={22} style={{ objectFit: "contain" }} unoptimized />
               ) : (
                 <Flame size={20} color="#ffffff" fill="#ffffff" />
               )}

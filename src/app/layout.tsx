@@ -43,6 +43,8 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#09090b" />
+        <link rel="preload" href="/login-bg-outer-dark.png" as="image" />
+        <link rel="preload" href="/login-bg-outer-light.png" as="image" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

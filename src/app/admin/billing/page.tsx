@@ -12,7 +12,7 @@ export default async function BillingDashboard() {
   const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   const systemConfig = await prisma.systemConfig.findFirst({

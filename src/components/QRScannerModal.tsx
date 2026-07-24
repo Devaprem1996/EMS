@@ -64,7 +64,28 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const handleSimulateScan = () => {
+  const handleSimulateScan = async () => {
+    try {
+      const res = await fetch("/api/jobs?stage=REFILLING");
+      if (res.ok) {
+        const data = await res.json();
+        const validSerials = data
+          .map((job: any) => job.serialNumber)
+          .filter((s: any) => s && s.trim() !== "");
+        
+        if (validSerials.length > 0) {
+          const randomCode = validSerials[Math.floor(Math.random() * validSerials.length)];
+          onScan(randomCode);
+          stopCamera();
+          onClose();
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch real job serials, falling back to mock serials", e);
+    }
+    
+    // Fallback: Use standard demo scan codes if DB list is empty or call fails
     const sampleSerials = ["CYL-2026-8941", "FE-9921-X4", "SAFE-5582-CO2", "CYL-7740-ABC"];
     const randomCode = sampleSerials[Math.floor(Math.random() * sampleSerials.length)];
     onScan(randomCode);

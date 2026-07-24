@@ -13,7 +13,7 @@ export default async function AnalyticsDashboard() {
   const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   const systemConfig = await prisma.systemConfig.findFirst({

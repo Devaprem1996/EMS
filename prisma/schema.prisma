@@ -42,6 +42,7 @@ model Customer {
   secondaryPhone String?
   email          String?
   address        String?
+  passwordHash   String?            // Customer portal password hash
   tickets        Ticket[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt

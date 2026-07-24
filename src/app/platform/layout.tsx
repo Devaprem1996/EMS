@@ -11,7 +11,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const session = sessionCookie ? verifySession(sessionCookie.value) : null;
 
   if (!session || session.role !== "SUPER_ADMIN") {
-    redirect("/login");
+    redirect("/");
   }
 
   return (

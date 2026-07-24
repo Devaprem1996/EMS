@@ -32,13 +32,30 @@ export default function AdminCentralOverviewPage() {
   const [loading, setLoading] = useState(false);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
+  const [stats, setStats] = useState({ enquiries: 0, refills: 0, services: 0, techs: 0 });
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/jobs/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (err) {
+        console.error("Failed to load operations stats:", err);
+      }
+    }
+    fetchStats();
+  }, []);
+
   // Timeframe-Specific Datasets & KPIs
   const timeframeData = {
     today: {
-      enquiries: 28,
-      refills: 14,
-      services: 9,
-      techs: 18,
+      enquiries: stats.enquiries,
+      refills: stats.refills,
+      services: stats.services,
+      techs: stats.techs,
       leadConv: "+18.4%",
       onTimeRate: "99.1%",
       avgTurnaround: "1.2 hrs",
@@ -57,10 +74,10 @@ export default function AdminCentralOverviewPage() {
       ]
     },
     month: {
-      enquiries: 148,
-      refills: 64,
-      services: 39,
-      techs: 18,
+      enquiries: stats.enquiries,
+      refills: stats.refills,
+      services: stats.services,
+      techs: stats.techs,
       leadConv: "+14.2%",
       onTimeRate: "98.4%",
       avgTurnaround: "2.4 hrs",
@@ -79,10 +96,10 @@ export default function AdminCentralOverviewPage() {
       ]
     },
     year: {
-      enquiries: 1420,
-      refills: 580,
-      services: 310,
-      techs: 18,
+      enquiries: stats.enquiries,
+      refills: stats.refills,
+      services: stats.services,
+      techs: stats.techs,
       leadConv: "+22.8%",
       onTimeRate: "97.8%",
       avgTurnaround: "2.1 hrs",

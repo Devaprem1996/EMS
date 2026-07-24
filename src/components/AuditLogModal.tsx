@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { ShieldCheck, History, X, UserCheck, Clock, Layers } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ShieldCheck, History, X, Loader } from "lucide-react";
 
 interface AuditLogModalProps {
   isOpen: boolean;
@@ -10,44 +10,43 @@ interface AuditLogModalProps {
   clientName: string | null;
 }
 
-export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: AuditLogModalProps) {
-  if (!isOpen || !jobId) return null;
+interface AuditLog {
+  id: string;
+  action: string;
+  user: string;
+  role: string;
+  timestamp: string;
+  remarks?: string;
+}
 
-  // Sample Audit History entries for compliance tracking
-  const mockAuditLogs = [
-    {
-      id: "1",
-      action: "Status Updated to 'Order Delivered'",
-      user: "Admin (Devaprem)",
-      role: "ADMINISTRATOR",
-      timestamp: "23/07/2026, 11:30:00 AM",
-      ip: "192.168.1.45"
-    },
-    {
-      id: "2",
-      action: "Technician Assigned: 'Alex Rivera'",
-      user: "System Dispatcher",
-      role: "SYSTEM",
-      timestamp: "23/07/2026, 09:30:00 AM",
-      ip: "192.168.1.1"
-    },
-    {
-      id: "3",
-      action: "Hydro-Test Result Logged: 99.2% Pressure Passed",
-      user: "Alex Rivera",
-      role: "TECHNICIAN",
-      timestamp: "23/07/2026, 06:30:00 AM",
-      ip: "172.16.0.88"
-    },
-    {
-      id: "4",
-      action: "Job Record Created",
-      user: "Admin (Devaprem)",
-      role: "ADMINISTRATOR",
-      timestamp: "22/07/2026, 11:30:00 AM",
-      ip: "192.168.1.45"
+export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: AuditLogModalProps) {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || !jobId) return;
+
+    async function fetchHistory() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/history`);
+        if (!res.ok) throw new Error("Failed to load audit history");
+        const data = await res.json();
+        setLogs(data);
+      } catch (err: any) {
+        console.error("Error loading audit history:", err);
+        setError(err.message || "Failed to load audit trail.");
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+
+    fetchHistory();
+  }, [isOpen, jobId]);
+
+  if (!isOpen || !jobId) return null;
 
   return (
     <div style={{
@@ -92,41 +91,60 @@ export default function AuditLogModal({ isOpen, onClose, jobId, clientName }: Au
 
         {/* Audit Timeline List */}
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "340px", overflowY: "auto", paddingRight: "4px" }}>
-          {mockAuditLogs.map((log, index) => (
-            <div key={log.id} style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "14px",
-              padding: "0.85rem 1rem",
-              display: "flex",
-              gap: "12px",
-              alignItems: "flex-start"
-            }}>
-              <div style={{
-                background: index === 0 ? "rgba(163, 230, 53, 0.15)" : "rgba(255,255,255,0.06)",
-                color: index === 0 ? "#a3e635" : "#71717a",
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0
-              }}>
-                <ShieldCheck size={16} />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#ffffff", marginBottom: "2px" }}>
-                  {log.action}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#a1a1aa", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <span>👤 {log.user} ({log.role})</span>
-                  <span>🕒 {log.timestamp}</span>
-                </div>
-              </div>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+              <div className="spinner" style={{ width: "30px", height: "30px", borderWidth: "2px" }}></div>
             </div>
-          ))}
+          ) : error ? (
+            <div style={{ padding: "1.5rem", color: "#ef4444", fontSize: "0.85rem", textAlign: "center" }}>
+              {error}
+            </div>
+          ) : logs.length === 0 ? (
+            <div style={{ padding: "2rem", color: "#a1a1aa", fontSize: "0.85rem", textAlign: "center" }}>
+              No audit trail events recorded for this ticket yet.
+            </div>
+          ) : (
+            logs.map((log, index) => (
+              <div key={log.id} style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "14px",
+                padding: "0.85rem 1rem",
+                display: "flex",
+                gap: "12px",
+                alignItems: "flex-start"
+              }}>
+                <div style={{
+                  background: index === 0 ? "rgba(163, 230, 53, 0.15)" : "rgba(255,255,255,0.06)",
+                  color: index === 0 ? "#a3e635" : "#71717a",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <ShieldCheck size={16} />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#ffffff", marginBottom: "2px" }}>
+                    {log.action}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#a1a1aa", display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: log.remarks ? "4px" : "0" }}>
+                    <span>👤 {log.user} ({log.role})</span>
+                    <span>🕒 {log.timestamp}</span>
+                  </div>
+                  {log.remarks && (
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", background: "rgba(255,255,255,0.02)", padding: "4px 8px", borderRadius: "6px", borderLeft: "2px solid var(--accent)" }}>
+                      {log.remarks}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}

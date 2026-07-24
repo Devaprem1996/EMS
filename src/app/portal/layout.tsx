@@ -16,14 +16,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       .then((res) => res.json())
       .then((data) => {
         if (!data.authenticated || !data.user || data.user.role !== "CUSTOMER") {
-          router.push("/login");
+          router.push("/");
         } else {
           setSession(data.user);
           setLoading(false);
         }
       })
       .catch(() => {
-        router.push("/login");
+        router.push("/");
       });
   }, [router]);
 
@@ -42,7 +42,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <LifeBuoy size={48} style={{ color: "var(--text-secondary)", marginBottom: "20px" }} />
         <h2>Portal Disabled</h2>
         <p style={{ color: "var(--text-secondary)" }}>The customer portal is currently disabled for this tenant.</p>
-        <button onClick={() => router.push("/login")} style={{ marginTop: "20px", padding: "10px 20px", background: "var(--primary)", border: "none", borderRadius: "8px", color: "#fff", cursor: "pointer" }}>Return to Login</button>
+        <button onClick={() => router.push("/")} style={{ marginTop: "20px", padding: "10px 20px", background: "var(--primary)", border: "none", borderRadius: "8px", color: "#fff", cursor: "pointer" }}>Return to Login</button>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <button 
             onClick={async () => {
               await fetch("/api/auth/logout", { method: "POST" });
-              router.push("/login");
+              router.push("/");
             }}
             style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "1px solid var(--border-glass)", padding: "8px 12px", borderRadius: "8px", color: "var(--text-primary)", cursor: "pointer", fontSize: "13px", fontWeight: "600", transition: "background 0.2s" }}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}

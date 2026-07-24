@@ -25,8 +25,9 @@ export default async function CustomerPortalDashboard() {
     }
   });
 
-  const activeTickets = tickets.filter(t => t.currentStatus !== "COMPLETED");
-  const completedTickets = tickets.filter(t => t.currentStatus === "COMPLETED");
+  const activeTickets = tickets.filter(t => t.currentStage !== "COMPLETED" && t.currentStatus !== "COMPLETED" && t.currentStatus !== "Service Done" && t.currentStatus !== "Order Delivered");
+  const completedTickets = tickets.filter(t => t.currentStage === "COMPLETED" || t.currentStatus === "COMPLETED" || t.currentStatus === "Service Done" || t.currentStatus === "Order Delivered");
+  const upcomingMaintenance = tickets.filter(t => t.amcDate && new Date(t.amcDate) >= new Date());
 
   const getStageIcon = (stage: string) => {
     if (stage === "ENQUIRY") return <Clock size={20} />;
@@ -40,6 +41,13 @@ export default async function CustomerPortalDashboard() {
     if (stage === "REFILLING") return "#f59e0b";
     if (stage === "SERVICES") return "#8b5cf6";
     return "#10b981";
+  };
+
+  const getProgressPercentage = (stage: string, status: string) => {
+    if (stage === "COMPLETED" || status === "COMPLETED" || status === "Service Done" || status === "Order Delivered") return 100;
+    if (stage === "SERVICES") return status === "IN_PROGRESS" ? 85 : 70;
+    if (stage === "REFILLING") return status === "IN_PROGRESS" ? 50 : 40;
+    return status === "ASSIGNED" ? 25 : 15;
   };
 
   return (
@@ -69,7 +77,7 @@ export default async function CustomerPortalDashboard() {
             <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
               {activeTickets.map(ticket => (
                 <div key={ticket.id} style={{ padding: "15px", borderRadius: "12px", background: "var(--bg-input)", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                     <span style={{ fontSize: "12px", fontWeight: "bold", color: getStageColor(ticket.currentStage), display: "flex", alignItems: "center", gap: "6px" }}>
                       {getStageIcon(ticket.currentStage)}
                       {ticket.currentStage}
@@ -89,9 +97,9 @@ export default async function CustomerPortalDashboard() {
                       </span>
                     )}
                   </div>
-                  {/* Progress Bar Mockup */}
+                  {/* Dynamic Progress Bar */}
                   <div style={{ height: "4px", width: "100%", background: "rgba(255,255,255,0.1)", borderRadius: "2px", marginTop: "12px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: ticket.currentStatus === "ASSIGNED" ? "50%" : ticket.currentStatus === "IN_PROGRESS" ? "75%" : "25%", background: getStageColor(ticket.currentStage), borderRadius: "2px", transition: "width 0.5s ease" }}></div>
+                    <div style={{ height: "100%", width: `${getProgressPercentage(ticket.currentStage, ticket.currentStatus)}%`, background: getStageColor(ticket.currentStage), borderRadius: "2px", transition: "width 0.5s ease" }}></div>
                   </div>
                 </div>
               ))}
@@ -105,9 +113,29 @@ export default async function CustomerPortalDashboard() {
             <Calendar size={20} style={{ color: "var(--accent)" }} />
             Upcoming Maintenance
           </h2>
-          <div style={{ padding: "30px 0", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px", border: "1px dashed var(--border-glass)", borderRadius: "12px" }}>
-            No upcoming scheduled maintenance for your registered equipment.
-          </div>
+          
+          {upcomingMaintenance.length === 0 ? (
+            <div style={{ padding: "30px 0", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px", border: "1px dashed var(--border-glass)", borderRadius: "12px" }}>
+              No upcoming scheduled maintenance for your registered equipment.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {upcomingMaintenance.map(ticket => (
+                <div key={ticket.id} style={{ padding: "15px", borderRadius: "12px", background: "var(--bg-input)", border: "1px solid var(--border-glass)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Tag: <strong>{ticket.serialNumber || "N/A"}</strong></span>
+                    <span style={{ fontSize: "11px", background: "rgba(220,38,38,0.1)", color: "#f87171", padding: "2px 8px", borderRadius: "4px", fontWeight: "bold" }}>AMC ACTIVE</span>
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px" }}>
+                    {ticket.itemDescription || "Fire Extinguisher Maintenance"} ({ticket.capacity || "N/A"})
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    Next Refilling Date: <strong style={{ color: "var(--text-primary)" }}>{new Date(ticket.amcDate!).toLocaleDateString()}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

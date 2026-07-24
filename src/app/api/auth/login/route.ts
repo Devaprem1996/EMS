@@ -26,8 +26,14 @@ export async function POST(req: NextRequest) {
       });
 
       if (customer) {
-        // For Prototype: Mock password for customers is 'portal123'
-        if (password !== "portal123") {
+        let passwordMatch = false;
+        if (customer.passwordHash) {
+          passwordMatch = await bcrypt.compare(password, customer.passwordHash);
+        } else {
+          passwordMatch = password === "portal123";
+        }
+
+        if (!passwordMatch) {
           return NextResponse.json({ error: "Invalid password" }, { status: 401 });
         }
 

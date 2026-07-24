@@ -1,9 +1,0 @@
-Column,Type,Constraints / Attributes,Description,Example
-id,String,"Primary Key, Default: UUID",Unique assignment ID,z1y2x3w4-v5u6-7t8s-9r0q-1p2o3n4m5l6k
-ticketId,String,"Required, Foreign Key (Ticket), Cascade delete",Associated ticket ID,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
-employeeId,String,"Required, Foreign Key (Employee)",Allocated employee/technician ID,d4b8e3a2-7f12-4c8d-b9ea-b65f3fcd84c6
-assignedAt,DateTime,Default: now(),Time of assignment,2026-07-14T10:15:00Z
-completedAt,DateTime,Optional,Time technician finished assignment,2026-07-14T14:30:00Z
-status,String,Required,"Task status: Pending, Completed, Assign For Service",Pending
-notes,String,Optional,Technician post-service comments,Valve seal verified ok
-deletedAt,DateTime,Optional,Soft-delete timestamp,null

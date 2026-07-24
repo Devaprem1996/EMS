@@ -1,6 +1,0 @@
-Column,Type,Constraints / Attributes,Description,Example
-id,String,"Primary Key, Default: UUID",Unique ID for follow-up record,c2b3a4d5-e6f7-7a8b-9c0d-1e2f3a4b5c6d
-ticketId,String,"Required, Foreign Key (Ticket), Cascade delete",Associated ticket ID,a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
-remarks,String,Required,Remarks from follow-up conversation,"Called client, they asked to callback tomorrow"
-createdAt,DateTime,Default: now(),Timestamp of follow-up record,2026-07-14T11:00:00Z
-deletedAt,DateTime,Optional,Timestamp for soft deletion,null

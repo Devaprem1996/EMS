@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConfig } from "@/context/ConfigContext";
-import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert, ArrowRight, Sun, Moon } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, Flame, ShieldAlert } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { config, themeMode, toggleTheme } = useConfig();
+  const { config, themeMode } = useConfig();
   
   // Form State
   const [username, setUsername] = useState("");
@@ -89,8 +89,9 @@ export default function LoginPage() {
       } else {
         router.push("/technician/tasks");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "An error occurred";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -120,41 +121,6 @@ export default function LoginPage() {
       overflowX: "hidden"
     }}>
       
-      {/* Floating Theme Switcher */}
-      <button
-        onClick={toggleTheme}
-        type="button"
-        aria-label="Toggle Theme"
-        style={{
-          position: "fixed",
-          top: "20px",
-          right: "20px",
-          width: "44px",
-          height: "44px",
-          borderRadius: "50%",
-          backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)",
-          border: isDark ? "1px solid rgba(255, 255, 255, 0.15)" : "1px solid rgba(15, 23, 42, 0.1)",
-          backdropFilter: "blur(12px)",
-          color: isDark ? "#facc15" : "#475569",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          zIndex: 100,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1) rotate(12deg)";
-          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.1)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1) rotate(0deg)";
-          e.currentTarget.style.backgroundColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)";
-        }}
-      >
-        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
 
       {/* Outer Responsive Card Container */}
       <div className="login-card-container framer-scale" style={{

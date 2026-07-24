@@ -105,9 +105,23 @@ export async function POST(req: NextRequest) {
       try {
         // Map raw headers to keys based on ems-config
         const mappedRow: any = {};
-        const mappings = dbConfig.importMappings;
+        const mappings: any = {};
+        for (const [k, v] of Object.entries(dbConfig.importMappings)) {
+          mappings[k] = [...v];
+        }
 
-        for (const [key, aliases] of Object.entries(mappings)) {
+        // Dynamically inject custom defined whitelabel labels to aliases
+        const labels = dbConfig.brand?.labels || {};
+        for (const [fieldKey, customLabel] of Object.entries(labels)) {
+          if (customLabel && typeof customLabel === "string" && mappings[fieldKey]) {
+            const cleanLabel = customLabel.toLowerCase().trim();
+            if (!mappings[fieldKey].includes(cleanLabel)) {
+              mappings[fieldKey].unshift(cleanLabel);
+            }
+          }
+        }
+
+        for (const [key, aliases] of Object.entries(mappings) as [string, string[]][]) {
           const matchKey = Object.keys(rawRow).find((k: string) => 
             aliases.includes(k.toLowerCase().trim())
           );

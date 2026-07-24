@@ -1,62 +1,71 @@
-import { prisma } from "@/lib/db";
-import { verifySession } from "@/lib/auth-helpers";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { FileText, CheckCircle, Clock, Search, Download } from "lucide-react";
+"use client";
 
-export const dynamic = "force-dynamic";
+import React, { useState } from "react";
+import useSWR from "swr";
+import { useConfig } from "@/context/ConfigContext";
+import { FileText, CheckCircle, Clock, Download, PlusCircle, AlertCircle } from "lucide-react";
 
-export default async function BillingDashboard() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("ems_session");
-  const session = sessionCookie ? verifySession(sessionCookie.value) : null;
+export default function BillingDashboard() {
+  const { config } = useConfig();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
 
-  if (!session) {
-    redirect("/");
-  }
+  const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-  const systemConfig = await prisma.systemConfig.findFirst({
-    where: { tenantId: session.tenantId }
-  });
+  // SWR queries for unbilled tickets and generated invoices
+  const { data: unbilledTickets = [], mutate: mutateUnbilled } = useSWR(
+    "/api/billing?scope=unbilled",
+    fetcher
+  );
 
-  if (systemConfig) {
+  const { data: invoices = [], mutate: mutateInvoices } = useSWR(
+    "/api/billing",
+    fetcher
+  );
+
+  const handleGenerateInvoice = async (ticketId: string) => {
+    setSubmittingId(ticketId);
+    setErrorMsg(null);
+    setSuccessMsg(null);
     try {
-      const parsedConfig = JSON.parse(systemConfig.config);
-      if (parsedConfig.features && !parsedConfig.features.billingModule) {
-        return <div style={{ padding: "50px", textAlign: "center", color: "var(--text-secondary)" }}>This module is not enabled for your account.</div>;
+      const res = await fetch("/api/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMsg(`Invoice ${data.invoiceNumber} generated successfully!`);
+        mutateUnbilled();
+        mutateInvoices();
+        // Clear message after timeout
+        setTimeout(() => setSuccessMsg(null), 4000);
+      } else {
+        setErrorMsg(data.error || "Failed to generate invoice");
       }
-    } catch(e) {}
-  }
-
-  const invoices = await prisma.invoice.findMany({
-    include: {
-      ticket: {
-        include: {
-          customer: true
-        }
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Connection error. Failed to generate invoice.");
+    } finally {
+      setSubmittingId(null);
     }
-  });
+  };
 
-  // Fetch completed tickets that do NOT have an invoice yet
-  const unbilledTickets = await prisma.ticket.findMany({
-    where: {
-      currentStatus: "COMPLETED",
-      invoice: null
-    },
-    include: {
-      customer: true
-    },
-    orderBy: {
-      updatedAt: "desc"
-    }
-  });
+  const handlePrint = (invoiceId: string) => {
+    window.open(`/admin/billing/invoice/${invoiceId}/print`, "_blank");
+  };
 
-  const totalRevenue = invoices.filter((i: any) => i.status === "PAID").reduce((sum: number, i: any) => sum + i.totalAmount, 0);
-  const pendingRevenue = invoices.filter((i: any) => i.status === "SENT").reduce((sum: number, i: any) => sum + i.totalAmount, 0);
+  const totalRevenue = invoices
+    .filter((i: any) => i.status === "PAID")
+    .reduce((sum: number, i: any) => sum + i.totalAmount, 0);
+
+  const pendingRevenue = invoices
+    .filter((i: any) => i.status === "SENT")
+    .reduce((sum: number, i: any) => sum + i.totalAmount, 0);
+
+  const primaryColor = config?.brand?.theme?.primaryColor || "#2563eb";
 
   return (
     <div style={{ padding: "30px", maxWidth: "1400px", margin: "0 auto" }}>
@@ -67,15 +76,30 @@ export default async function BillingDashboard() {
         </div>
       </div>
 
+      {/* Notifications */}
+      {successMsg && (
+        <div style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid #10b981", color: "#10b981", borderRadius: "10px", padding: "12px 16px", marginBottom: "25px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <CheckCircle size={18} />
+          {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", color: "#ef4444", borderRadius: "10px", padding: "12px 16px", marginBottom: "25px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertCircle size={18} />
+          {errorMsg}
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px", marginBottom: "40px" }}>
         <div style={{ background: "var(--bg-card-glass)", borderRadius: "16px", padding: "24px", border: "1px solid var(--border-glass)", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
           <div style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>Total Revenue (Paid)</div>
-          <div style={{ fontSize: "32px", fontWeight: "700", color: "#10b981" }}>${totalRevenue.toLocaleString()}</div>
+          <div style={{ fontSize: "32px", fontWeight: "700", color: "#10b981" }}>${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
         </div>
         <div style={{ background: "var(--bg-card-glass)", borderRadius: "16px", padding: "24px", border: "1px solid var(--border-glass)", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
           <div style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>Pending (Awaiting Payment)</div>
-          <div style={{ fontSize: "32px", fontWeight: "700", color: "#f59e0b" }}>${pendingRevenue.toLocaleString()}</div>
+          <div style={{ fontSize: "32px", fontWeight: "700", color: "#f59e0b" }}>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
         </div>
         <div style={{ background: "var(--bg-card-glass)", borderRadius: "16px", padding: "24px", border: "1px solid var(--border-glass)", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
           <div style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>Unbilled Tasks</div>
@@ -87,7 +111,7 @@ export default async function BillingDashboard() {
         {/* Unbilled Completed Tickets */}
         <div>
           <h2 style={{ fontSize: "18px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <Clock size={20} style={{ color: "var(--accent)" }} />
+            <Clock size={20} style={{ color: primaryColor }} />
             Ready for Invoicing
           </h2>
           
@@ -97,18 +121,36 @@ export default async function BillingDashboard() {
                 No completed tasks awaiting invoices.
               </div>
             ) : (
-              unbilledTickets.map(ticket => (
+              unbilledTickets.map((ticket: any) => (
                 <div key={ticket.id} style={{ background: "var(--bg-card-glass)", border: "1px solid var(--border-glass)", borderRadius: "12px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
-                      {(ticket as any).customer?.companyName || (ticket as any).customer?.contactName || "Unknown Customer"}
+                      {ticket.customer?.companyName || ticket.customer?.contactName || "Unknown Customer"}
                     </div>
                     <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                       {ticket.ticketNumber} • {ticket.itemDescription || "General Service"}
                     </div>
                   </div>
-                  <button style={{ background: "var(--primary)", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>
-                    Generate Invoice
+                  <button 
+                    onClick={() => handleGenerateInvoice(ticket.id)}
+                    disabled={submittingId === ticket.id}
+                    style={{ 
+                      background: primaryColor, 
+                      color: "#fff", 
+                      border: "none", 
+                      padding: "8px 16px", 
+                      borderRadius: "8px", 
+                      fontSize: "13px", 
+                      fontWeight: "600", 
+                      cursor: submittingId === ticket.id ? "not-allowed" : "pointer",
+                      opacity: submittingId === ticket.id ? 0.7 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <PlusCircle size={14} />
+                    {submittingId === ticket.id ? "Generating..." : "Generate Invoice"}
                   </button>
                 </div>
               ))
@@ -139,10 +181,24 @@ export default async function BillingDashboard() {
                       </span>
                     </div>
                     <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                      {invoice.ticket.customer?.companyName} • ${invoice.totalAmount}
+                      {invoice.ticket?.customer?.companyName || "Unknown Customer"} • ${invoice.totalAmount.toFixed(2)}
                     </div>
                   </div>
-                  <button style={{ background: "transparent", color: "var(--text-primary)", border: "1px solid var(--border-glass)", padding: "8px", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Download PDF">
+                  <button 
+                    onClick={() => handlePrint(invoice.id)}
+                    style={{ 
+                      background: "transparent", 
+                      color: "var(--text-primary)", 
+                      border: "1px solid var(--border-glass)", 
+                      padding: "8px", 
+                      borderRadius: "8px", 
+                      cursor: "pointer", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "center" 
+                    }} 
+                    title="Download PDF / Print"
+                  >
                     <Download size={16} />
                   </button>
                 </div>

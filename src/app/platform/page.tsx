@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
-import { Plus, Users, Building, Settings } from "lucide-react";
+import { Users, Building, Settings } from "lucide-react";
 import Link from "next/link";
+import ProvisionTenantButton from "./ProvisionTenantButton";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,7 @@ export default async function PlatformDashboard() {
           <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 8px 0" }}>Tenants & Clients</h1>
           <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: 0 }}>Manage all client instances across the platform.</p>
         </div>
-        <button style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--primary)", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer" }}>
-          <Plus size={18} />
-          Provision New Tenant
-        </button>
+        <ProvisionTenantButton />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>

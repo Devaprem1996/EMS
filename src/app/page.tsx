@@ -120,7 +120,8 @@ export default function LoginPage() {
       position: "relative",
       overflowX: "hidden"
     }}>
-      
+      <link rel="preload" href="/login-bg-outer-dark.png" as="image" />
+      <link rel="preload" href="/login-bg-outer-light.png" as="image" />
 
       {/* Outer Responsive Card Container */}
       <div className="login-card-container framer-scale" style={{

@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { Calendar, Package, Wrench, CheckCircle, Clock, History } from "lucide-react";
-import AuditLogModal from "./AuditLogModal";
+import dynamic from "next/dynamic";
+
+const AuditLogModal = dynamic(() => import("./AuditLogModal"), { ssr: false });
 
 interface Ticket {
   id: string;

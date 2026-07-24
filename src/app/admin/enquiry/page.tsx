@@ -90,9 +90,11 @@ interface Technician {
   role: string;
 }
 
-import PDFCertificateModal from "@/components/PDFCertificateModal";
-import AuditLogModal from "@/components/AuditLogModal";
+import dynamic from "next/dynamic";
 import { Printer, ShieldCheck } from "lucide-react";
+
+const PDFCertificateModal = dynamic(() => import("@/components/PDFCertificateModal"), { ssr: false });
+const AuditLogModal = dynamic(() => import("@/components/AuditLogModal"), { ssr: false });
 
 export default function EnquiryDashboardPage() {
   const { config } = useConfig();

@@ -91,6 +91,7 @@ interface Technician {
 }
 
 import dynamic from "next/dynamic";
+import useSWR from "swr";
 import { Printer, ShieldCheck } from "lucide-react";
 
 const PDFCertificateModal = dynamic(() => import("@/components/PDFCertificateModal"), { ssr: false });
@@ -217,28 +218,40 @@ export default function EnquiryDashboardPage() {
   // Bulk import instructions panel
   const [showImportGuide, setShowImportGuide] = useState(false);
 
-  // Fetch all data
-  const fetchData = async () => {
-    setSelectedJobIds([]);
-    try {
-      // 1. Fetch enquiries
-      const enqRes = await fetch(`/api/jobs?stage=ENQUIRY&status=${statusFilter}&search=${encodeURIComponent(search)}`);
-      if (enqRes.ok) {
-        const enqData = await enqRes.json();
-        setEnquiries(enqData);
-      }
+  const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-      // 2. Fetch technicians
-      const techRes = await fetch("/api/employees?status=active");
-      if (techRes.ok) {
-        const techData = await techRes.json();
-        setTechnicians(techData.filter((t: any) => t.role === "TECHNICIAN"));
-      }
-    } catch (err) {
-      console.error("Error loading dashboard data:", err);
-    } finally {
+  const { data: enqData, mutate: mutateEnquiries } = useSWR(
+    `/api/jobs?stage=ENQUIRY&status=${statusFilter}&search=${encodeURIComponent(search)}`,
+    fetcher
+  );
+
+  const { data: techRawData, mutate: mutateTechnicians } = useSWR(
+    "/api/employees?status=active",
+    fetcher
+  );
+
+  useEffect(() => {
+    if (enqData) {
+      setEnquiries(enqData);
+    }
+  }, [enqData]);
+
+  useEffect(() => {
+    if (techRawData) {
+      setTechnicians(techRawData.filter((t: any) => t.role === "TECHNICIAN"));
+    }
+  }, [techRawData]);
+
+  useEffect(() => {
+    if (enqData && techRawData) {
       setLoading(false);
     }
+  }, [enqData, techRawData]);
+
+  const fetchData = () => {
+    setSelectedJobIds([]);
+    mutateEnquiries();
+    mutateTechnicians();
   };
 
   useEffect(() => {

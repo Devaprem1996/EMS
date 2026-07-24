@@ -25,14 +25,28 @@ import {
   Sparkles,
   BarChart3
 } from "lucide-react";
+import { 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip 
+} from "recharts";
 
 export default function AdminCentralOverviewPage() {
   const { config } = useConfig();
   const [timeframe, setTimeframe] = useState<"today" | "month" | "year">("month");
   const [loading, setLoading] = useState(false);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const [stats, setStats] = useState({ enquiries: 0, refills: 0, services: 0, techs: 0 });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     async function fetchStats() {
@@ -468,63 +482,56 @@ export default function AdminCentralOverviewPage() {
               <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 {timeframe === "today" ? "Hourly View" : timeframe === "month" ? "Monthly View" : "Quarterly View"}
               </span>
-            </div>
-
-            {/* Dynamic Multi-Color Vertical Bar Chart */}
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "10px", height: "140px", paddingTop: "20px" }}>
-              {currentDataset.bars.map((bar: any, i: number) => (
-                <div 
-                  key={i} 
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", flex: 1, position: "relative" }}
-                  onMouseEnter={() => setHoveredBar(i)}
-                  onMouseLeave={() => setHoveredBar(null)}
-                >
-                  {/* Tooltip on Hover */}
-                  {hoveredBar === i && (
-                    <div style={{
-                      position: "absolute",
-                      top: "-38px",
-                      background: "#000000",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      borderRadius: "8px",
-                      padding: "4px 8px",
-                      fontSize: "10px",
-                      color: "#ffffff",
-                      whiteSpace: "nowrap",
-                      zIndex: 10,
-                      boxShadow: "0 10px 20px rgba(0,0,0,0.5)"
-                    }}>
-                      SLA Target: <b>{bar.valTarget}</b> | Actual: <b>{bar.valActual}</b>
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", gap: "3px", alignItems: "flex-end", height: "100px", width: "100%" }}>
-                    {/* Target SLA Bar */}
-                    <div style={{
-                      flex: 1,
-                      height: bar.target,
-                      background: bar.active ? "linear-gradient(180deg, #a3e635, #84cc16)" : "linear-gradient(180deg, #38bdf8, #0284c7)",
-                      borderRadius: "4px",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      opacity: hoveredBar === i ? 1 : 0.85
-                    }} title={`Target: ${bar.target}`}></div>
-                    
-                    {/* Actual Execution Bar */}
-                    <div style={{
-                      flex: 1,
-                      height: bar.actual,
-                      background: bar.active ? "linear-gradient(180deg, #c084fc, #a855f7)" : "rgba(255,255,255,0.25)",
-                      borderRadius: "4px",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      opacity: hoveredBar === i ? 1 : 0.85
-                    }} title={`Actual: ${bar.actual}`}></div>
-                  </div>
-
-                  <span style={{ fontSize: "0.68rem", color: bar.active ? "#a3e635" : "var(--text-secondary, #a1a1aa)", fontWeight: bar.active ? "800" : "600" }}>
-                    {bar.label}
-                  </span>
+                   {/* Dynamic Multi-Color Vertical Bar Chart */}
+            <div style={{ height: "140px", paddingTop: "10px", width: "100%" }}>
+              {isMounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={currentDataset.bars}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis 
+                      dataKey="label" 
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 10, fontWeight: 600 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: '#09090b',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        color: '#ffffff'
+                      }}
+                      itemStyle={{ color: '#ffffff' }}
+                      cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                    />
+                    <Bar 
+                      dataKey="valTarget" 
+                      name="SLA Target" 
+                      fill="#38bdf8" 
+                      radius={[4, 4, 0, 0]} 
+                    />
+                    <Bar 
+                      dataKey="valActual" 
+                      name="Actual" 
+                      fill="#a3e635" 
+                      radius={[4, 4, 0, 0]} 
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ height: "100%", width: "100%", background: "rgba(255,255,255,0.02)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: "12px" }}>
+                  Loading telemetry visualizer...
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Chart Legend */}
@@ -534,10 +541,10 @@ export default function AdminCentralOverviewPage() {
                 <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Target SLA Volume</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c084fc" }}></span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a3e635" }}></span>
                 <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Actual Execution</span>
               </div>
-            </div>
+            </div>         </div>
           </div>
         </div>
 

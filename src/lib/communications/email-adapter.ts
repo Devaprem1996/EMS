@@ -1,4 +1,5 @@
 import { EmsConfig } from "@/config/ems-config";
+import nodemailer from "nodemailer";
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -16,14 +17,31 @@ export class EmailAdapter {
 
   async sendEmail(options: SendEmailOptions): Promise<boolean> {
     if (!this.config || this.config.provider === "none") {
-      console.log(`[EmailAdapter] Mock send to ${options.to}: ${options.subject}`);
+      console.log(`[EmailAdapter] Mock send to ${options.to}:\nSubject: ${options.subject}\nHTML: ${options.bodyHtml}`);
       return true;
     }
 
     try {
       if (this.config.provider === "smtp") {
-        // TODO: Implement Nodemailer for SMTP using this.config.smtpHost, etc.
-        console.log(`[EmailAdapter] SMTP send to ${options.to}`);
+        const transporter = nodemailer.createTransport({
+          host: this.config.smtpHost,
+          port: this.config.smtpPort,
+          secure: this.config.smtpPort === 465,
+          auth: {
+            user: this.config.smtpUser,
+            pass: this.config.smtpPass,
+          },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"${this.config.senderName || "Safeway EMS"}" <${this.config.senderEmail || "no-reply@safeway.com"}>`,
+          to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+          subject: options.subject,
+          text: options.bodyText || options.subject,
+          html: options.bodyHtml,
+        });
+
+        console.log(`[EmailAdapter] SMTP email sent: ${info.messageId} to ${options.to}`);
         return true;
       }
       

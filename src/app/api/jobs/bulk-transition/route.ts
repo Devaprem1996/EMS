@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/auth-helpers";
 import { invalidateJobsAndTasks } from "@/lib/cache";
+import { EMS_CONFIG } from "@/config/ems-config";
+import { EmailAdapter } from "@/lib/communications/email-adapter";
+import { SmsAdapter } from "@/lib/communications/sms-adapter";
 
 // POST /api/jobs/bulk-transition - Bulk transition jobs to a new stage
 // Flow 1: Only "Order Confirmed" tickets are eligible to transition to REFILLING.
@@ -26,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     let transitioned = 0;
     const skippedTickets: string[] = [];
+    const notificationsToSend: any[] = [];
 
     // Perform transaction
     await prisma.$transaction(async (tx: any) => {
@@ -33,6 +37,7 @@ export async function POST(req: NextRequest) {
         // 1. Find job (ticket)
         const job = await tx.ticket.findUnique({
           where: { id },
+          include: { customer: true }
         });
         if (!job) continue;
 
@@ -76,12 +81,81 @@ export async function POST(req: NextRequest) {
           },
         });
 
+        if (job.customer) {
+          notificationsToSend.push({
+            ticketNumber: job.ticketNumber,
+            customerEmail: job.customer.email,
+            customerPhone: job.customer.secondaryPhone || job.customer.primaryPhone,
+            customerName: job.customer.companyName || job.customer.contactName || "Customer",
+            oldStage: job.currentStage,
+            newStage: toStage,
+            oldStatus: job.currentStatus,
+            newStatus: nextStatus,
+          });
+        }
+
         transitioned++;
       }
     });
 
     // Invalidate cached lists
     invalidateJobsAndTasks();
+
+    // Trigger alerts in background asynchronously
+    if (notificationsToSend.length > 0) {
+      (async () => {
+        try {
+          const emailConfig = EMS_CONFIG.communications?.email;
+          const smsConfig = EMS_CONFIG.communications?.sms;
+
+          const emailAdapter = emailConfig ? new EmailAdapter(emailConfig) : null;
+          const smsAdapter = smsConfig ? new SmsAdapter(smsConfig) : null;
+
+          for (const item of notificationsToSend) {
+            // Email Transition Alert
+            if (emailAdapter && item.customerEmail) {
+              await emailAdapter.sendEmail({
+                to: item.customerEmail,
+                subject: `[Safeway Alert] Cylinder ${item.ticketNumber} Update`,
+                bodyHtml: `
+                  <div style="font-family: sans-serif; padding: 24px; background: #0f172a; color: #f8fafc; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); max-width: 500px; margin: 0 auto;">
+                    <h2 style="color: #ef4444; margin-top: 0; font-size: 20px; font-weight: 800;">Safeway CRM</h2>
+                    <p style="font-size: 14px; color: #cbd5e1;">Dear ${item.customerName},</p>
+                    <p style="font-size: 14px; color: #cbd5e1;">Your cylinder registration record <strong>${item.ticketNumber}</strong> has been updated:</p>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 16px; margin: 15px 0;">
+                      <table style="border-collapse: collapse; width: 100%; font-size: 13.5px;">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                          <td style="padding: 8px 0; color: #94a3b8;">Previous Status:</td>
+                          <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #e2e8f0;">${item.oldStage} (${item.oldStatus})</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #94a3b8;">New Active Status:</td>
+                          <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #a3e635;">${item.newStage} (${item.newStatus})</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <p style="font-size: 11.5px; color: #64748b; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; margin-bottom: 0; text-align: center;">
+                      This is an automated notification from Safeway Enquiry Management System.
+                    </p>
+                  </div>
+                `
+              }).catch(err => console.error("[Bulk Transition Notification] Email dispatch error:", err));
+            }
+
+            // SMS Transition Alert
+            if (smsAdapter && item.customerPhone) {
+              const smsText = `Safeway CRM: Cylinder ${item.ticketNumber} transitioned to ${item.newStage} (${item.newStatus}).`;
+              await smsAdapter.sendSms({
+                to: item.customerPhone,
+                message: smsText
+              }).catch(err => console.error("[Bulk Transition Notification] SMS dispatch error:", err));
+            }
+          }
+        } catch (err) {
+          console.error("[Bulk Transition Notification] Communications thread error:", err);
+        }
+      })();
+    }
 
     return NextResponse.json({
       success: true,

@@ -25,6 +25,7 @@ import {
   BarChart2
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
+import CommandPalette from "@/components/CommandPalette";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -409,6 +410,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right Header Utilities: Notifications & Profile */}
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* Command Palette Visual Trigger */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+              style={{
+                background: "var(--bg-input)",
+                border: "1px solid var(--border-glass)",
+                borderRadius: "10px",
+                padding: "8px 14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                color: "var(--text-secondary)",
+                fontSize: "0.85rem",
+                fontWeight: "500",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; }}
+              title="Search and Quick Actions (Ctrl + K)"
+            >
+              <span>🔍 Search...</span>
+              <kbd style={{
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: "5px",
+                padding: "1px 5px",
+                fontSize: "10px",
+                fontFamily: "monospace",
+                color: "var(--text-muted)",
+                marginLeft: "4px"
+              }}>Ctrl K</kbd>
+            </button>
             {/* Notification Bell Popover */}
             <div style={{ position: "relative" }}>
               <button
@@ -700,6 +734,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           }
         }
       `}</style>
+      {/* Command Palette */}
+      <CommandPalette />
     </div>
   );
 }

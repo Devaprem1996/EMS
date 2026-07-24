@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import useSWR from "swr";
+import KanbanBoard from "@/components/KanbanBoard";
 
 interface Customer {
   id: string;
@@ -88,6 +89,7 @@ export default function ServiceDashboardPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,6 +102,12 @@ export default function ServiceDashboardPage() {
     const saved = localStorage.getItem("ems_table_density");
     if (saved === "compact" || saved === "normal") {
       setTableDensity(saved);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const urlSearch = params.get("search");
+    if (urlSearch) {
+      setSearch(urlSearch);
     }
   }, []);
 
@@ -526,6 +534,46 @@ export default function ServiceDashboardPage() {
         </div>
 
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* View Mode Switcher */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "list" ? "var(--accent)" : "transparent",
+                color: viewMode === "list" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard list view"
+            >
+              📋 List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "kanban" ? "var(--accent)" : "transparent",
+                color: viewMode === "kanban" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Kanban Board view"
+            >
+              🎴 Kanban
+            </button>
+          </div>
+
           {/* Table View Density Control */}
           <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
             <button
@@ -603,175 +651,204 @@ export default function ServiceDashboardPage() {
         ))}
       </div>
 
-      {/* Data Table */}
-      <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+      {/* Data Table or Kanban Board */}
+      {viewMode === "kanban" ? (
+        loading ? (
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying dispatch databases...</div>
           </div>
         ) : filteredJobs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "45px 20px", textAlign: "center", color: "var(--text-secondary)" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No services records matched</div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Adjust search terms to find client inspect lists</div>
           </div>
         ) : (
-          <table className={`glass-table table-density-${tableDensity}`}>
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Client Name</th>
-                <th>Contact Name</th>
-                <th>Contact Phone</th>
-                <th>Service Date</th>
-                <th>Status</th>
-                <th>Technicians</th>
-                <th style={{ textAlign: "center" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedJobs.map((job, index) => {
-                const displayStatus = job.currentStatus === "Pending Service" ? "Pending" : job.currentStatus;
-                const statusDotClass = displayStatus === "Completed" ? "pulse-green" : "pulse-amber";
-                const statusColor = displayStatus === "Completed" ? "#10b981" : "#fbbf24";
-
-                return (
-                  <tr key={job.id}>
-                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
-                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
-                      <div>{job.customer?.companyName || "N/A"}</div>
-                      {job.serialNumber && (
-                        <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px", fontWeight: "normal" }}>
-                          SN: <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>{job.serialNumber}</span> {job.extinguisherType && `(${job.extinguisherType}${job.capacity ? ` - ${job.capacity}` : ""})`}
-                        </div>
-                      )}
-                    </td>
-                    <td>{job.customer?.contactPerson}</td>
-                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
-                    <td style={{ color: "#fff", fontWeight: "600" }}>{formatDate(job.visitDate)}</td>
-                    <td>
-                      <span className={`pill-badge ${displayStatus === "Completed" ? "pill-badge-green" : "pill-badge-amber"}`}>
-                        <span className={`priority-dot ${displayStatus === "Completed" ? "priority-dot-green" : "priority-dot-amber"}`}></span>
-                        {displayStatus}
-                      </span>
-                    </td>
-                    <td>
-                      {job.assignments.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
-                      ) : (
-                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                          {job.assignments.map(a => (
-                            <span 
-                              key={a.id} 
-                              title={a.assignedBy ? `Assigned by: ${a.assignedBy}` : "Assigned by Admin"} 
-                              style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                            >
-                              <span>{a.technician.fullName}</span>
-                              {a.assignedBy && (
-                                <span style={{ fontSize: "9.5px", opacity: 0.75, borderLeft: "1px solid rgba(147,197,253,0.3)", paddingLeft: "4px" }}>
-                                  by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <div style={{ display: "inline-flex", gap: "6px" }}>
-                        <button
-                          onClick={() => handleOpenEdit(job)}
-                          style={{
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            color: "#fff",
-                            padding: "7px",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
-                          title="Service Update"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleOpenAssign(job)}
-                          style={{
-                            background: "rgba(245, 158, 11, 0.08)",
-                            border: "1px solid rgba(245, 158, 11, 0.2)",
-                            color: "#f59e0b",
-                            padding: "7px",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
-                          title="Assign Technician"
-                        >
-                          <UserPlus size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-        
-        {/* Pagination Footer */}
-        {!loading && totalItems > 0 && (
-          <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-            </span>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <button 
-                onClick={() => setCurrentPage(1)} 
-                disabled={currentPage === 1}
-                className="pagination-btn"
-                title="First Page"
-              >
-                <ChevronsLeft size={14} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                disabled={currentPage === 1}
-                className="pagination-btn"
-                title="Previous Page"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              
-              <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                Page {currentPage} of {totalPages}
-              </span>
-
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
-                disabled={currentPage === totalPages}
-                className="pagination-btn"
-                title="Next Page"
-              >
-                <ChevronRight size={14} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(totalPages)} 
-                disabled={currentPage === totalPages}
-                className="pagination-btn"
-                title="Last Page"
-              >
-                <ChevronsRight size={14} />
-              </button>
+          <KanbanBoard
+            tickets={filteredJobs}
+            statusKey="currentStatus"
+            columns={[
+              { key: "Pending", label: "Pending", color: "#fbbf24", badgeBg: "rgba(251, 191, 36, 0.15)" },
+              { key: "Completed", label: "Completed", color: "#10b981", badgeBg: "rgba(16, 185, 129, 0.15)" }
+            ]}
+            onEdit={(ticket) => handleOpenEdit(ticket)}
+            onAssign={(ticket) => handleOpenAssign(ticket)}
+            stageName="SERVICES"
+          />
+        )
+      ) : (
+        <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+              <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying dispatch databases...</div>
             </div>
-          </div>
-        )}
-      </div>
+          ) : filteredJobs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
+              <span style={{ fontSize: "28px" }}>📭</span>
+              <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No services records matched</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Adjust search terms to find client inspect lists</div>
+            </div>
+          ) : (
+            <>
+              <table className={`glass-table table-density-${tableDensity}`}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Client Name</th>
+                    <th>Contact Name</th>
+                    <th>Contact Phone</th>
+                    <th>Service Date</th>
+                    <th>Status</th>
+                    <th>Technicians</th>
+                    <th style={{ textAlign: "center" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedJobs.map((job, index) => {
+                    const displayStatus = job.currentStatus === "Pending Service" ? "Pending" : job.currentStatus;
+                    const statusDotClass = displayStatus === "Completed" ? "pulse-green" : "pulse-amber";
+                    const statusColor = displayStatus === "Completed" ? "#10b981" : "#fbbf24";
+
+                    return (
+                      <tr key={job.id}>
+                        <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
+                        <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
+                          <div>{job.customer?.companyName || "N/A"}</div>
+                          {job.serialNumber && (
+                            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px", fontWeight: "normal" }}>
+                              SN: <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>{job.serialNumber}</span> {job.extinguisherType && `(${job.extinguisherType}${job.capacity ? ` - ${job.capacity}` : ""})`}
+                            </div>
+                          )}
+                        </td>
+                        <td>{job.customer?.contactPerson}</td>
+                        <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
+                        <td style={{ color: "#fff", fontWeight: "600" }}>{formatDate(job.visitDate)}</td>
+                        <td>
+                          <span className={`pill-badge ${displayStatus === "Completed" ? "pill-badge-green" : "pill-badge-amber"}`}>
+                            <span className={`priority-dot ${displayStatus === "Completed" ? "priority-dot-green" : "priority-dot-amber"}`}></span>
+                            {displayStatus}
+                          </span>
+                        </td>
+                        <td>
+                          {job.assignments.length === 0 ? (
+                            <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
+                          ) : (
+                            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                              {job.assignments.map(a => (
+                                <span 
+                                  key={a.id} 
+                                  title={a.assignedBy ? `Assigned by: ${a.assignedBy}` : "Assigned by Admin"} 
+                                  style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                                >
+                                  <span>{a.technician.fullName}</span>
+                                  {a.assignedBy && (
+                                    <span style={{ fontSize: "9.5px", opacity: 0.75, borderLeft: "1px solid rgba(147,197,253,0.3)", paddingLeft: "4px" }}>
+                                      by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "inline-flex", gap: "6px" }}>
+                            <button
+                              onClick={() => handleOpenEdit(job)}
+                              style={{
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                color: "#fff",
+                                padding: "7px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
+                              title="Service Update"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleOpenAssign(job)}
+                              style={{
+                                background: "rgba(245, 158, 11, 0.08)",
+                                border: "1px solid rgba(245, 158, 11, 0.2)",
+                                color: "#f59e0b",
+                                padding: "7px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
+                              title="Assign Technician"
+                            >
+                              <UserPlus size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Pagination Footer */}
+              {!loading && totalItems > 0 && (
+                <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                    Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+                  </span>
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    <button 
+                      onClick={() => setCurrentPage(1)} 
+                      disabled={currentPage === 1}
+                      className="pagination-btn"
+                      title="First Page"
+                    >
+                      <ChevronsLeft size={14} />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                      disabled={currentPage === 1}
+                      className="pagination-btn"
+                      title="Previous Page"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    
+                    <span style={{ fontSize: "13px", color: "var(--text-secondary)", minWidth: "80px", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      Page {currentPage} of {totalPages}
+                    </span>
+
+                    <button 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn"
+                      title="Next Page"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentPage(totalPages)} 
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn"
+                      title="Last Page"
+                    >
+                      <ChevronsRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Service Update Modal */}
       {isEditModalOpen && selectedJob && (

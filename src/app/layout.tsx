@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { ThemeToggleFloating } from "@/components/ThemeToggle";
+import { Toaster } from "sonner";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -54,7 +55,7 @@ export default function RootLayout({
                     }
                   });
                   if (window.caches) {
-                    caches.keys().then(function(names) {
+                     caches.keys().then(function(names) {
                       for (let name of names) caches.delete(name);
                     });
                   }
@@ -67,6 +68,7 @@ export default function RootLayout({
       <body style={{ fontFamily: "var(--font-plus-jakarta), 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
         <ConfigProvider>
           <ThemeToggleFloating />
+          <Toaster richColors position="top-right" />
           {children}
         </ConfigProvider>
       </body>

@@ -219,4 +219,21 @@ export const EMS_CONFIG: EmsConfig = {
     assignedTechnicians: ["assigned technicians", "technicians", "assigned employees", "assigned_techs"],
     targetDashboard: ["upload to", "target dashboard", "dashboard", "upload_to", "target", "route to", "send to"],
   },
+  communications: {
+    email: {
+      provider: (process.env.SMTP_HOST ? "smtp" : "none") as any,
+      senderName: "Safeway CRM Alerts",
+      senderEmail: process.env.SMTP_FROM || "alerts@safeway.com",
+      smtpHost: process.env.SMTP_HOST || "smtp.mailtrap.io",
+      smtpPort: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 2525,
+      smtpUser: process.env.SMTP_USER || "",
+      smtpPass: process.env.SMTP_PASS || "",
+    },
+    sms: {
+      provider: (process.env.TWILIO_ACCOUNT_SID ? "twilio" : "mock") as any,
+      senderId: process.env.TWILIO_FROM_NUMBER || "+1234567890",
+      apiKey: process.env.TWILIO_ACCOUNT_SID || "",
+      apiSecret: process.env.TWILIO_AUTH_TOKEN || "",
+    },
+  },
 };

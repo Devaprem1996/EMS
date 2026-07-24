@@ -1,4 +1,5 @@
 import { EmsConfig } from "@/config/ems-config";
+import twilio from "twilio";
 
 export interface SendSmsOptions {
   to: string;
@@ -14,14 +15,19 @@ export class SmsAdapter {
 
   async sendSms(options: SendSmsOptions): Promise<boolean> {
     if (!this.config || this.config.provider === "none" || this.config.provider === "mock") {
-      console.log(`[SmsAdapter] Mock send to ${options.to}: ${options.message}`);
+      console.log(`[SmsAdapter] Mock send to ${options.to}:\nMessage: ${options.message}`);
       return true;
     }
 
     try {
       if (this.config.provider === "twilio") {
-        // TODO: Implement Twilio API using this.config.apiKey & apiSecret
-        console.log(`[SmsAdapter] Twilio send to ${options.to}`);
+        const client = twilio(this.config.apiKey, this.config.apiSecret);
+        const res = await client.messages.create({
+          body: options.message,
+          from: this.config.senderId,
+          to: options.to,
+        });
+        console.log(`[SmsAdapter] Twilio SMS sent: ${res.sid} to ${options.to}`);
         return true;
       }
       

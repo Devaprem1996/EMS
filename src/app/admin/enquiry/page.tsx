@@ -26,6 +26,7 @@ import {
   ChevronsRight
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
+import KanbanBoard from "@/components/KanbanBoard";
 
 interface Customer {
   id: string;
@@ -107,6 +108,7 @@ export default function EnquiryDashboardPage() {
   const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
   // Certificate & Audit Modal States
   const [pdfJob, setPdfJob] = useState<any | null>(null);
@@ -124,6 +126,22 @@ export default function EnquiryDashboardPage() {
     if (saved === "compact" || saved === "normal") {
       setTableDensity(saved);
     }
+    
+    // Read search param from URL if present
+    const params = new URLSearchParams(window.location.search);
+    const urlSearch = params.get("search");
+    if (urlSearch) {
+      setSearch(urlSearch);
+    }
+
+    // Command palette action triggers
+    const handleAddTrigger = () => {
+      setIsAddModalOpen(true);
+    };
+    window.addEventListener("trigger-add-enquiry-modal", handleAddTrigger);
+    return () => {
+      window.removeEventListener("trigger-add-enquiry-modal", handleAddTrigger);
+    };
   }, []);
 
   const toggleTableDensity = (density: "compact" | "normal") => {
@@ -1007,6 +1025,46 @@ export default function EnquiryDashboardPage() {
         </div>
 
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* View Mode Switcher */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "list" ? "var(--accent)" : "transparent",
+                color: viewMode === "list" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard list view"
+            >
+              📋 List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "kanban" ? "var(--accent)" : "transparent",
+                color: viewMode === "kanban" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Kanban Board view"
+            >
+              🎴 Kanban
+            </button>
+          </div>
+
           {/* Table View Density Control */}
           <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
             <button
@@ -1329,8 +1387,38 @@ export default function EnquiryDashboardPage() {
         ))}
       </div>
 
-      {/* Table Data Grid */}
-      <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
+      {/* Table Data Grid or Kanban Board */}
+      {viewMode === "kanban" ? (
+        loading ? (
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
+            <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <div style={{ marginTop: "10px", fontSize: "14px" }}>Querying telemetry systems...</div>
+          </div>
+        ) : filteredEnquiries.length === 0 ? (
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "45px 20px", textAlign: "center", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "28px" }}>📭</span>
+            <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No telemetry records available</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Register a new client enquiry or import a bulk batch file</div>
+          </div>
+        ) : (
+          <KanbanBoard
+            tickets={filteredEnquiries}
+            statusKey="currentStatus"
+            columns={[
+              { key: "Enquiry Registered", label: "Enquiry Registered", color: "#fbbf24", badgeBg: "rgba(251, 191, 36, 0.15)" },
+              { key: "Order Confirmed", label: "Order Confirmed", color: "#60a5fa", badgeBg: "rgba(96, 165, 250, 0.15)" },
+              { key: "Order Delivered", label: "Order Delivered", color: "#10b981", badgeBg: "rgba(16, 185, 129, 0.15)" },
+              { key: "Cancelled", label: "Cancelled", color: "#f87171", badgeBg: "rgba(248, 113, 113, 0.15)" }
+            ]}
+            onEdit={(ticket) => handleOpenEdit(ticket)}
+            onAssign={(ticket) => handleOpenAssign(ticket)}
+            stageName="ENQUIRY"
+          />
+        )
+      ) : (
+        <>
+          {/* Table Data Grid */}
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
@@ -1596,6 +1684,8 @@ export default function EnquiryDashboardPage() {
             </button>
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* Floating Add Button Removed */}

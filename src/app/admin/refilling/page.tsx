@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import useSWR from "swr";
+import KanbanBoard from "@/components/KanbanBoard";
 
 interface Customer {
   id: string;
@@ -102,6 +103,7 @@ export default function RefillingDashboardPage() {
   const [yearFilter, setYearFilter] = useState("all");
   const [selectedCategoryTab, setSelectedCategoryTab] = useState("all");
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,6 +116,12 @@ export default function RefillingDashboardPage() {
     const saved = localStorage.getItem("ems_table_density");
     if (saved === "compact" || saved === "normal") {
       setTableDensity(saved);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const urlSearch = params.get("search");
+    if (urlSearch) {
+      setSearch(urlSearch);
     }
   }, []);
 
@@ -591,6 +599,46 @@ export default function RefillingDashboardPage() {
         </div>
 
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* View Mode Switcher */}
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "list" ? "var(--accent)" : "transparent",
+                color: viewMode === "list" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Standard list view"
+            >
+              📋 List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              style={{
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                borderRadius: "7px",
+                border: "none",
+                background: viewMode === "kanban" ? "var(--accent)" : "transparent",
+                color: viewMode === "kanban" ? "#0f172a" : "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              title="Kanban Board view"
+            >
+              🎴 Kanban
+            </button>
+          </div>
+
           {/* Table View Density Control */}
           <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--bg-input)", padding: "3px", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
             <button
@@ -684,198 +732,223 @@ export default function RefillingDashboardPage() {
         ))}
       </div>
 
-      {/* Data Table */}
-      <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+      {/* Data Table or Kanban Board */}
+      {viewMode === "kanban" ? (
+        loading ? (
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
             <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             <div style={{ marginTop: "10px", fontSize: "14px" }}>Synchronizing gas inventory log...</div>
           </div>
         ) : filteredJobs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "45px 20px", textAlign: "center", color: "var(--text-secondary)" }}>
             <span style={{ fontSize: "28px" }}>📭</span>
             <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No refilling records matched</div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Adjust search terms or year/status dropdown values</div>
           </div>
         ) : (
-          <table className={`glass-table table-density-${tableDensity}`}>
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Client Name</th>
-                <th>Contact Name</th>
-                <th>Contact Phone</th>
-                <th>Category</th>
-                <th>{config?.brand?.labels?.deliveredDate || "Delivery Date"}</th>
-                <th>{config?.brand?.labels?.amcDate || "Refilling Date"}</th>
-                <th>Status</th>
-                <th>Technicians</th>
-                <th style={{ textAlign: "center" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedJobs.map((job, index) => {
-                const statusDotClass = 
-                  job.currentStatus === "Order Delivered" ? "pulse-green" :
-                  job.currentStatus === "Order Confirmed" ? "pulse-blue" :
-                  job.currentStatus === "Order Dropped" ? "pulse-red" : "pulse-amber";
-
-                const statusColor =
-                  job.currentStatus === "Order Delivered" ? "#10b981" :
-                  job.currentStatus === "Order Confirmed" ? "#60a5fa" :
-                  job.currentStatus === "Order Dropped" ? "#f87171" : "#fbbf24";
-
-                return (
-                  <tr key={job.id}>
-                    <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
-                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>
-                      <div>{job.customer?.companyName || "N/A"}</div>
-                      {job.serialNumber && (
-                        <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px", fontWeight: "normal" }}>
-                          SN: <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>{job.serialNumber}</span> {job.extinguisherType && `(${job.extinguisherType}${job.capacity ? ` - ${job.capacity}` : ""})`}
-                        </div>
-                      )}
-                    </td>
-                    <td>{job.customer?.contactPerson}</td>
-                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{job.customer?.phone}</td>
-                    <td>
-                      <span style={{ fontSize: "11px", textTransform: "uppercase", background: "rgba(255,255,255,0.05)", padding: "3px 6px", borderRadius: "5px", border: "1px solid rgba(255,255,255,0.04)" }}>
-                        {job.requirementCategory || "SELECT"}
-                      </span>
-                    </td>
-                    <td>{formatDate(job.deliveredDate)}</td>
-                    <td style={{ color: "#10b981", fontWeight: "700" }}>{formatDate(job.amcDate)}</td>
-                    <td>
-                      <span className={`pill-badge ${
-                        job.currentStatus === "Order Delivered" ? "pill-badge-green" :
-                        job.currentStatus === "Order Confirmed" ? "pill-badge-blue" :
-                        job.currentStatus === "Order Dropped" ? "pill-badge-red" : "pill-badge-amber"
-                      }`}>
-                        <span className={`priority-dot ${
-                          job.currentStatus === "Order Delivered" ? "priority-dot-green" :
-                          job.currentStatus === "Order Confirmed" ? "priority-dot-amber" :
-                          job.currentStatus === "Order Dropped" ? "priority-dot-red" : "priority-dot-amber"
-                        }`}></span>
-                        {job.currentStatus}
-                      </span>
-                    </td>
-                    <td>
-                      {job.assignments.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
-                      ) : (
-                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                          {job.assignments.map(a => (
-                            <span 
-                              key={a.id} 
-                              title={a.assignedBy ? `Assigned by: ${a.assignedBy}` : "Assigned by Admin"} 
-                              style={{ fontSize: "11px", background: "rgba(59, 130, 246, 0.1)", color: "#93c5fd", padding: "2px 6px", borderRadius: "5px", border: "1px solid rgba(59,130,246,0.15)", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                            >
-                              <span>{a.technician.fullName}</span>
-                              {a.assignedBy && (
-                                <span style={{ fontSize: "9.5px", opacity: 0.75, borderLeft: "1px solid rgba(147,197,253,0.3)", paddingLeft: "4px" }}>
-                                  by {(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(a.assignedBy) || (a.assignedBy.length >= 32 && a.assignedBy.includes("-") && !a.assignedBy.includes(" "))) ? "Admin" : a.assignedBy}
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <div style={{ display: "inline-flex", gap: "6px" }}>
-                        <button
-                          onClick={() => handleOpenEdit(job)}
-                          style={{
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            color: "#fff",
-                            padding: "7px",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-                          title="Update Refilling details"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleOpenAssign(job)}
-                          style={{
-                            background: "rgba(245, 158, 11, 0.08)",
-                            border: "1px solid rgba(245, 158, 11, 0.2)",
-                            color: "#f59e0b",
-                            padding: "7px",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
-                          title="Assign Technician"
-                        >
-                          <UserPlus size={13} />
-                        </button>
-                      </div>
-                    </td>
+          <KanbanBoard
+            tickets={filteredJobs}
+            statusKey="currentStatus"
+            columns={[
+              { key: "Refilling Order Received", label: "Order Received", color: "#fbbf24", badgeBg: "rgba(251, 191, 36, 0.15)" },
+              { key: "Quotation Sent", label: "Quotation Sent", color: "#60a5fa", badgeBg: "rgba(96, 165, 250, 0.15)" },
+              { key: "Follow-up In Progress", label: "Follow-up In Progress", color: "#c084fc", badgeBg: "rgba(192, 132, 252, 0.15)" },
+              { key: "Order Confirmed", label: "Order Confirmed", color: "#a3e635", badgeBg: "rgba(163, 230, 83, 0.15)" },
+              { key: "Order Delivered", label: "Order Delivered", color: "#10b981", badgeBg: "rgba(16, 185, 129, 0.15)" },
+              { key: "Order Dropped", label: "Order Dropped", color: "#f87171", badgeBg: "rgba(248, 113, 113, 0.15)" }
+            ]}
+            onEdit={(ticket) => {
+              setSelectedJob(ticket);
+              setIsEditModalOpen(true);
+            }}
+            onAssign={(ticket) => {
+              setSelectedJob(ticket);
+              setIsAssignModalOpen(true);
+            }}
+            stageName="REFILLING"
+          />
+        )
+      ) : (
+        <>
+          {/* Data Table */}
+          <div style={{ background: "var(--bg-card)", backdropFilter: "blur(20px)", borderRadius: "16px", border: "1px solid var(--border-glass)", padding: "10px", overflowX: "auto", boxShadow: "var(--shadow-glass)" }}>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+                <div style={{ display: "inline-block", width: "24px", height: "24px", border: "3px solid rgba(220,38,38,0.2)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                <div style={{ marginTop: "10px", fontSize: "14px" }}>Synchronizing gas inventory log...</div>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "45px 20px", color: "var(--text-secondary)" }}>
+                <span style={{ fontSize: "28px" }}>📭</span>
+                <div style={{ marginTop: "10px", fontSize: "14px", fontWeight: "600" }}>No refilling records matched</div>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Adjust search terms or year/status dropdown values</div>
+              </div>
+            ) : (
+              <table className={`glass-table table-density-${tableDensity}`}>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Job Number</th>
+                    <th>Client Name</th>
+                    <th>Cylinder Serial No</th>
+                    <th>Type</th>
+                    <th>Capacity</th>
+                    <th>Stage Status</th>
+                    <th>Technicians</th>
+                    <th style={{ textAlign: "center" }}>Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {paginatedJobs.map((job, index) => {
+                    return (
+                      <tr key={job.id}>
+                        <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
+                        <td style={{ fontFamily: "monospace", fontWeight: "700", color: "var(--accent)" }}>{job.jobNumber}</td>
+                        <td style={{ fontWeight: "600", color: "#fff" }}>{job.customer?.companyName || "N/A"}</td>
+                        <td style={{ fontFamily: "monospace", color: "#c084fc", fontWeight: "600" }}>{job.serialNumber || "N/A"}</td>
+                        <td>{job.extinguisherType || "N/A"}</td>
+                        <td>{job.capacity || "N/A"}</td>
+                        <td>
+                          <span className={`pill-badge ${
+                            job.currentStatus === "Order Delivered" || job.currentStatus === "Closed" ? "pill-badge-green" :
+                            job.currentStatus === "Order Confirmed" ? "pill-badge-blue" :
+                            job.currentStatus === "Order Dropped" ? "pill-badge-red" : "pill-badge-amber"
+                          }`}>
+                            <span className={`priority-dot ${
+                              job.currentStatus === "Order Delivered" || job.currentStatus === "Closed" ? "priority-dot-green" :
+                              job.currentStatus === "Order Confirmed" ? "priority-dot-blue" :
+                              job.currentStatus === "Order Dropped" ? "priority-dot-red" : "priority-dot-amber"
+                            }`}></span>
+                            {job.currentStatus || "Order Confirmed"}
+                          </span>
+                        </td>
+                        <td>
+                          {job.assignments.length === 0 ? (
+                            <span style={{ color: "#475569", fontSize: "12px", fontStyle: "italic" }}>Unassigned</span>
+                          ) : (
+                            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                              {job.assignments.map((asg) => (
+                                <span 
+                                  key={asg.id} 
+                                  style={{
+                                    fontSize: "10px",
+                                    background: "rgba(192, 132, 252, 0.15)",
+                                    color: "#c084fc",
+                                    padding: "2px 6px",
+                                    borderRadius: "9999px",
+                                    fontWeight: "600",
+                                    border: "1px solid rgba(192, 132, 252, 0.2)"
+                                  }}
+                                  title={asg.technician?.phone}
+                                >
+                                  {asg.technician?.fullName.split(" ")[0]}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                            <button
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsEditModalOpen(true);
+                              }}
+                              style={{
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                color: "var(--text-secondary)",
+                                padding: "7px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                              title="Edit Refilling details"
+                            >
+                              <Edit2 size={13} />
+                            </button>
 
-      {/* Pagination Footer */}
-      {!loading && totalItems > 0 && (
-        <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span className="pagination-info" style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-          </span>
-          <div className="pagination-controls" style={{ display: "flex", gap: "5px" }}>
-            <button 
-              onClick={() => setCurrentPage(1)} 
-              disabled={currentPage === 1}
-              className="pagination-btn"
-              title="First Page"
-            >
-              <ChevronsLeft size={14} />
-            </button>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-              disabled={currentPage === 1}
-              className="pagination-btn"
-              title="Previous Page"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            
-            <span style={{ fontSize: "13px", color: "var(--text-primary)", minWidth: "80px", textAlign: "center", alignSelf: "center" }}>
-              Page {currentPage} of {totalPages}
-            </span>
-
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
-              disabled={currentPage === totalPages}
-              className="pagination-btn"
-              title="Next Page"
-            >
-              <ChevronRight size={14} />
-            </button>
-            <button 
-              onClick={() => setCurrentPage(totalPages)} 
-              disabled={currentPage === totalPages}
-              className="pagination-btn"
-              title="Last Page"
-            >
-              <ChevronsRight size={14} />
-            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsAssignModalOpen(true);
+                              }}
+                              style={{
+                                background: "rgba(245, 158, 11, 0.08)",
+                                border: "1px solid rgba(245, 158, 11, 0.2)",
+                                color: "#f59e0b",
+                                padding: "7px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.18)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245, 158, 11, 0.08)"; }}
+                              title="Assign Technicians"
+                            >
+                              <UserPlus size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
-        </div>
-      )}
 
+          {/* Pagination Footer */}
+          {!loading && totalItems > 0 && (
+            <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="pagination-info" style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+              </span>
+              <div className="pagination-controls" style={{ display: "flex", gap: "5px" }}>
+                <button 
+                  onClick={() => setCurrentPage(1)} 
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                  title="First Page"
+                >
+                  <ChevronsLeft size={14} />
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                
+                <span style={{ fontSize: "13px", color: "var(--text-primary)", minWidth: "80px", textAlign: "center", alignSelf: "center" }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                  title="Next Page"
+                >
+                  <ChevronRight size={14} />
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(totalPages)} 
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                  title="Last Page"
+                >
+                  <ChevronsRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Update Refilling Modal */}
       {isEditModalOpen && selectedJob && (

@@ -254,6 +254,7 @@ export default function AdminCentralOverviewPage() {
             <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.enquiries}
             </div>
+            <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
             <div style={{ fontSize: "var(--font-xs)", color: "var(--accent)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <TrendingUp size={13} /> {currentDataset.leadConv} Lead Conversion Rate
             </div>
@@ -285,6 +286,7 @@ export default function AdminCentralOverviewPage() {
             <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.refills}
             </div>
+            <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
             <div style={{ fontSize: "var(--font-xs)", color: "#c084fc", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <Zap size={13} /> {currentDataset.onTimeRate} Dispatch Efficiency
             </div>
@@ -316,6 +318,7 @@ export default function AdminCentralOverviewPage() {
             <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.services}
             </div>
+            <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
             <div style={{ fontSize: "var(--font-xs)", color: "#38bdf8", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <CheckCircle2 size={13} /> 94.8% Completion Rate
             </div>
@@ -347,6 +350,7 @@ export default function AdminCentralOverviewPage() {
             <div style={{ fontSize: "var(--font-2xl)", fontWeight: "800", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
               {currentDataset.techs}
             </div>
+            <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
             <div style={{ fontSize: "var(--font-xs)", color: "#f43f5e", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <Activity size={13} /> Active Staff Assigned
             </div>

@@ -14,10 +14,11 @@ export default async function CustomerPortalDashboard() {
     return <div style={{ padding: "30px", textAlign: "center" }}>Unauthorized. Please log in to the portal.</div>;
   }
 
-  // Fetch all tickets for this customer
+  // Fetch all tickets for this customer (scoped to tenant)
   const tickets = await prisma.ticket.findMany({
     where: {
       customerId: session.userId,
+      tenantId: session.tenantId,
       deletedAt: null,
     },
     orderBy: {

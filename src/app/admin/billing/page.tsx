@@ -14,12 +14,12 @@ export default function BillingDashboard() {
   const fetcher = (url: string) => fetch(url).then(r => r.json());
 
   // SWR queries for unbilled tickets and generated invoices
-  const { data: unbilledTickets = [], mutate: mutateUnbilled } = useSWR(
+  const { data: unbilledTickets = [], error: errorUnbilled, mutate: mutateUnbilled } = useSWR(
     "/api/billing?scope=unbilled",
     fetcher
   );
 
-  const { data: invoices = [], mutate: mutateInvoices } = useSWR(
+  const { data: invoices = [], error: errorInvoices, mutate: mutateInvoices } = useSWR(
     "/api/billing",
     fetcher
   );
@@ -88,6 +88,13 @@ export default function BillingDashboard() {
         <div style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", color: "#ef4444", borderRadius: "10px", padding: "12px 16px", marginBottom: "25px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
           <AlertCircle size={18} />
           {errorMsg}
+        </div>
+      )}
+
+      {(errorUnbilled || errorInvoices) && (
+        <div style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", color: "#ef4444", borderRadius: "10px", padding: "12px 16px", marginBottom: "25px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertCircle size={18} />
+          Failed to load billing or unbilled data. Please try again.
         </div>
       )}
 

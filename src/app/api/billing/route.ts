@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
     if (scope === "unbilled") {
       const unbilledTickets = await prisma.ticket.findMany({
         where: {
-          currentStatus: "COMPLETED",
+          currentStatus: {
+            in: ["COMPLETED", "Completed", "Service Done", "Order Delivered"],
+          },
           tenantId,
           invoice: null,
           deletedAt: null,

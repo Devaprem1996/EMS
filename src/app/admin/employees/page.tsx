@@ -17,7 +17,7 @@ import {
   ChevronRight,
   ChevronsRight
 } from "lucide-react";
-import { EMS_CONFIG } from "@/config/ems-config";
+import { useConfig } from "@/context/ConfigContext";
 
 interface Employee {
   id: string;
@@ -32,6 +32,7 @@ interface Employee {
 }
 
 export default function EmployeeMasterPage() {
+  const { config } = useConfig();
   // Data States
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);

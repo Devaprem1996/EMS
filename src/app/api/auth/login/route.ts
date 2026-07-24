@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
         if (customer.passwordHash) {
           passwordMatch = await bcrypt.compare(password, customer.passwordHash);
         } else {
-          passwordMatch = password === "portal123";
+          // Reject login for customers without a password hash — they must set one first
+          return NextResponse.json({ error: "Account not activated. Please contact support to set your password." }, { status: 401 });
         }
 
         if (!passwordMatch) {

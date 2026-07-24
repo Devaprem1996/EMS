@@ -8,6 +8,8 @@ export interface SessionData {
   fullName: string;
   role: "ADMIN" | "TECHNICIAN" | "SUPER_ADMIN" | "CUSTOMER";
   tenantId?: string | null;
+  iat?: number;  // issued-at (epoch ms)
+  exp?: number;  // expiry (epoch ms)
 }
 
 const SESSION_SECRET = process.env.SESSION_SECRET || "safeway_ems_super_secure_fallback_key_for_dev_32_chars";
@@ -16,8 +18,14 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "safeway_ems_super_secure_f
  * Signs session data using HMAC-SHA256.
  * Returns the base64-encoded session data appended with its signature.
  */
-export function signSession(data: SessionData): string {
-  const sessionDataStr = Buffer.from(JSON.stringify(data)).toString("base64");
+export function signSession(data: SessionData, maxAgeMs = 24 * 60 * 60 * 1000): string {
+  const now = Date.now();
+  const enrichedData: SessionData = {
+    ...data,
+    iat: now,
+    exp: now + maxAgeMs,
+  };
+  const sessionDataStr = Buffer.from(JSON.stringify(enrichedData)).toString("base64");
   const signature = crypto
     .createHmac("sha256", SESSION_SECRET)
     .update(sessionDataStr)
@@ -53,7 +61,15 @@ export function verifySession(cookieValue: string): SessionData | null {
     }
     
     const decodedString = Buffer.from(sessionDataStr, "base64").toString("utf-8");
-    return JSON.parse(decodedString) as SessionData;
+    const parsed = JSON.parse(decodedString) as SessionData;
+
+    // Validate expiry if present
+    if (parsed.exp && Date.now() > parsed.exp) {
+      console.warn("[Auth Helper] Session token has expired.");
+      return null;
+    }
+
+    return parsed;
   } catch (error) {
     console.error("[Auth Helper] Error verifying session signature:", error);
     return null;

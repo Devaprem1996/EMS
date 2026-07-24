@@ -48,16 +48,18 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                  for (let registration of registrations) {
-                    registration.unregister();
-                  }
-                });
-                if (window.caches) {
-                  caches.keys().then(function(names) {
-                    for (let name of names) caches.delete(name);
+              if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                      registration.unregister();
+                    }
                   });
+                  if (window.caches) {
+                    caches.keys().then(function(names) {
+                      for (let name of names) caches.delete(name);
+                    });
+                  }
                 }
               }
             `

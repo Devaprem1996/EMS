@@ -19,6 +19,7 @@ import {
   Settings
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
+import useSWR from "swr";
 
 interface Customer {
   id: string;
@@ -162,27 +163,39 @@ export default function ServiceDashboardPage() {
   const [customerLocation, setCustomerLocation] = useState("");
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
 
-  // Fetch all data
-  const fetchData = async () => {
-    try {
-      // Fetch services jobs
-      const jobsRes = await fetch(`/api/jobs?stage=SERVICES&status=${statusFilter}&search=${encodeURIComponent(search)}`);
-      if (jobsRes.ok) {
-        const jobsData = await jobsRes.json();
-        setJobs(jobsData);
-      }
+  const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-      // Fetch active technicians
-      const techRes = await fetch("/api/employees?status=active");
-      if (techRes.ok) {
-        const techData = await techRes.json();
-        setTechnicians(techData.filter((t: any) => t.role === "TECHNICIAN"));
-      }
-    } catch (err) {
-      console.error("Error loading services dashboard data:", err);
-    } finally {
+  const { data: jobsData, mutate: mutateJobs } = useSWR(
+    `/api/jobs?stage=SERVICES&status=${statusFilter}&search=${encodeURIComponent(search)}`,
+    fetcher
+  );
+
+  const { data: techRawData, mutate: mutateTechnicians } = useSWR(
+    "/api/employees?status=active",
+    fetcher
+  );
+
+  useEffect(() => {
+    if (jobsData) {
+      setJobs(jobsData);
+    }
+  }, [jobsData]);
+
+  useEffect(() => {
+    if (techRawData) {
+      setTechnicians(techRawData.filter((t: any) => t.role === "TECHNICIAN"));
+    }
+  }, [techRawData]);
+
+  useEffect(() => {
+    if (jobsData && techRawData) {
       setLoading(false);
     }
+  }, [jobsData, techRawData]);
+
+  const fetchData = () => {
+    mutateJobs();
+    mutateTechnicians();
   };
 
   useEffect(() => {

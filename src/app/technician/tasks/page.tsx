@@ -179,6 +179,7 @@ interface Assignment {
 }
 
 import dynamic from "next/dynamic";
+import useSWR from "swr";
 import { Scan, Navigation, MapPin } from "lucide-react";
 
 const QRScannerModal = dynamic(() => import("@/components/QRScannerModal"), {
@@ -244,19 +245,22 @@ export default function TechnicianTasksPage() {
   const [existingSignature, setExistingSignature] = useState<string | null>(null);
   const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, unknown>>({});
 
-  // Fetch data
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`/api/tasks?search=${encodeURIComponent(search)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAssignments(data);
-      }
-    } catch (err) {
-      console.error("Error loading task data:", err);
-    } finally {
+  const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+  const { data: tasksData, mutate: mutateTasks } = useSWR(
+    `/api/tasks?search=${encodeURIComponent(search)}`,
+    fetcher
+  );
+
+  useEffect(() => {
+    if (tasksData) {
+      setAssignments(tasksData);
       setLoading(false);
     }
+  }, [tasksData]);
+
+  const fetchData = () => {
+    mutateTasks();
   };
 
   useEffect(() => {

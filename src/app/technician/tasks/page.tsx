@@ -178,8 +178,13 @@ interface Assignment {
   job: Job;
 }
 
-import QRScannerModal from "@/components/QRScannerModal";
+import dynamic from "next/dynamic";
 import { Scan, Navigation, MapPin } from "lucide-react";
+
+const QRScannerModal = dynamic(() => import("@/components/QRScannerModal"), {
+  ssr: false,
+  loading: () => <div style={{ color: "#a1a1aa", fontSize: "14px", textAlign: "center", padding: "20px" }}>Loading scanner...</div>
+});
 
 export default function TechnicianTasksPage() {
   const { config } = useConfig();

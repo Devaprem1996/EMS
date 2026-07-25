@@ -43,6 +43,27 @@ export default function KanbanBoard({
   stageName
 }: KanbanBoardProps) {
 
+  const [draggedOverColumn, setDraggedOverColumn] = React.useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, ticketId: string) => {
+    e.dataTransfer.setData("text/plain", ticketId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    setDraggedOverColumn(null);
+    const ticketId = e.dataTransfer.getData("text/plain");
+    const ticket = tickets.find((t) => t.id === ticketId);
+    if (ticket && onStatusChange && ticket[statusKey] !== targetStatus) {
+      onStatusChange(ticket, targetStatus);
+    }
+  };
+
   // Group tickets by status
   const groupedTickets = React.useMemo(() => {
     const groups: Record<string, any[]> = {};
@@ -114,22 +135,28 @@ export default function KanbanBoard({
         const isUnmapped = column.key === "unmapped";
         if (isUnmapped && columnTickets.length === 0) return null;
 
+        const isOver = draggedOverColumn === column.key;
         return (
           <div 
             key={column.key}
             className="kanban-column"
             style={{
               flex: "0 0 310px",
-              background: "rgba(21, 22, 30, 0.35)",
-              border: "1px solid var(--border-glass)",
+              background: isOver ? "rgba(var(--accent-rgb, 163, 230, 53), 0.08)" : "rgba(21, 22, 30, 0.35)",
+              border: isOver ? "1px dashed var(--accent, #a3e635)" : "1px solid var(--border-glass)",
               borderRadius: "16px",
               display: "flex",
               flexDirection: "column",
               maxHeight: "650px",
-              boxShadow: "var(--shadow-glass)",
+              boxShadow: isOver ? "0 0 20px rgba(var(--accent-rgb, 163, 230, 53), 0.15)" : "var(--shadow-glass)",
               backdropFilter: "blur(10px)",
-              scrollSnapAlign: "start"
+              scrollSnapAlign: "start",
+              transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
             }}
+            onDragOver={handleDragOver}
+            onDragEnter={() => setDraggedOverColumn(column.key)}
+            onDragLeave={() => setDraggedOverColumn(null)}
+            onDrop={(e) => handleDrop(e, column.key)}
           >
             {/* Column Header */}
             <div 
@@ -205,6 +232,8 @@ export default function KanbanBoard({
                     <div 
                       key={ticket.id}
                       className="kanban-card card-glow"
+                      draggable={true}
+                      onDragStart={(e) => handleDragStart(e, ticket.id)}
                       style={{
                         background: "var(--bg-card)",
                         border: "1px solid var(--border-glass)",
@@ -215,7 +244,7 @@ export default function KanbanBoard({
                         gap: "0.8rem",
                         position: "relative",
                         transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-                        cursor: "pointer"
+                        cursor: "grab"
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "translateY(-2px)";

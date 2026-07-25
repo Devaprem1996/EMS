@@ -482,6 +482,7 @@ export default function AdminCentralOverviewPage() {
               <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 {timeframe === "today" ? "Hourly View" : timeframe === "month" ? "Monthly View" : "Quarterly View"}
               </span>
+            </div>
                    {/* Dynamic Multi-Color Vertical Bar Chart */}
             <div style={{ height: "140px", paddingTop: "10px", width: "100%" }}>
               {isMounted ? (
@@ -544,7 +545,7 @@ export default function AdminCentralOverviewPage() {
                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a3e635" }}></span>
                 <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Actual Execution</span>
               </div>
-            </div>         </div>
+            </div>
           </div>
         </div>
 

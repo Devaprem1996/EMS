@@ -461,6 +461,28 @@ export default function EnquiryDashboardPage() {
     }
   };
 
+  const handleStatusChange = async (ticket: Enquiry, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/jobs/${ticket.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentStatus: newStatus,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+
+      setSuccessMsg(`Status of ${ticket.jobNumber || "Enquiry"} updated to "${newStatus}"!`);
+      mutateEnquiries();
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to update status");
+      setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
+
   // Open Assign Technician Modal
   const handleOpenAssign = (enq: Enquiry) => {
     setIsBulkAssign(false);
@@ -1412,6 +1434,7 @@ export default function EnquiryDashboardPage() {
             ]}
             onEdit={(ticket) => handleOpenEdit(ticket)}
             onAssign={(ticket) => handleOpenAssign(ticket)}
+            onStatusChange={handleStatusChange}
             stageName="ENQUIRY"
           />
         )

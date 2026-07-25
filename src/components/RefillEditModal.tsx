@@ -54,12 +54,9 @@ export default function RefillEditModal({
   onSuccess,
   onError,
 }: RefillEditModalProps) {
-  // Collapsible cards state
-  const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(true);
-  const [isEquipmentCardOpen, setIsEquipmentCardOpen] = useState(true);
-  const [isStatusCardOpen, setIsStatusCardOpen] = useState(true);
-  const [isFollowUpCardOpen, setIsFollowUpCardOpen] = useState(true);
-  const [isCustomFieldsCardOpen, setIsCustomFieldsCardOpen] = useState(true);
+  // Accordion state — only one section open at a time
+  const [activeSection, setActiveSection] = useState<string | null>("status");
+  const toggleSection = (key: string) => setActiveSection(prev => prev === key ? null : key);
 
   // Form Fields
   const [serialNumber, setSerialNumber] = useState("");
@@ -99,11 +96,7 @@ export default function RefillEditModal({
       }
       setCustomFieldsData(parsedStageData);
 
-      setIsCustomerCardOpen(true);
-      setIsEquipmentCardOpen(true);
-      setIsStatusCardOpen(true);
-      setIsFollowUpCardOpen(true);
-      setIsCustomFieldsCardOpen(true);
+      setActiveSection("status");
     }
   }, [selectedJob]);
 
@@ -181,17 +174,17 @@ export default function RefillEditModal({
             {/* Card 1: Customer Information */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
+                onClick={() => toggleSection("customer")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Zap size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Customer & Site Information</span>
                 </div>
-                {isCustomerCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "customer" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isCustomerCardOpen && (
+              {activeSection === "customer" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -228,17 +221,17 @@ export default function RefillEditModal({
             {/* Card 2: Equipment / Cylinder Details */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
+                onClick={() => toggleSection("equipment")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Zap size={16} style={{ color: "#a855f7" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Item & Equipment Specifications</span>
                 </div>
-                {isEquipmentCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "equipment" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isEquipmentCardOpen && (
+              {activeSection === "equipment" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -274,17 +267,17 @@ export default function RefillEditModal({
             {/* Card 3: Refilling Status & AMC Dates */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
+                onClick={() => toggleSection("status")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Calendar size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Refilling Status & AMC Dates</span>
                 </div>
-                {isStatusCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "status" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isStatusCardOpen && (
+              {activeSection === "status" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -339,17 +332,17 @@ export default function RefillEditModal({
             {/* Card 5: Follow Up */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsFollowUpCardOpen(!isFollowUpCardOpen)}
+                onClick={() => toggleSection("followup")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <MessageSquare size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Follow Up Notes</span>
                 </div>
-                {isFollowUpCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "followup" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isFollowUpCardOpen && (
+              {activeSection === "followup" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div>
                     <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Scheduled Follow-up Date</label>
@@ -382,17 +375,17 @@ export default function RefillEditModal({
             {config?.stages?.REFILLING?.fields && config.stages.REFILLING.fields.length > 0 && (
               <div className="modal-section-card">
                 <div 
-                  onClick={() => setIsCustomFieldsCardOpen(!isCustomFieldsCardOpen)}
+                  onClick={() => toggleSection("customfields")}
                   className="modal-section-header"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <Settings size={16} style={{ color: "var(--accent)" }} />
                     <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Custom Fields</span>
                   </div>
-                  {isCustomFieldsCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                  {activeSection === "customfields" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
                 </div>
 
-                {isCustomFieldsCardOpen && (
+                {activeSection === "customfields" && (
                   <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                     {config.stages.REFILLING.fields.map((field: any) => {
                       const val = customFieldsData[field.key] ?? "";

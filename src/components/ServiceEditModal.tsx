@@ -47,12 +47,9 @@ export default function ServiceEditModal({
   onSuccess,
   onError,
 }: ServiceEditModalProps) {
-  // Collapsible cards state
-  const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(true);
-  const [isEquipmentCardOpen, setIsEquipmentCardOpen] = useState(true);
-  const [isRequirementCardOpen, setIsRequirementCardOpen] = useState(true);
-  const [isStatusCardOpen, setIsStatusCardOpen] = useState(true);
-  const [isCustomFieldsCardOpen, setIsCustomFieldsCardOpen] = useState(true);
+  // Accordion state — only one section open at a time
+  const [activeSection, setActiveSection] = useState<string | null>("status");
+  const toggleSection = (key: string) => setActiveSection(prev => prev === key ? null : key);
 
   // Form Fields
   const [visitDate, setVisitDate] = useState("");
@@ -72,11 +69,7 @@ export default function ServiceEditModal({
       }
       setCustomFieldsData(parsedStageData);
 
-      setIsCustomerCardOpen(true);
-      setIsEquipmentCardOpen(true);
-      setIsRequirementCardOpen(true);
-      setIsStatusCardOpen(true);
-      setIsCustomFieldsCardOpen(true);
+      setActiveSection("status");
     }
   }, [selectedJob]);
 
@@ -136,17 +129,17 @@ export default function ServiceEditModal({
             {/* Card 1: Customer Information */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
+                onClick={() => toggleSection("customer")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Zap size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Customer & Site Information</span>
                 </div>
-                {isCustomerCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "customer" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isCustomerCardOpen && (
+              {activeSection === "customer" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -183,17 +176,17 @@ export default function ServiceEditModal({
             {/* Card 2: Equipment & AMC Context */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
+                onClick={() => toggleSection("equipment")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Calendar size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Equipment & AMC Reference</span>
                 </div>
-                {isEquipmentCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "equipment" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isEquipmentCardOpen && (
+              {activeSection === "equipment" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -239,16 +232,16 @@ export default function ServiceEditModal({
             {selectedJob.requirementDetails && (
               <div className="modal-section-card">
                 <div 
-                  onClick={() => setIsRequirementCardOpen(!isRequirementCardOpen)}
+                  onClick={() => toggleSection("requirement")}
                   className="modal-section-header"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <MessageSquare size={16} style={{ color: "var(--accent)" }} />
                     <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Original Enquiry Context</span>
                   </div>
-                  {isRequirementCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                  {activeSection === "requirement" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
                 </div>
-                {isRequirementCardOpen && (
+                {activeSection === "requirement" && (
                   <div style={{ padding: "12px", borderTop: "1px solid var(--border-glass)" }}>
                     <textarea value={selectedJob.requirementDetails} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-secondary)", fontFamily: "inherit" }} />
                   </div>
@@ -259,17 +252,17 @@ export default function ServiceEditModal({
             {/* Card 4: Service Schedule & Status */}
             <div className="modal-section-card">
               <div 
-                onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
+                onClick={() => toggleSection("status")}
                 className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Calendar size={16} style={{ color: "var(--accent)" }} />
                   <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Service Schedule & Status</span>
                 </div>
-                {isStatusCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                {activeSection === "status" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
               </div>
 
-              {isStatusCardOpen && (
+              {activeSection === "status" && (
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
@@ -293,17 +286,17 @@ export default function ServiceEditModal({
             {config?.stages?.SERVICES?.fields && config.stages.SERVICES.fields.length > 0 && (
               <div className="modal-section-card">
                 <div 
-                  onClick={() => setIsCustomFieldsCardOpen(!isCustomFieldsCardOpen)}
+                  onClick={() => toggleSection("customfields")}
                   className="modal-section-header"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <Settings size={16} style={{ color: "var(--accent)" }} />
                     <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Custom Fields</span>
                   </div>
-                  {isCustomFieldsCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
+                  {activeSection === "customfields" ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
                 </div>
 
-                {isCustomFieldsCardOpen && (
+                {activeSection === "customfields" && (
                   <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                     {config.stages.SERVICES.fields.map((field: any) => {
                       const val = customFieldsData[field.key] ?? "";

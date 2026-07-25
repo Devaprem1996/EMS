@@ -1290,49 +1290,61 @@ body {
 /* Slide-Over Contextual Sheet Drawer Styles */
 .slide-over-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(4, 4, 6, 0.4);
-  backdrop-filter: blur(12px);
-  z-index: 1000;
+  inset: 0;
+  background: rgba(8, 8, 12, 0.65) !important;
+  backdrop-filter: blur(14px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+  z-index: 10005 !important;
   display: flex;
-  justify-content: flex-end;
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  align-items: center;
+  justify-content: center;
+  animation: premiumFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.slide-over-card {
+.slide-over-card, .theme-modal-card {
   width: 100%;
-  max-width: 580px;
-  height: 100%;
-  background: rgba(18, 18, 24, 0.85);
-  backdrop-filter: blur(40px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+  max-width: 620px;
+  max-height: 92vh;
+  background: rgba(21, 22, 30, 0.9) !important;
+  backdrop-filter: blur(35px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(35px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(163, 230, 53, 0.05) !important;
   display: flex;
   flex-direction: column;
   position: relative;
-  animation: slideOverIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+  animation: premiumScaleUp 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 }
 
-.slide-over-card::before {
+.slide-over-card::before, .theme-modal-card::before {
   content: '';
   position: absolute;
   top: 0;
-  bottom: 0;
   left: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, var(--primary), var(--accent));
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  z-index: 10;
 }
 
-@keyframes slideOverIn {
-  from {
-    transform: translateX(100%);
-  }
+@keyframes premiumFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
+@keyframes premiumScaleUp {
+  from {
+    transform: scale(0.96) translateY(8px);
+    opacity: 0;
+  }
   to {
-    transform: translateX(0);
+    transform: scale(1) translateY(0);
+    opacity: 1;
   }
 }
 
@@ -2594,7 +2606,14 @@ select:disabled {
 
 :root[data-theme="light"] .slide-over-card,
 :root[data-theme="light"] .theme-modal-card {
-  background-color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(35px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(35px) saturate(120%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 24px 60px rgba(0, 0, 0, 0.15),
+    0 0 40px rgba(163, 230, 53, 0.03) !important;
   color: #0f172a !important;
 }
 
@@ -3097,17 +3116,7 @@ select:disabled {
   }
 }
 
-.slide-over-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 10005 !important;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Resolved override in favor of master slide-over-backdrop class */
 
 @media (max-width: 768px) {
   /* Dynamic KPI & Telemetry Grids */

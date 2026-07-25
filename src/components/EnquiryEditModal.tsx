@@ -201,17 +201,18 @@ export default function EnquiryEditModal({
   if (!isOpen) return null;
 
   return (
-    <div className="slide-over-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="slide-over-card theme-modal-card" style={{ maxWidth: "660px", maxHeight: "95%" }}>
+    <div className="slide-over-backdrop modal-animate-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="slide-over-card theme-modal-card modal-animate-card" style={{ maxWidth: "660px", maxHeight: "95%", position: "relative" }}>
+        <div className="modal-header-accent-bar" />
         
         {/* Modal Header */}
         <div className="slide-over-header theme-modal-card-header">
-          <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "#3b82f6" }}>{selectedEnquiry.jobNumber}</span></h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
+          <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "var(--accent)" }}>{selectedEnquiry.jobNumber}</span></h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
         </div>
 
         {/* Tabs List */}
-        <div style={{ display: "flex", background: "#13131c", borderBottom: "1px solid #2d2d3a", overflowX: "auto" }}>
+        <div style={{ display: "flex", gap: "6px", background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderBottom: "1px solid var(--border-glass)", overflowX: "auto" }}>
           {(["client", "requirement", "status", "followup", "amc"] as const).map((tab) => {
             if (tab === "amc" && currentStatus !== "Order Delivered") return null;
             
@@ -223,21 +224,25 @@ export default function EnquiryEditModal({
               amc: "Delivery & AMC",
             };
 
+            const isActive = activeTab === tab;
+
             return (
               <button 
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 style={{
-                  padding: "12px 18px",
-                  background: activeTab === tab ? "#181822" : "transparent",
+                  padding: "8px 14px",
+                  background: isActive ? "linear-gradient(135deg, var(--accent) 0%, #ff6b4a 100%)" : "transparent",
                   border: "none",
-                  borderBottom: activeTab === tab ? "2px solid #ff4d80" : "none",
-                  color: activeTab === tab ? "#ff4d80" : "#a0aec0",
+                  borderRadius: "8px",
+                  color: isActive ? "var(--bg-dark)" : "var(--text-secondary)",
                   cursor: "pointer",
-                  fontWeight: "bold",
-                  fontSize: "13px",
-                  whiteSpace: "nowrap"
+                  fontWeight: "700",
+                  fontSize: "12.5px",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                  boxShadow: isActive ? "0 4px 12px rgba(163, 230, 53, 0.2)" : "none"
                 }}
               >
                 {labels[tab]}
@@ -253,31 +258,31 @@ export default function EnquiryEditModal({
             {activeTab === "client" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client / Company Name *</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Client / Company Name *</label>
                   <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Person Name *</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact Person Name *</label>
                     <input type="text" value={contactPerson} onChange={e => setContactPerson(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 1 *</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact No 1 *</label>
                     <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 2</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact No 2</label>
                     <input type="tel" value={phone2} onChange={e => setPhone2(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Email ID</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Email ID</label>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address *</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Address *</label>
                   <textarea value={address} onChange={e => setAddress(e.target.value)} required rows={3} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
                 </div>
               </div>
@@ -288,7 +293,7 @@ export default function EnquiryEditModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement Category *</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requirement Category *</label>
                     <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                       <option value="SELECT">SELECT</option>
                       {(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"]).map((cat: string) => (
@@ -297,7 +302,7 @@ export default function EnquiryEditModal({
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Source of Enquiry *</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Source of Enquiry *</label>
                     <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                       <option value="SELECT">SELECT</option>
                       {(config?.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"]).map((src: string) => (
@@ -307,7 +312,7 @@ export default function EnquiryEditModal({
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requirement</label>
                   <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Requirement details, item count, specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
                 </div>
                 {/* Custom Fields in Edit modal */}
@@ -320,7 +325,7 @@ export default function EnquiryEditModal({
                         const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
                         return (
                           <div key={field.key}>
-                            <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>
+                            <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
                               {field.label} {field.required ? "*" : ""}
                             </label>
                             {field.type === "boolean" ? (
@@ -349,23 +354,23 @@ export default function EnquiryEditModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Enquiry Date *</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Enquiry Date *</label>
                     <input type="date" value={enquiryDate} onChange={e => setEnquiryDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requested Delivery Date</label>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requested Delivery Date</label>
                     <input type="date" value={requestedDeliveryDate} onChange={e => setRequestedDeliveryDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Enquiry Status *</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Enquiry Status *</label>
                   <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                     <option value="Enquiry Registered">Enquiry Registered</option>
                     <option value="Order Confirmed">Order Confirmed</option>
                     <option value="Order Delivered">Order Delivered</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
-                  <p style={{ fontSize: "12px", color: "#a0aec0", marginTop: "10px", lineHeight: "1.4" }}>
+                  <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "10px", lineHeight: "1.4" }}>
                     💡 Changing status updates task flow logic:
                     <br />• <b>Order Confirmed</b> enables the Assign Technicians button.
                     <br />• <b>Order Delivered</b> displays the Delivery & AMC setup tab.
@@ -378,11 +383,11 @@ export default function EnquiryEditModal({
             {activeTab === "followup" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Next Follow-up Date</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Next Follow-up Date</label>
                   <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>New Follow-up Notes / Remarks</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>New Follow-up Notes / Remarks</label>
                   <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
                 </div>
 
@@ -407,11 +412,11 @@ export default function EnquiryEditModal({
             {activeTab === "amc" && currentStatus === "Order Delivered" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Delivered Date</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Delivered Date</label>
                   <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>No. of Years</label>
+                  <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>No. of Years</label>
                   <select value={amcYears} onChange={e => setAmcYears(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                       <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
@@ -419,7 +424,7 @@ export default function EnquiryEditModal({
                   </select>
                 </div>
                 <div style={{ background: "#111116", border: "1px solid #2d2d3a", padding: "12px", borderRadius: "6px", marginTop: "10px" }}>
-                  <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", textTransform: "uppercase" }}>Calculated AMC Date</label>
+                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", textTransform: "uppercase" }}>Calculated AMC Date</label>
                   <span style={{ fontSize: "18px", color: "#10b981", fontWeight: "bold", fontFamily: "monospace" }}>
                     {calculatedAmcDate ? formatDate(calculatedAmcDate) : "Please select Delivered Date"}
                   </span>

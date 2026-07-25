@@ -133,8 +133,9 @@ export default function AssignTechnicianModal({
   if (!isOpen) return null;
 
   return (
-    <div className="slide-over-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="slide-over-card theme-modal-card" style={{ maxWidth: "600px", maxHeight: "95%" }}>
+    <div className="slide-over-backdrop modal-animate-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="slide-over-card theme-modal-card modal-animate-card" style={{ maxWidth: "600px", maxHeight: "95%", position: "relative" }}>
+        <div className="modal-header-accent-bar" />
         
         <div className="slide-over-header theme-modal-card-header">
           <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>

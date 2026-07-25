@@ -3472,5 +3472,93 @@ select:disabled {
   color: #94a3b8 !important;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Advanced Modal Animations & Glassmorphism Enhancements                      */
+/* -------------------------------------------------------------------------- */
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(16px) saturate(180%);
+  }
+}
+
+@keyframes modalEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.93) translateY(24px);
+    filter: blur(4px);
+  }
+  65% {
+    transform: scale(1.008) translateY(-2px);
+    filter: none;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-animate-backdrop {
+  animation: backdropFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.modal-animate-card {
+  animation: modalEntrance 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.modal-header-accent-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-purple) 50%, var(--accent-indigo) 100%);
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.modal-section-card {
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(18, 18, 24, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-section-card:hover {
+  border-color: rgba(163, 230, 53, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.modal-section-header {
+  padding: 11px 14px;
+  background: rgba(26, 27, 38, 0.6);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.modal-section-header:hover {
+  background: rgba(26, 27, 38, 0.95);
+}
+
+:root[data-theme="light"] .modal-section-card {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .modal-section-header {
+  background: #f8fafc;
+}
+
+:root[data-theme="light"] .modal-section-header:hover {
+  background: #f1f5f9;
+}
+
+
 
 

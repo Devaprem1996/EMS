@@ -121,8 +121,9 @@ export default function ServiceEditModal({
   if (!isOpen) return null;
 
   return (
-    <div className="slide-over-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="slide-over-card theme-modal-card" style={{ maxWidth: "600px", maxHeight: "95%" }}>
+    <div className="slide-over-backdrop modal-animate-backdrop" style={{ zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="slide-over-card theme-modal-card modal-animate-card" style={{ maxWidth: "600px", maxHeight: "95%", position: "relative" }}>
+        <div className="modal-header-accent-bar" />
         
         <div className="slide-over-header theme-modal-card-header">
           <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Service Details: <span style={{ color: "var(--accent)" }}>{selectedJob.jobNumber}</span></h2>
@@ -133,10 +134,10 @@ export default function ServiceEditModal({
           <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
             
             {/* Card 1: Customer Information */}
-            <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+            <div className="modal-section-card">
               <div 
                 onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
-                style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Zap size={16} style={{ color: "var(--accent)" }} />
@@ -180,10 +181,10 @@ export default function ServiceEditModal({
             </div>
 
             {/* Card 2: Equipment & AMC Context */}
-            <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+            <div className="modal-section-card">
               <div 
                 onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
-                style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Calendar size={16} style={{ color: "var(--accent)" }} />
@@ -236,10 +237,10 @@ export default function ServiceEditModal({
 
             {/* Card 3: Original Requirement Context */}
             {selectedJob.requirementDetails && (
-              <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+              <div className="modal-section-card">
                 <div 
                   onClick={() => setIsRequirementCardOpen(!isRequirementCardOpen)}
-                  style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  className="modal-section-header"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <MessageSquare size={16} style={{ color: "var(--accent)" }} />
@@ -256,10 +257,10 @@ export default function ServiceEditModal({
             )}
 
             {/* Card 4: Service Schedule & Status */}
-            <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+            <div className="modal-section-card">
               <div 
                 onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
-                style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                className="modal-section-header"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Calendar size={16} style={{ color: "var(--accent)" }} />
@@ -290,10 +291,10 @@ export default function ServiceEditModal({
 
             {/* Custom Fields in Edit modal */}
             {config?.stages?.SERVICES?.fields && config.stages.SERVICES.fields.length > 0 && (
-              <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
+              <div className="modal-section-card">
                 <div 
                   onClick={() => setIsCustomFieldsCardOpen(!isCustomFieldsCardOpen)}
-                  style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  className="modal-section-header"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <Settings size={16} style={{ color: "var(--accent)" }} />
@@ -331,6 +332,7 @@ export default function ServiceEditModal({
                 )}
               </div>
             )}
+
 
           </div>
 

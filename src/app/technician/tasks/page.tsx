@@ -551,7 +551,7 @@ export default function TechnicianTasksPage() {
         ) : paginatedAssignments.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>No assignments found matching this type.</div>
         ) : (
-          <table className={`premium-table table-density-${tableDensity}`} style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
+          <table className={`premium-table desktop-only-table table-density-${tableDensity}`} style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, textAlign: "left", fontSize: "14px" }}>
             <thead>
               <tr>
                 <th>S.No</th>
@@ -629,7 +629,7 @@ export default function TechnicianTasksPage() {
                             alignItems: "center",
                             transition: "all 0.2s"
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(var(--primary-rgb, 59, 130, 246), 0.15)"; e.currentTarget.style.borderColor = "rgba(var(--primary-rgb, 59, 130, 246), 0.3)"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
                           title="Task Details"
                         >
@@ -642,6 +642,158 @@ export default function TechnicianTasksPage() {
               })}
             </tbody>
           </table>
+        )}
+
+        {/* Mobile View Card Grid */}
+        {!loading && paginatedAssignments.length > 0 && (
+          <div className="mobile-only-cards" style={{ display: "none" }}>
+            {paginatedAssignments.map((asg, index) => {
+              const displayStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
+              const locUrl = asg.job.customerLocation;
+              const tel = asg.job.customer?.phone;
+
+              return (
+                <div 
+                  key={asg.id} 
+                  style={{
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border-glass)",
+                    borderRadius: "16px",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                    boxShadow: "var(--shadow-glass)",
+                    position: "relative"
+                  }}
+                >
+                  {/* Card Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span 
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "800",
+                        color: "var(--accent)",
+                        background: "rgba(var(--accent-rgb, 163, 230, 53), 0.1)",
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontFamily: "monospace"
+                      }}
+                    >
+                      {asg.job.jobNumber}
+                    </span>
+                    <span className={`pill-badge ${
+                      displayStatus === "Completed" ? "pill-badge-green" :
+                      displayStatus === "Assign For Service" ? "pill-badge-blue" : "pill-badge-amber"
+                    }`}>
+                      <span className={`priority-dot ${
+                        displayStatus === "Completed" ? "priority-dot-green" :
+                        displayStatus === "Assign For Service" ? "priority-dot-amber" : "priority-dot-amber"
+                      }`}></span>
+                      {displayStatus}
+                    </span>
+                  </div>
+
+                  {/* Client Info */}
+                  <div>
+                    <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 4px 0" }}>
+                      {asg.job.customer?.companyName || "N/A"}
+                    </h3>
+                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0 }}>
+                      Contact: {asg.job.customer?.contactPerson || "N/A"}
+                    </p>
+                  </div>
+
+                  {/* Parameters Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.03)", fontSize: "13px" }}>
+                    <div>
+                      <span style={{ color: "var(--text-secondary)", display: "block", fontSize: "11px", marginBottom: "2px" }}>Stage Type</span>
+                      <strong style={{ color: "var(--text-primary)" }}>{asg.job.assignFor || "DELIVERY"}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--text-secondary)", display: "block", fontSize: "11px", marginBottom: "2px" }}>Assigned On</span>
+                      <strong style={{ color: "var(--text-primary)" }}>{formatDate(asg.assignedAt)}</strong>
+                    </div>
+                  </div>
+
+                  {/* Actions (Call / Navigate) */}
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {tel && (
+                      <a 
+                        href={`tel:${tel}`} 
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          background: "rgba(59, 130, 246, 0.15)",
+                          border: "1px solid rgba(59, 130, 246, 0.3)",
+                          color: "#60a5fa",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          textDecoration: "none",
+                          textAlign: "center"
+                        }}
+                      >
+                        📞 Call Client
+                      </a>
+                    )}
+                    {locUrl && (
+                      <a 
+                        href={locUrl.startsWith("http") ? locUrl : `https://google.com/maps/search/?api=1&query=${encodeURIComponent(locUrl)}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          background: "rgba(163, 230, 53, 0.15)",
+                          border: "1px solid rgba(163, 230, 53, 0.3)",
+                          color: "var(--accent)",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          textDecoration: "none",
+                          textAlign: "center"
+                        }}
+                      >
+                        📍 Navigate ↗
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Edit action */}
+                  <button
+                    onClick={() => handleOpenEdit(asg)}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+                      border: "none",
+                      borderRadius: "10px",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)"
+                    }}
+                  >
+                    ✏️ Update Task Details
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
@@ -709,7 +861,7 @@ export default function TechnicianTasksPage() {
               <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px" }}>
                 
                 {/* Client / Contact Person */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="responsive-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Client Name */}
                   <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
                     <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Client Name*</span>
@@ -723,7 +875,7 @@ export default function TechnicianTasksPage() {
                 </div>
 
                 {/* Contact Number / Visit Date */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="responsive-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Contact Number */}
                   <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
                     <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Contact Number*</span>
@@ -743,7 +895,7 @@ export default function TechnicianTasksPage() {
                 </div>
 
                 {/* Instructions */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="responsive-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Admin Instructions */}
                   <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
                     <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Admin Instructions</span>
@@ -763,7 +915,7 @@ export default function TechnicianTasksPage() {
                 </div>
 
                 {/* Assigned For & Completed Status */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="responsive-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   {/* Assigned For */}
                   <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
                     <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Assigned For*</span>
@@ -830,6 +982,35 @@ export default function TechnicianTasksPage() {
           </div>
         </div>
       )}
+
+      {/* CSS Media Queries for Responsive Viewport Switching */}
+      <style jsx global>{`
+        @media (max-width: 991px) {
+          .desktop-only-table {
+            display: none !important;
+          }
+          .mobile-only-cards {
+            display: flex !important;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+          }
+        }
+        @media (min-width: 992px) {
+          .desktop-only-table {
+            display: table !important;
+          }
+          .mobile-only-cards {
+            display: none !important;
+          }
+        }
+        @media (max-width: 580px) {
+          .responsive-form-row {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+        }
+      `}</style>
 
     </div>
   );

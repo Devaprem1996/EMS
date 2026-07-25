@@ -31,9 +31,21 @@ export async function GET(req: NextRequest) {
     const stage = searchParams.get("stage") || "ENQUIRY";
     const status = searchParams.get("status") || "all";
     const search = searchParams.get("search") || "";
+    
+    // Pagination Parameters
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit") || "10";
+    const isPaginated = pageParam !== null;
+    const page = isPaginated ? Math.max(parseInt(pageParam!), 1) : 1;
+    const limit = isPaginated ? Math.max(parseInt(limitParam), 1) : 10;
+
+    const category = searchParams.get("category") || "all";
+    const year = searchParams.get("year") || "all";
 
     // 2. Cache Hit Check
-    const cacheKey = tenantId ? `jobs:${stage}:${status}:${search}:tenant:${tenantId}` : `jobs:${stage}:${status}:${search}`;
+    const cacheKey = tenantId 
+      ? `jobs:${stage}:${status}:${search}:${category}:${year}:page:${page}:limit:${limit}:paginated:${isPaginated}:tenant:${tenantId}` 
+      : `jobs:${stage}:${status}:${search}:${category}:${year}:page:${page}:limit:${limit}:paginated:${isPaginated}`;
     const cachedJobs = serverCache.get(cacheKey);
     if (cachedJobs) {
       return NextResponse.json(cachedJobs);
@@ -49,6 +61,19 @@ export async function GET(req: NextRequest) {
 
     if (status !== "all") {
       whereClause.currentStatus = status;
+    }
+
+    if (category !== "all") {
+      whereClause.requirementCategory = category;
+    }
+
+    if (year !== "all") {
+      const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+      const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
+      whereClause.amcDate = {
+        gte: startOfYear,
+        lte: endOfYear,
+      };
     }
 
     if (search) {
@@ -67,8 +92,15 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    // Fetch Total count for metadata if paginated
+    const totalItems = isPaginated ? await prisma.ticket.count({ where: whereClause }) : 0;
+
     const jobs = await prisma.ticket.findMany({
       where: whereClause,
+      ...(isPaginated ? {
+        skip: (page - 1) * limit,
+        take: limit,
+      } : {}),
       include: {
         customer: true,
         assignments: {
@@ -134,10 +166,23 @@ export async function GET(req: NextRequest) {
       })),
     }));
 
-    // Cache results for 1 minute
-    serverCache.set(cacheKey, mappedJobs, 60000);
+    // Construct final response
+    const responsePayload = isPaginated 
+      ? {
+          data: mappedJobs,
+          meta: {
+            totalItems,
+            totalPages: Math.ceil(totalItems / limit),
+            currentPage: page,
+            limit,
+          }
+        }
+      : mappedJobs;
 
-    return NextResponse.json(mappedJobs, {
+    // Cache results for 1 minute
+    serverCache.set(cacheKey, responsePayload, 60000);
+
+    return NextResponse.json(responsePayload, {
       headers: {
         "Cache-Control": "no-store, max-age=0, must-revalidate",
       },

@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import useSWR from "swr";
+import RefillEditModal from "@/components/RefillEditModal";
+import AssignTechnicianModal from "@/components/AssignTechnicianModal";
 import KanbanBoard from "@/components/KanbanBoard";
 
 interface Customer {
@@ -186,7 +188,7 @@ export default function RefillingDashboardPage() {
   const fetcher = (url: string) => fetch(url).then(r => r.json());
 
   const { data: jobsData, mutate: mutateJobs } = useSWR(
-    `/api/jobs?stage=REFILLING&status=${statusFilter}&search=${encodeURIComponent(search)}`,
+    `/api/jobs?stage=REFILLING&status=${statusFilter}&search=${encodeURIComponent(search)}&category=${selectedCategoryTab}&year=${yearFilter}&page=${currentPage}&limit=${pageSize}`,
     fetcher
   );
 
@@ -196,8 +198,8 @@ export default function RefillingDashboardPage() {
   );
 
   useEffect(() => {
-    if (jobsData) {
-      setJobs(jobsData);
+    if (jobsData && jobsData.data) {
+      setJobs(jobsData.data);
     }
   }, [jobsData]);
 
@@ -272,42 +274,6 @@ export default function RefillingDashboardPage() {
     }
   }, [deliveredDate, amcYears]);
 
-  // Submit Update Refilling Form
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedJob) return;
-
-    try {
-      const res = await fetch(`/api/jobs/${selectedJob.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deliveredDate: deliveredDate || null,
-          amcYears: parseInt(amcYears, 10),
-          currentStatus,
-          followUpDate: followUpDate || null,
-          newRemarks: newRemarks.trim() || null,
-          stageData: customFieldsData,
-          serialNumber: serialNumber || null,
-          capacity: capacity || null,
-          extinguisherType: extinguisherType || null,
-          itemDescription: itemDescription || null,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update refilling details");
-
-      setSuccessMsg("Refilling details updated successfully!");
-      setIsEditModalOpen(false);
-      fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
-  };
-
   const handleStatusChange = async (ticket: Job, newStatus: string) => {
     try {
       const res = await fetch(`/api/jobs/${ticket.id}`, {
@@ -333,44 +299,7 @@ export default function RefillingDashboardPage() {
   // Handle Assign Technician Modal Open
   const handleOpenAssign = (job: Job) => {
     setSelectedJob(job);
-    setVisitDate(job.visitDate ? job.visitDate.split("T")[0] : "");
-    setAdminInstructions(job.adminInstructions || "");
-    setTechnicianInstructions(job.technicianInstructions || "");
-    setCustomerLocation(job.customerLocation || "");
-    setSelectedTechIds(job.assignments.map(a => a.technicianId));
     setIsAssignModalOpen(true);
-  };
-
-  // Submit Technician Assignment
-  const handleAssignSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedJob) return;
-
-    try {
-      const res = await fetch(`/api/jobs/${selectedJob.id}/assign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitDate: visitDate || null,
-          adminInstructions,
-          technicianInstructions,
-          customerLocation,
-          technicianIds: selectedTechIds,
-          assignFor: "REFILLING",
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to assign technician");
-
-      setSuccessMsg("Technician assigned successfully!");
-      setIsAssignModalOpen(false);
-      fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
   };
 
   // Handle tech checkbox toggle
@@ -393,35 +322,23 @@ export default function RefillingDashboardPage() {
 
   // Extract unique years from deliveredDate or amcDate for the filter dropdown
   const getFilterYears = () => {
-    const yearsSet = new Set<string>();
-    jobs.forEach(job => {
-      if (job.amcDate) {
-        const year = new Date(job.amcDate).getFullYear().toString();
-        yearsSet.add(year);
-      }
-    });
-    // Add current year as fallback if empty
-    if (yearsSet.size === 0) {
-      yearsSet.add(new Date().getFullYear().toString());
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear - 2; y <= currentYear + 4; y++) {
+      years.push(String(y));
     }
-    return Array.from(yearsSet).sort();
+    return years;
   };
 
-  // Filter jobs by year locally
-  const filteredJobs = jobs.filter(job => {
-    if (selectedCategoryTab !== "all" && job.requirementCategory !== selectedCategoryTab) return false;
-    if (yearFilter === "all") return true;
-    if (!job.amcDate) return false;
-    const jobYear = new Date(job.amcDate).getFullYear().toString();
-    return jobYear === yearFilter;
-  });
+  // Server-side filtered jobs
+  const filteredJobs = jobs;
 
-  // Client-side pagination calculations
-  const totalItems = filteredJobs.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  // Server-side pagination metadata
+  const totalItems = jobsData?.meta?.totalItems || 0;
+  const totalPages = jobsData?.meta?.totalPages || 1;
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + jobs.length, totalItems);
+  const paginatedJobs = jobs;
 
   return (
     <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
@@ -975,368 +892,35 @@ export default function RefillingDashboardPage() {
 
       {/* Update Refilling Modal */}
       {isEditModalOpen && selectedJob && (
-        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
-          <div className="slide-over-card theme-modal-card">
-            
-            <div className="slide-over-header theme-modal-card-header">
-              <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold" }}>Update Refilling Details</h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
-                
-                {/* Card 1: Customer Info */}
-                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                  <div 
-                    onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
-                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Calendar size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Customer & Site Information</span>
-                    </div>
-                    {isCustomerCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </div>
-
-                  {isCustomerCardOpen && (
-                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Client (Company Name)</label>
-                          <input type="text" value={selectedJob.customer?.companyName || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Person Name</label>
-                          <input type="text" value={selectedJob.customer?.contactPerson || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                      </div>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 1</label>
-                          <input type="text" value={selectedJob.customer?.phone || ""} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Contact Phone 2</label>
-                          <input type="text" value={selectedJob.customer?.phone2 || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Email Address</label>
-                        <input type="text" value={selectedJob.customer?.email || "N/A"} readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Site Address</label>
-                        <textarea value={selectedJob.customer?.address || "No site address logged."} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card 2: Equipment / Cylinder Details */}
-                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                  <div 
-                    onClick={() => setIsEquipmentCardOpen(!isEquipmentCardOpen)}
-                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "15px", paddingBottom: "10px", borderBottom: "1px solid var(--border-glass)" }}>
-                      <Zap size={16} style={{ color: "#a855f7" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Item & Equipment Specifications</span>
-                    </div>
-                    {isEquipmentCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </div>
-
-                  {isEquipmentCardOpen && (
-                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.serialNumber || "Cylinder Tag / Serial No"}</label>
-                          <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. CYL-99823" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.extinguisherType || "Extinguisher Type"}</label>
-                          <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} className="robust-select">
-                            <option value="">Select Type</option>
-                            <option value="CO2">CO2</option>
-                            <option value="DCP">DCP</option>
-                            <option value="Water">Water</option>
-                            <option value="Foam">Foam</option>
-                            <option value="Clean Agent">Clean Agent</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.capacity || "Cylinder Capacity"}</label>
-                          <input type="text" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g. 2 Kg, 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.itemDescription || "Item Description"}</label>
-                          <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Model X-100" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card 3: Refilling Status & AMC Dates */}
-                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                  <div 
-                    onClick={() => setIsStatusCardOpen(!isStatusCardOpen)}
-                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Calendar size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-primary)" }}>Refilling Status & AMC Dates</span>
-                    </div>
-                    {isStatusCardOpen ? <ChevronUp size={14} style={{ color: "var(--text-primary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-primary)" }} />}
-                  </div>
-
-                  {isStatusCardOpen && (
-                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.deliveredDate || "Delivered Date"}*</label>
-                          <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcYears || "No. of Years"}*</label>
-                          <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required className="robust-select">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
-                              <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="responsive-form-grid">
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcDate || "Next Refilling Date (Calculated)"}*</label>
-                          <input type="date" value={calculatedAmcDate} readOnly style={{ width: "100%", padding: "7px", borderRadius: "6px", color: "#10b981", fontWeight: "bold", cursor: "not-allowed" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Current Refilling Status*</label>
-                          <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required className="robust-select">
-                            <option value="Refilling Order Received">Refilling Order Received</option>
-                            <option value="Quotation Sent">Quotation Sent</option>
-                            <option value="Follow-up In Progress">Follow-up In Progress</option>
-                            <option value="Order Confirmed">Order Confirmed</option>
-                            <option value="Order Delivered">Order Delivered</option>
-                            <option value="Order Dropped">Order Dropped</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card 4: Requirement Notes Context */}
-                {requirementDetails && (
-                  <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", background: "var(--bg-input)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <MessageSquare size={16} style={{ color: "var(--accent)" }} />
-                        <span style={{ fontWeight: "600", fontSize: "13px" }}>Original Enquiry Context</span>
-                      </div>
-                    </div>
-                    <div style={{ padding: "12px", borderTop: "1px solid var(--border-glass)" }}>
-                      <textarea value={requirementDetails} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Card 5: Follow Up */}
-                <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                  <div 
-                    onClick={() => setIsFollowUpCardOpen(!isFollowUpCardOpen)}
-                    style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <MessageSquare size={16} style={{ color: "var(--accent)" }} />
-                      <span style={{ fontWeight: "600", fontSize: "13px" }}>Follow Up Notes</span>
-                    </div>
-                    {isFollowUpCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </div>
-
-                  {isFollowUpCardOpen && (
-                    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
-                      <div>
-                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Scheduled Follow-up Date</label>
-                        <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Add Remarks / New Note</label>
-                        <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                      </div>
-                      
-                      <div style={{ marginTop: "5px" }}>
-                        <h4 style={{ fontSize: "12px", fontWeight: "bold", borderBottom: "1px solid var(--border-glass)", paddingBottom: "4px", marginBottom: "6px" }}>Followup History</h4>
-                        <div style={{ maxHeight: "150px", overflowY: "auto", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {selectedJob.followUps.length === 0 ? (
-                            <div style={{ color: "var(--text-muted)", fontSize: "12px" }}>No prior follow-up history logs.</div>
-                          ) : (
-                            selectedJob.followUps.map(f => (
-                              <div key={f.id} style={{ fontSize: "12.5px", borderBottom: "1px solid var(--border-glass)", paddingBottom: "4px" }}>
-                                <span style={{ color: "var(--accent)", fontWeight: "500" }}>{formatDate(f.createdAt)}</span>: {f.remarks}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Custom Fields in Edit modal */}
-                {config?.stages?.REFILLING?.fields && config.stages.REFILLING.fields.length > 0 && (
-                  <div style={{ border: "1px solid var(--border-glass)", borderRadius: "8px", overflow: "hidden" }}>
-                    <div 
-                      onClick={() => setIsCustomFieldsCardOpen(!isCustomFieldsCardOpen)}
-                      style={{ padding: "10px 12px", background: "var(--bg-input)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <Settings size={16} style={{ color: "var(--accent)" }} />
-                        <span style={{ fontWeight: "600", fontSize: "13px" }}>Custom Fields</span>
-                      </div>
-                      {isCustomFieldsCardOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </div>
-
-                    {isCustomFieldsCardOpen && (
-                      <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
-                        {config.stages.REFILLING.fields.map(field => {
-                          const val = customFieldsData[field.key] ?? "";
-                          const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
-                          return (
-                            <div key={field.key}>
-                              <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>
-                                {field.label} {field.required ? "*" : ""}
-                              </label>
-                              {field.type === "boolean" ? (
-                                <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
-                              ) : field.type === "select" ? (
-                                <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }}>
-                                  <option value="">SELECT</option>
-                                  {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                </select>
-                              ) : field.type === "multi-select" ? (
-                                <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                              ) : (
-                                <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-              </div>
-
-              {/* Modal Footer */}
-              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Update Details</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <RefillEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          selectedJob={selectedJob}
+          config={config}
+          onSuccess={() => {
+            fetchData();
+            setIsEditModalOpen(false);
+          }}
+          onError={setErrorMsg}
+        />
       )}
 
       {/* Assign Technician Modal */}
       {isAssignModalOpen && selectedJob && (
-        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
-          <div className="slide-over-card theme-modal-card">
-            
-            <div className="slide-over-header theme-modal-card-header">
-              <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold" }}>Assign Technician</h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
-            </div>
-
-            <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body" style={{ gap: "12px", padding: "1.5rem" }}>
-                
-                {/* Client info summary */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", background: "var(--bg-input)", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-glass)" }}>
-                  <div>
-                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CLIENT NAME</span>
-                    <span style={{ fontSize: "12px", fontWeight: "bold" }}>{selectedJob.customer?.companyName || "N/A"}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT PERSON</span>
-                    <span style={{ fontSize: "12px" }}>{selectedJob.customer?.contactPerson}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: "10px", color: "var(--text-secondary)", display: "block" }}>CONTACT NUMBER</span>
-                    <span style={{ fontSize: "12px" }}>{selectedJob.customer?.phone}</span>
-                  </div>
-                </div>
-
-                <div className="responsive-form-grid">
-                  <div>
-                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Visit/Service Date *</label>
-                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Assign For</label>
-                    <input type="text" value="REFILLING" readOnly className="theme-input-disabled" style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Address</label>
-                  <textarea value={selectedJob.customer?.address || ""} readOnly className="theme-input-disabled" rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                </div>
-
-                <div className="responsive-form-grid">
-                  <div>
-                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Admin Instructions</label>
-                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Technician Instructions</label>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Customer Location</label>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Coordinates or URL..." style={{ width: "100%", padding: "7px", borderRadius: "6px" }} />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "4px", fontWeight: "bold" }}>Assign REFILLING To (Technicians) *</label>
-                  <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "8px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {technicians.length === 0 ? (
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>No active technicians found.</div>
-                    ) : (
-                      technicians.map(tech => (
-                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedTechIds.includes(tech.id)}
-                            onChange={() => handleTechToggle(tech.id)}
-                            style={{ width: "15px", height: "15px", cursor: "pointer" }}
-                          />
-                          <span>{tech.fullName} ({tech.phone})</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                  <p style={{ fontSize: "10.5px", color: "#ff6c37", marginTop: "6px", lineHeight: "1.3", marginBlockEnd: 0 }}>
-                    * Deselect existing technician (if any) for new assignment
-                    <br />* Delete existing assignment from technician view screen
-                  </p>
-                </div>
-
-              </div>
-
-              <div className="slide-over-footer theme-modal-card-header" style={{ padding: "12px 1.5rem", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "var(--accent)", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer", fontWeight: "600" }}>Assign</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AssignTechnicianModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          selectedJob={selectedJob}
+          technicians={technicians}
+          assignFor="REFILLING"
+          onSuccess={() => {
+            fetchData();
+            setIsAssignModalOpen(false);
+            setSuccessMsg("Technician assigned successfully!");
+            setTimeout(() => setSuccessMsg(null), 3000);
+          }}
+          onError={setErrorMsg}
+        />
       )}
 
     </div>

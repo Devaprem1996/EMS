@@ -28,10 +28,20 @@ export async function GET(req: NextRequest) {
     const tenantId = session.tenantId;
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const type = searchParams.get("type") || "all";
+
+    // Pagination Parameters
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit") || "10";
+    const isPaginated = pageParam !== null;
+    const page = isPaginated ? Math.max(parseInt(pageParam!), 1) : 1;
+    const limit = isPaginated ? Math.max(parseInt(limitParam), 1) : 10;
 
     // 2. Cache Hit Check
     const cacheScope = session.role === "TECHNICIAN" ? session.userId : "all";
-    const cacheKey = tenantId ? `tasks:${cacheScope}:${search}:tenant:${tenantId}` : `tasks:${cacheScope}:${search}`;
+    const cacheKey = tenantId 
+      ? `tasks:${cacheScope}:${search}:${type}:page:${page}:limit:${limit}:paginated:${isPaginated}:tenant:${tenantId}` 
+      : `tasks:${cacheScope}:${search}:${type}:page:${page}:limit:${limit}:paginated:${isPaginated}`;
     const cachedData = serverCache.get(cacheKey);
     if (cachedData) {
       return NextResponse.json(cachedData);
@@ -44,6 +54,13 @@ export async function GET(req: NextRequest) {
     if (tenantId) {
       whereClause.ticket = {
         tenantId: tenantId
+      };
+    }
+
+    if (type !== "all") {
+      whereClause.ticket = {
+        ...whereClause.ticket,
+        assignmentType: type.toUpperCase()
       };
     }
 
@@ -82,8 +99,15 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    // Fetch Total count for metadata if paginated
+    const totalItems = isPaginated ? await prisma.ticketAssignment.count({ where: whereClause }) : 0;
+
     const assignments = await prisma.ticketAssignment.findMany({
       where: whereClause,
+      ...(isPaginated ? {
+        skip: (page - 1) * limit,
+        take: limit,
+      } : {}),
       include: {
         employee: {
           select: {
@@ -166,10 +190,23 @@ export async function GET(req: NextRequest) {
       completedAt: asg.completedAt,
     }));
 
-    // Cache the tasks list for 1 minute
-    serverCache.set(cacheKey, mappedAssignments, 60000);
+    // Construct final response
+    const responsePayload = isPaginated 
+      ? {
+          data: mappedAssignments,
+          meta: {
+            totalItems,
+            totalPages: Math.ceil(totalItems / limit),
+            currentPage: page,
+            limit,
+          }
+        }
+      : mappedAssignments;
 
-    return NextResponse.json(mappedAssignments, {
+    // Cache the tasks list for 1 minute
+    serverCache.set(cacheKey, responsePayload, 60000);
+
+    return NextResponse.json(responsePayload, {
       headers: {
         "Cache-Control": "no-store, max-age=0, must-revalidate",
       },

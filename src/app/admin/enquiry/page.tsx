@@ -26,6 +26,9 @@ import {
   ChevronsRight
 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
+import DynamicForm from "@/components/DynamicForm";
+import EnquiryEditModal from "@/components/EnquiryEditModal";
+import AssignTechnicianModal from "@/components/AssignTechnicianModal";
 import KanbanBoard from "@/components/KanbanBoard";
 
 interface Customer {
@@ -144,22 +147,26 @@ export default function EnquiryDashboardPage() {
     };
   }, []);
 
-  const toggleTableDensity = (density: "compact" | "normal") => {
-    setTableDensity(density);
-    localStorage.setItem("ems_table_density", density);
-  };
+  const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-  const filteredEnquiries = enquiries.filter(enq => {
-    if (selectedCategoryTab === "all") return true;
-    return enq.requirementCategory === selectedCategoryTab;
-  });
+  const { data: enqData, mutate: mutateEnquiries } = useSWR(
+    `/api/jobs?stage=ENQUIRY&status=${statusFilter}&search=${encodeURIComponent(search)}&category=${selectedCategoryTab}&page=${currentPage}&limit=${pageSize}`,
+    fetcher
+  );
 
-  // Client-side pagination calculations
-  const totalItems = filteredEnquiries.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const { data: techRawData, mutate: mutateTechnicians } = useSWR(
+    "/api/employees?status=active",
+    fetcher
+  );
+
+  const filteredEnquiries = enquiries;
+
+  // Server-side pagination metadata
+  const totalItems = enqData?.meta?.totalItems || 0;
+  const totalPages = enqData?.meta?.totalPages || 1;
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const paginatedEnquiries = filteredEnquiries.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + enquiries.length, totalItems);
+  const paginatedEnquiries = enquiries;
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -236,21 +243,14 @@ export default function EnquiryDashboardPage() {
   // Bulk import instructions panel
   const [showImportGuide, setShowImportGuide] = useState(false);
 
-  const fetcher = (url: string) => fetch(url).then(r => r.json());
-
-  const { data: enqData, mutate: mutateEnquiries } = useSWR(
-    `/api/jobs?stage=ENQUIRY&status=${statusFilter}&search=${encodeURIComponent(search)}`,
-    fetcher
-  );
-
-  const { data: techRawData, mutate: mutateTechnicians } = useSWR(
-    "/api/employees?status=active",
-    fetcher
-  );
+  const toggleTableDensity = (density: "compact" | "normal") => {
+    setTableDensity(density);
+    localStorage.setItem("ems_table_density", density);
+  };
 
   useEffect(() => {
-    if (enqData) {
-      setEnquiries(enqData);
+    if (enqData && enqData.data) {
+      setEnquiries(enqData.data);
     }
   }, [enqData]);
 
@@ -413,52 +413,17 @@ export default function EnquiryDashboardPage() {
     }
   }, [deliveredDate, amcYears]);
 
-  // Submit Edit Enquiry Updates
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEnquiry) return;
+  // Open Assign Technician Modal
+  const handleOpenAssign = (enq: Enquiry) => {
+    setIsBulkAssign(false);
+    setSelectedEnquiry(enq);
+    setIsAssignModalOpen(true);
+  };
 
-    if (requestedDeliveryDate && enquiryDate && new Date(requestedDeliveryDate) < new Date(enquiryDate)) {
-      setErrorMsg("Requested Delivery Date cannot be before the Enquiry Date");
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/jobs/${selectedEnquiry.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyName,
-          contactPerson,
-          phone,
-          phone2: phone2 || null,
-          email: email || null,
-          address,
-          requirementCategory,
-          enquirySource,
-          requirementDetails,
-          requestedDeliveryDate: requestedDeliveryDate || null,
-          enquiryDate: enquiryDate || null,
-          currentStatus,
-          followUpDate: followUpDate || null,
-          newRemarks: newRemarks.trim() || null,
-          deliveredDate: deliveredDate || null,
-          amcYears: parseInt(amcYears, 10),
-          stageData: customFieldsData,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update enquiry");
-
-      setSuccessMsg("Enquiry updated successfully!");
-      setIsEditModalOpen(false);
-      fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
+  const handleOpenBulkAssign = () => {
+    setIsBulkAssign(true);
+    setSelectedEnquiry(null);
+    setIsAssignModalOpen(true);
   };
 
   const handleStatusChange = async (ticket: Enquiry, newStatus: string) => {
@@ -479,74 +444,6 @@ export default function EnquiryDashboardPage() {
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to update status");
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
-  };
-
-  // Open Assign Technician Modal
-  const handleOpenAssign = (enq: Enquiry) => {
-    setIsBulkAssign(false);
-    setSelectedEnquiry(enq);
-    setVisitDate(enq.visitDate ? enq.visitDate.split("T")[0] : "");
-    setAdminInstructions(enq.adminInstructions || "");
-    setTechnicianInstructions(enq.technicianInstructions || "");
-    setCustomerLocation(enq.customerLocation || "");
-    // Pre-check currently assigned techs
-    setSelectedTechIds(enq.assignments.map(a => a.technicianId));
-
-    setIsAssignModalOpen(true);
-  };
-
-  const handleOpenBulkAssign = () => {
-    setIsBulkAssign(true);
-    setSelectedEnquiry(null);
-    setVisitDate("");
-    setAdminInstructions("");
-    setTechnicianInstructions("");
-    setCustomerLocation("");
-    setSelectedTechIds([]);
-    setIsAssignModalOpen(true);
-  };
-
-  // Submit Assignments
-  const handleAssignSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isBulkAssign && !selectedEnquiry) return;
-
-    try {
-      const url = isBulkAssign ? "/api/jobs/bulk-assign" : `/api/jobs/${selectedEnquiry!.id}/assign`;
-      const payload = isBulkAssign
-        ? {
-            jobIds: selectedJobIds,
-            technicianIds: selectedTechIds,
-            visitDate: visitDate || null,
-            adminInstructions,
-            technicianInstructions,
-            customerLocation,
-          }
-        : {
-            visitDate: visitDate || null,
-            adminInstructions,
-            technicianInstructions,
-            customerLocation,
-            technicianIds: selectedTechIds,
-          };
-
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update technician assignments");
-
-      setSuccessMsg(isBulkAssign ? "Bulk assignments completed successfully!" : "Assignments updated successfully!");
-      setIsAssignModalOpen(false);
-      fetchData();
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
       setTimeout(() => setErrorMsg(null), 4000);
     }
   };
@@ -1848,353 +1745,37 @@ export default function EnquiryDashboardPage() {
 
       {/* Edit Enquiry Modal (Tabbed Layout) */}
       {isEditModalOpen && selectedEnquiry && (
-        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
-          <div className="slide-over-card theme-modal-card" style={{ maxWidth: "660px" }}>
-            
-            {/* Modal Header */}
-            <div className="slide-over-header theme-modal-card-header">
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "#3b82f6" }}>{selectedEnquiry.jobNumber}</span></h2>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
-            </div>
-
-            {/* Tabs List */}
-            <div style={{ display: "flex", background: "#13131c", borderBottom: "1px solid #2d2d3a", overflowX: "auto" }}>
-              <button 
-                onClick={() => setActiveTab("client")}
-                style={{ padding: "12px 18px", background: activeTab === "client" ? "#181822" : "transparent", border: "none", borderBottom: activeTab === "client" ? "2px solid #ff4d80" : "none", color: activeTab === "client" ? "#ff4d80" : "#a0aec0", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}
-              >
-                Client Details
-              </button>
-              <button 
-                onClick={() => setActiveTab("requirement")}
-                style={{ padding: "12px 18px", background: activeTab === "requirement" ? "#181822" : "transparent", border: "none", borderBottom: activeTab === "requirement" ? "2px solid #ff4d80" : "none", color: activeTab === "requirement" ? "#ff4d80" : "#a0aec0", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}
-              >
-                Requirement Info
-              </button>
-              <button 
-                onClick={() => setActiveTab("status")}
-                style={{ padding: "12px 18px", background: activeTab === "status" ? "#181822" : "transparent", border: "none", borderBottom: activeTab === "status" ? "2px solid #ff4d80" : "none", color: activeTab === "status" ? "#ff4d80" : "#a0aec0", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}
-              >
-                Enquiry Status & Dates
-              </button>
-              <button 
-                onClick={() => setActiveTab("followup")}
-                style={{ padding: "12px 18px", background: activeTab === "followup" ? "#181822" : "transparent", border: "none", borderBottom: activeTab === "followup" ? "2px solid #ff4d80" : "none", color: activeTab === "followup" ? "#ff4d80" : "#a0aec0", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}
-              >
-                Follow Up
-              </button>
-              {currentStatus === "Order Delivered" && (
-                <button 
-                  onClick={() => setActiveTab("amc")}
-                  style={{ padding: "12px 18px", background: activeTab === "amc" ? "#181822" : "transparent", border: "none", borderBottom: activeTab === "amc" ? "2px solid #ff4d80" : "none", color: activeTab === "amc" ? "#ff4d80" : "#a0aec0", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}
-                >
-                  Delivery & AMC
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body">
-                
-                {/* 1. Client Details Tab */}
-                {activeTab === "client" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client / Company Name *</label>
-                      <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Person Name *</label>
-                        <input type="text" value={contactPerson} onChange={e => setContactPerson(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 1 *</label>
-                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact No 2</label>
-                        <input type="tel" value={phone2} onChange={e => setPhone2(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Email ID</label>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address *</label>
-                      <textarea value={address} onChange={e => setAddress(e.target.value)} required rows={3} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Requirement Info Tab */}
-                {activeTab === "requirement" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement Category *</label>
-                        <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                          <option value="SELECT">SELECT</option>
-                          {(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"]).map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Source of Enquiry *</label>
-                        <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                          <option value="SELECT">SELECT</option>
-                          {(config?.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"]).map(src => (
-                            <option key={src} value={src}>{src}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requirement</label>
-                      <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Requirement details, item count, specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                    </div>
-                    {/* Custom Fields in Edit modal */}
-                    {config?.stages?.ENQUIRY?.fields && config.stages.ENQUIRY.fields.length > 0 && (
-                      <div style={{ marginTop: "15px", padding: "15px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px" }}>
-                        <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "var(--accent)", marginBottom: "12px" }}>Custom Fields</h3>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          {config.stages.ENQUIRY.fields.map(field => {
-                            const val = customFieldsData[field.key] ?? "";
-                            const onChange = (newVal: any) => setCustomFieldsData({ ...customFieldsData, [field.key]: newVal });
-                            return (
-                              <div key={field.key}>
-                                <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>
-                                  {field.label} {field.required ? "*" : ""}
-                                </label>
-                                {field.type === "boolean" ? (
-                                  <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
-                                ) : field.type === "select" ? (
-                                  <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                                    <option value="">SELECT</option>
-                                    {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                  </select>
-                                ) : field.type === "multi-select" ? (
-                                  <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                                ) : (
-                                  <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 3. Enquiry Status & Dates Tab */}
-                {activeTab === "status" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Enquiry Date *</label>
-                        <input type="date" value={enquiryDate} onChange={e => setEnquiryDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Requested Delivery Date</label>
-                        <input type="date" value={requestedDeliveryDate} onChange={e => setRequestedDeliveryDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Enquiry Status *</label>
-                      <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                        <option value="Enquiry Registered">Enquiry Registered</option>
-                        <option value="Order Confirmed">Order Confirmed</option>
-                        <option value="Order Delivered">Order Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                      <p style={{ fontSize: "12px", color: "#a0aec0", marginTop: "10px", lineHeight: "1.4" }}>
-                        💡 Changing status updates task flow logic:
-                        <br />• <b>Order Confirmed</b> enables the Assign Technicians button.
-                        <br />• <b>Order Delivered</b> displays the Delivery & AMC setup tab.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Follow Up Tab */}
-                {activeTab === "followup" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Next Follow-up Date</label>
-                      <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>New Follow-up Notes / Remarks</label>
-                      <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                    </div>
-
-                    <div style={{ marginTop: "10px" }}>
-                      <h4 style={{ fontSize: "13px", fontWeight: "bold", borderBottom: "1px solid #2d2d3a", paddingBottom: "6px", marginBottom: "8px" }}>Follow-up History</h4>
-                      <div style={{ maxHeight: "150px", overflowY: "auto", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {selectedEnquiry.followUps.length === 0 ? (
-                          <div style={{ color: "#718096", fontSize: "12px" }}>No prior follow-up history logs.</div>
-                        ) : (
-                          selectedEnquiry.followUps.map(f => (
-                            <div key={f.id} style={{ fontSize: "12px", borderBottom: "1px solid #1a1a24", paddingBottom: "6px" }}>
-                              <span style={{ color: "#ff4d80", fontWeight: "500" }}>{formatDate(f.createdAt)}</span>: {f.remarks}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. Delivery & AMC Tab */}
-                {activeTab === "amc" && currentStatus === "Order Delivered" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Delivered Date</label>
-                      <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>No. of Years</label>
-                      <select value={amcYears} onChange={e => setAmcYears(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
-                          <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ background: "#111116", border: "1px solid #2d2d3a", padding: "12px", borderRadius: "6px", marginTop: "10px" }}>
-                      <label style={{ fontSize: "11px", color: "#a0aec0", display: "block", textTransform: "uppercase" }}>Calculated AMC Date</label>
-                      <span style={{ fontSize: "18px", color: "#10b981", fontWeight: "bold", fontFamily: "monospace" }}>
-                        {calculatedAmcDate ? formatDate(calculatedAmcDate) : "Please select Delivered Date"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Modal Footer */}
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <EnquiryEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          selectedEnquiry={selectedEnquiry}
+          config={config}
+          onSuccess={() => {
+            fetchData();
+            setIsEditModalOpen(false);
+          }}
+          onError={setErrorMsg}
+        />
       )}
 
       {/* Assign Technician Modal */}
       {isAssignModalOpen && (isBulkAssign || selectedEnquiry) && (
-        <div className="slide-over-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsAssignModalOpen(false); }}>
-          <div className="slide-over-card theme-modal-card">
-            
-            <div className="slide-over-header theme-modal-card-header">
-              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>
-                {isBulkAssign ? `Bulk Assign (${selectedJobIds.length} Enquiries)` : "Assign Technician"}
-              </h2>
-              <button onClick={() => setIsAssignModalOpen(false)} style={{ background: "none", border: "none", color: "#718096", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
-            </div>
- 
-            <form onSubmit={handleAssignSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div className="slide-over-body">
-                
-                {/* Client Pre-fill info */}
-                {!isBulkAssign && selectedEnquiry && (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#111116", padding: "10px", borderRadius: "6px", border: "1px solid #1a1a24" }}>
-                    <div>
-                      <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CLIENT NAME</span>
-                      <span style={{ fontSize: "12px", fontWeight: "bold" }}>{selectedEnquiry.customer?.companyName || "N/A"}</span>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT PERSON</span>
-                      <span style={{ fontSize: "12px" }}>{selectedEnquiry.customer?.contactPerson}</span>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "10px", color: "#718096", display: "block" }}>CONTACT NUMBER</span>
-                      <span style={{ fontSize: "12px" }}>{selectedEnquiry.customer?.phone}</span>
-                    </div>
-                  </div>
-                )}
-                {isBulkAssign && (
-                  <div style={{ background: "rgba(59, 130, 246, 0.15)", padding: "12px", borderRadius: "6px", border: "1px solid #3b82f6", color: "#60a5fa", fontSize: "13px" }}>
-                    ℹ️ You are assigning technicians to <b>{selectedJobIds.length}</b> selected enquiries at once.
-                  </div>
-                )}
- 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Visit/Service Date *</label>
-                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Assign For (Not Editable)</label>
-                    <input type="text" value="DELIVERY" readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                  </div>
-                </div>
- 
-                {!isBulkAssign && selectedEnquiry && (
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address (Service Location)</label>
-                    <textarea value={selectedEnquiry.customer?.address || ""} readOnly rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed", resize: "none" }} />
-                  </div>
-                )}
- 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Admin Instructions</label>
-                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Technician Instructions</label>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
-                  </div>
-                </div>
- 
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Location (Google Map URL or Coordinates)</label>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="e.g. 12.9249, 80.1293 or link" style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
-                </div>
- 
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "6px", fontWeight: "bold" }}>Assign ENQUIRY To (Technicians) *</label>
-                  
-                  <div style={{ background: "#111116", border: "1px solid #2d2d3a", borderRadius: "8px", padding: "10px", maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {technicians.length === 0 ? (
-                      <div style={{ fontSize: "12px", color: "#718096" }}>No active technicians found. Add technician roles in Employee Master.</div>
-                    ) : (
-                      technicians.map(tech => (
-                        <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedTechIds.includes(tech.id)}
-                            onChange={() => handleTechToggle(tech.id)}
-                            style={{ width: "16px", height: "16px", cursor: "pointer" }}
-                          />
-                          <span>{tech.fullName} ({tech.phone})</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
- 
-                  <p style={{ fontSize: "11px", color: "#ff6c37", marginTop: "8px", lineHeight: "1.4", marginBlockEnd: 0 }}>
-                    * Deselect existing technician (if any) for new assignment and
-                    * Delete existing assignment from technician view screen
-                  </p>
-                </div>
- 
-              </div>
- 
-              <div className="slide-over-footer">
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff6c37", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Assign</button>
-              </div>
-            </form>
- 
-          </div>
-        </div>
+        <AssignTechnicianModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          selectedJob={selectedEnquiry}
+          technicians={technicians}
+          assignFor="ENQUIRY"
+          onSuccess={() => {
+            fetchData();
+            setIsAssignModalOpen(false);
+            setSuccessMsg("Technician assigned successfully!");
+            setTimeout(() => setSuccessMsg(null), 3000);
+          }}
+          onError={setErrorMsg}
+          isBulkAssign={isBulkAssign}
+          selectedJobIds={selectedJobIds}
+        />
       )}
       {/* Bulk Transition Stage Modal */}
       {isTransitionModalOpen && (

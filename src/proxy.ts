@@ -61,7 +61,7 @@ async function verifySessionLite(cookieValue: string): Promise<{ role: string; e
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Skip middleware for public routes and API routes (API routes handle their own auth)

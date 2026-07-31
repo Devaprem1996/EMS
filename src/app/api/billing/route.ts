@@ -99,19 +99,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Retrieve and validate ticket
+    const ticketWhere: any = {
+      id: ticketId,
+      deletedAt: null,
+    };
+    if (tenantId) {
+      ticketWhere.tenantId = tenantId;
+    }
+
     const ticket = await prisma.ticket.findFirst({
-      where: {
-        id: ticketId,
-        tenantId,
-        deletedAt: null,
-      },
+      where: ticketWhere,
     });
 
     if (!ticket) {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    if (ticket.currentStatus !== "COMPLETED") {
+    const completedStatuses = ["COMPLETED", "Completed", "Service Done", "Order Delivered"];
+    if (ticket.currentStage !== "COMPLETED" && !completedStatuses.includes(ticket.currentStatus)) {
       return NextResponse.json({ error: "Invoice can only be generated for COMPLETED tickets" }, { status: 400 });
     }
 

@@ -193,7 +193,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (session.role !== "ADMIN") {
+    if (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 });
     }
 

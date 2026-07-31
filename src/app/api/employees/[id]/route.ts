@@ -11,7 +11,7 @@ export async function PUT(
 ) {
   try {
     const session = getAuthSession(req);
-    if (!session || session.role !== "ADMIN") {
+    if (!session || (session.role !== "ADMIN" && session.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "Forbidden: Access restricted to admins" }, { status: 403 });
     }
 

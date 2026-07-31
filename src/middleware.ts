@@ -61,7 +61,7 @@ async function verifySessionLite(cookieValue: string): Promise<{ role: string; e
   }
 }
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Skip middleware for public routes and API routes (API routes handle their own auth)
@@ -132,3 +132,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
+

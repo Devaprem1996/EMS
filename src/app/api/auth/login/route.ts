@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import * as bcrypt from "bcryptjs";
 import { signSession } from "@/lib/auth-helpers";
+import { rateLimit } from "@/lib/rate-limiter";
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit login attempts — stricter limit to prevent brute-force
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const { isLimited } = rateLimit(ip, 10, 60000); // 10 attempts per minute
+    if (isLimited) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { mobileNumber, password } = await req.json();
 
     if (!mobileNumber || !password) {

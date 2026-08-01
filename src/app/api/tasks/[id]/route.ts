@@ -78,7 +78,7 @@ export async function PUT(
         if (currentTicket && currentTicket.stageData) {
           try {
             currentData = JSON.parse(currentTicket.stageData);
-          } catch (e) {}
+          } catch (e) { }
         }
         if (signature !== undefined) {
           currentData.signature = signature;

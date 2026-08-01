@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.31.218", "localhost", "127.0.0.1"],
+  ...(process.env.NODE_ENV !== "production" && {
+    allowedDevOrigins: ["192.168.31.218", "localhost", "127.0.0.1"],
+  }),
   async redirects() {
     return [
       {
@@ -36,6 +38,14 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(self), geolocation=(self)",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.turso.io wss://*.turso.io;",
           },
         ],
       },

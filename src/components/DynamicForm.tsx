@@ -37,10 +37,10 @@ export default function DynamicForm({ fields, values, onChange }: DynamicFormPro
                 style={{
                   width: "100%",
                   padding: "0.7rem 0.9rem",
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-glass)",
                   borderRadius: "10px",
-                  color: "#fff",
+                  color: "var(--text-primary)",
                   outline: "none"
                 }}
               />
@@ -55,10 +55,10 @@ export default function DynamicForm({ fields, values, onChange }: DynamicFormPro
                 style={{
                   width: "100%",
                   padding: "0.7rem 0.9rem",
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-glass)",
                   borderRadius: "10px",
-                  color: "#fff",
+                  color: "var(--text-primary)",
                   outline: "none"
                 }}
               />
@@ -88,19 +88,19 @@ export default function DynamicForm({ fields, values, onChange }: DynamicFormPro
                 style={{
                   width: "100%",
                   padding: "0.7rem 0.9rem",
-                  background: "#111116",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-glass)",
                   borderRadius: "10px",
-                  color: "#fff",
+                  color: "var(--text-primary)",
                   outline: "none",
                   cursor: "pointer"
                 }}
               >
-                <option value="" style={{ background: "#111116" }}>Select an option</option>
+                <option value="" style={{ background: "var(--bg-input)", color: "var(--text-primary)" }}>Select an option</option>
                 {field.options?.map((opt) => (
-                  <option key={opt} value={opt} style={{ background: "#111116" }}>
-                    {opt}
-                  </option>
+                  <option key={opt} value={opt} style={{ background: "var(--bg-input)", color: "var(--text-primary)" }}>
+                    {opt
+                  }</option>
                 ))}
               </select>
             )}

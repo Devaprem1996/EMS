@@ -665,6 +665,7 @@ export default function TechnicianTasksPage() {
           selectedAsg={selectedAsg}
           config={config}
           onSuccess={() => {
+            setIsModalOpen(false);
             fetchData();
             setSuccessMsg("Task details updated successfully!");
             setTimeout(() => setSuccessMsg(null), 3000);

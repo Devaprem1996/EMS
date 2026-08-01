@@ -119,7 +119,7 @@ export default function ServiceEditModal({
         <div className="modal-header-accent-bar" />
         
         <div className="slide-over-header theme-modal-card-header">
-          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Service Details: <span style={{ color: "var(--accent)" }}>{selectedJob.jobNumber}</span></h2>
+          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "var(--text-primary)" }}>Edit Service Details: <span style={{ color: "var(--accent)" }}>{selectedJob.jobNumber}</span></h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
         </div>
 
@@ -267,11 +267,11 @@ export default function ServiceEditModal({
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Service Date*</label>
-                      <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                      <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                     </div>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Service Status*</label>
-                      <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                      <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                         <option value="Select">Select</option>
                         <option value="Pending">Pending</option>
                         <option value="Completed">Completed</option>
@@ -309,14 +309,14 @@ export default function ServiceEditModal({
                           {field.type === "boolean" ? (
                             <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
                           ) : field.type === "select" ? (
-                            <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                            <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                               <option value="">SELECT</option>
                               {field.options?.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                           ) : field.type === "multi-select" ? (
-                            <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                            <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                           ) : (
-                            <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                            <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                           )}
                         </div>
                       );

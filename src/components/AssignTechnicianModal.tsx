@@ -138,7 +138,7 @@ export default function AssignTechnicianModal({
         <div className="modal-header-accent-bar" />
         
         <div className="slide-over-header theme-modal-card-header">
-          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>
+          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "var(--text-primary)" }}>
             {isBulkAssign ? `Bulk Assign (${selectedJobIds.length} Jobs)` : "Assign Technician"}
           </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>

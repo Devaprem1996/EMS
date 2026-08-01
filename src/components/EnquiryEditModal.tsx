@@ -207,7 +207,7 @@ export default function EnquiryEditModal({
         
         {/* Modal Header */}
         <div className="slide-over-header theme-modal-card-header">
-          <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Enquiry: <span style={{ color: "var(--accent)" }}>{selectedEnquiry.jobNumber}</span></h2>
+          <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "bold", color: "var(--text-primary)" }}>Edit Enquiry: <span style={{ color: "var(--accent)" }}>{selectedEnquiry.jobNumber}</span></h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={20} /></button>
         </div>
 
@@ -259,31 +259,31 @@ export default function EnquiryEditModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Client / Company Name *</label>
-                  <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact Person Name *</label>
-                    <input type="text" value={contactPerson} onChange={e => setContactPerson(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="text" value={contactPerson} onChange={e => setContactPerson(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact No 1 *</label>
-                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Contact No 2</label>
-                    <input type="tel" value={phone2} onChange={e => setPhone2(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="tel" value={phone2} onChange={e => setPhone2(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Email ID</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                 </div>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Address *</label>
-                  <textarea value={address} onChange={e => setAddress(e.target.value)} required rows={3} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
+                  <textarea value={address} onChange={e => setAddress(e.target.value)} required rows={3} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                 </div>
               </div>
             )}
@@ -294,7 +294,7 @@ export default function EnquiryEditModal({
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requirement Category *</label>
-                    <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                    <select value={requirementCategory} onChange={e => setRequirementCategory(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
                       <option value="SELECT">SELECT</option>
                       {(config?.categories || ["CCTV", "New Fire Extinguisher", "Refilling"]).map((cat: string) => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -303,7 +303,7 @@ export default function EnquiryEditModal({
                   </div>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Source of Enquiry *</label>
-                    <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                    <select value={enquirySource} onChange={e => setEnquirySource(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
                       <option value="SELECT">SELECT</option>
                       {(config?.sources || ["Existing Customers", "Social Media", "Phone Call", "Walk-in", "Email Enquiry", "Field Agent", "Website"]).map((src: string) => (
                         <option key={src} value={src}>{src}</option>
@@ -313,7 +313,7 @@ export default function EnquiryEditModal({
                 </div>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requirement</label>
-                  <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Requirement details, item count, specifications..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
+                  <textarea value={requirementDetails} onChange={e => setRequirementDetails(e.target.value)} rows={4} placeholder="Requirement details, item count, specifications..." style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                 </div>
                 {/* Custom Fields in Edit modal */}
                 {config?.stages?.ENQUIRY?.fields && config.stages.ENQUIRY.fields.length > 0 && (
@@ -331,14 +331,14 @@ export default function EnquiryEditModal({
                             {field.type === "boolean" ? (
                               <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
                             ) : field.type === "select" ? (
-                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                              <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
                                 <option value="">SELECT</option>
                                 {field.options?.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
                               </select>
                             ) : field.type === "multi-select" ? (
-                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                              <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                             ) : (
-                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                              <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                             )}
                           </div>
                         );
@@ -355,16 +355,16 @@ export default function EnquiryEditModal({
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Enquiry Date *</label>
-                    <input type="date" value={enquiryDate} onChange={e => setEnquiryDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="date" value={enquiryDate} onChange={e => setEnquiryDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                   <div>
                     <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Requested Delivery Date</label>
-                    <input type="date" value={requestedDeliveryDate} onChange={e => setRequestedDeliveryDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                    <input type="date" value={requestedDeliveryDate} onChange={e => setRequestedDeliveryDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                   </div>
                 </div>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Enquiry Status *</label>
-                  <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                  <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
                     <option value="Enquiry Registered">Enquiry Registered</option>
                     <option value="Order Confirmed">Order Confirmed</option>
                     <option value="Order Delivered">Order Delivered</option>
@@ -384,16 +384,16 @@ export default function EnquiryEditModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Next Follow-up Date</label>
-                  <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                 </div>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>New Follow-up Notes / Remarks</label>
-                  <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none", fontFamily: "inherit" }} />
+                  <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                 </div>
 
                 <div style={{ marginTop: "10px" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: "bold", borderBottom: "1px solid #2d2d3a", paddingBottom: "6px", marginBottom: "8px" }}>Follow-up History</h4>
-                  <div style={{ maxHeight: "150px", overflowY: "auto", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <h4 style={{ fontSize: "13px", fontWeight: "bold", borderBottom: "1px solid var(--border-glass)", paddingBottom: "6px", marginBottom: "8px" }}>Follow-up History</h4>
+                  <div style={{ maxHeight: "150px", overflowY: "auto", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     {selectedEnquiry.followUps.length === 0 ? (
                       <div style={{ color: "#718096", fontSize: "12px" }}>No prior follow-up history logs.</div>
                     ) : (
@@ -413,17 +413,17 @@ export default function EnquiryEditModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>Delivered Date</label>
-                  <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }} />
                 </div>
                 <div>
                   <label style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>No. of Years</label>
-                  <select value={amcYears} onChange={e => setAmcYears(e.target.value)} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                  <select value={amcYears} onChange={e => setAmcYears(e.target.value)} style={{ width: "100%", padding: "8px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-primary)" }}>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                       <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
                     ))}
                   </select>
                 </div>
-                <div style={{ background: "#111116", border: "1px solid #2d2d3a", padding: "12px", borderRadius: "6px", marginTop: "10px" }}>
+                <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", padding: "12px", borderRadius: "6px", marginTop: "10px" }}>
                   <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", textTransform: "uppercase" }}>Calculated AMC Date</label>
                   <span style={{ fontSize: "18px", color: "#10b981", fontWeight: "bold", fontFamily: "monospace" }}>
                     {calculatedAmcDate ? formatDate(calculatedAmcDate) : "Please select Delivered Date"}

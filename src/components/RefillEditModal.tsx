@@ -164,7 +164,7 @@ export default function RefillEditModal({
         <div className="modal-header-accent-bar" />
         
         <div className="slide-over-header theme-modal-card-header">
-          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "#fff" }}>Edit Refilling Details: <span style={{ color: "var(--accent)" }}>{selectedJob.jobNumber}</span></h2>
+          <h2 style={{ fontSize: "17px", margin: 0, fontWeight: "bold", color: "var(--text-primary)" }}>Edit Refilling Details: <span style={{ color: "var(--accent)" }}>{selectedJob.jobNumber}</span></h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex", alignItems: "center" }}><X size={18} /></button>
         </div>
 
@@ -236,11 +236,11 @@ export default function RefillEditModal({
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.serialNumber || "Cylinder Tag / Serial No"}</label>
-                      <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. CYL-99823" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                      <input type="text" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="e.g. CYL-99823" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                     </div>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.extinguisherType || "Extinguisher Type"}</label>
-                      <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                      <select value={extinguisherType} onChange={e => setExtinguisherType(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                         <option value="">Select Type</option>
                         <option value="CO2">CO2</option>
                         <option value="DCP">DCP</option>
@@ -253,11 +253,11 @@ export default function RefillEditModal({
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.capacity || "Cylinder Capacity"}</label>
-                      <input type="text" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g. 2 Kg, 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                      <input type="text" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g. 2 Kg, 9 Kg" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                     </div>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.itemDescription || "Item Description"}</label>
-                      <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Model X-100" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                      <input type="text" value={itemDescription} onChange={e => setItemDescription(e.target.value)} placeholder="e.g. Model X-100" style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                     </div>
                   </div>
                 </div>
@@ -282,11 +282,11 @@ export default function RefillEditModal({
                   <div className="responsive-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.deliveredDate || "Delivered Date"}*</label>
-                      <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                      <input type="date" value={deliveredDate} onChange={e => setDeliveredDate(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                     </div>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>{config?.brand?.labels?.amcYears || "No. of Years"}*</label>
-                      <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                      <select value={amcYears} onChange={e => setAmcYears(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => (
                           <option key={y} value={String(y)}>{y} {y === 1 ? "Year" : "Years"}</option>
                         ))}
@@ -300,7 +300,7 @@ export default function RefillEditModal({
                     </div>
                     <div>
                       <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Current Refilling Status*</label>
-                      <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                      <select value={currentStatus} onChange={e => setCurrentStatus(e.target.value)} required style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                         <option value="Refilling Order Received">Refilling Order Received</option>
                         <option value="Quotation Sent">Quotation Sent</option>
                         <option value="Follow-up In Progress">Follow-up In Progress</option>
@@ -346,11 +346,11 @@ export default function RefillEditModal({
                 <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-glass)" }}>
                   <div>
                     <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Scheduled Follow-up Date</label>
-                    <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                    <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                   </div>
                   <div>
                     <label style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", marginBottom: "3px" }}>Add Remarks / New Note</label>
-                    <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none", background: "#111116", border: "1px solid #2d2d3a", color: "#fff", fontFamily: "inherit" }} />
+                    <textarea value={newRemarks} onChange={e => setNewRemarks(e.target.value)} rows={3} placeholder="Add follow-up notes updates here..." style={{ width: "100%", padding: "7px", borderRadius: "6px", resize: "none", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)", fontFamily: "inherit" }} />
                   </div>
                   
                   <div style={{ marginTop: "5px" }}>
@@ -398,14 +398,14 @@ export default function RefillEditModal({
                           {field.type === "boolean" ? (
                             <input type="checkbox" checked={!!val} onChange={e => onChange(e.target.checked)} style={{ accentColor: "var(--primary)", transform: "scale(1.1)", cursor: "pointer" }} />
                           ) : field.type === "select" ? (
-                            <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }}>
+                            <select value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }}>
                               <option value="">SELECT</option>
                               {field.options?.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                           ) : field.type === "multi-select" ? (
-                            <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                            <input type="text" value={val} onChange={e => onChange(e.target.value)} placeholder="Comma-separated values" required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                           ) : (
-                            <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "#111116", border: "1px solid #2d2d3a", color: "#fff" }} />
+                            <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={val} onChange={e => onChange(e.target.value)} required={field.required} style={{ width: "100%", padding: "7px", borderRadius: "6px", background: "var(--bg-input)", border: "1px solid var(--border-glass)", color: "var(--text-primary)" }} />
                           )}
                         </div>
                       );

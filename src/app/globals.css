@@ -2604,6 +2604,20 @@ select:disabled {
   border-color: var(--border-glass) !important;
 }
 
+/* Transparent nested inputs support */
+.transparent-input {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+}
+:root[data-theme="light"] .transparent-input {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+}
+
 :root[data-theme="light"] .slide-over-card,
 :root[data-theme="light"] .theme-modal-card {
   background-color: rgba(255, 255, 255, 0.95) !important;

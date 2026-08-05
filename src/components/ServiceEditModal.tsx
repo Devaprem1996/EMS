@@ -86,6 +86,10 @@ export default function ServiceEditModal({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!window.confirm("Are you sure you want to save changes to this service ticket?")) {
+      return;
+    }
+
     if (currentStatus === "Select") {
       onError("Please select a valid Service Status");
       return;

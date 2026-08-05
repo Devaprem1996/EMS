@@ -192,6 +192,19 @@ export default function RefillingDashboardPage() {
     fetcher
   );
 
+  const { data: allJobsData } = useSWR(
+    `/api/jobs?stage=REFILLING&limit=1000`,
+    fetcher
+  );
+
+  const allRefillJobs = Array.isArray(allJobsData) ? allJobsData : (allJobsData?.data || []);
+  const totalRefill = allRefillJobs.length;
+  const activeProd = allRefillJobs.filter((j: any) => !["order delivered", "order dropped"].includes(j.currentStatus?.toLowerCase())).length;
+  const deliveredRefill = allRefillJobs.filter((j: any) => j.currentStatus?.toLowerCase() === "order delivered").length;
+  
+  const activePct = totalRefill > 0 ? Math.round((activeProd / totalRefill) * 100) : 0;
+  const delPct = totalRefill > 0 ? Math.round((deliveredRefill / totalRefill) * 100) : 0;
+
   const { data: techRawData, mutate: mutateTechnicians } = useSWR(
     "/api/employees?status=active",
     fetcher
@@ -214,6 +227,19 @@ export default function RefillingDashboardPage() {
       setLoading(false);
     }
   }, [jobsData, techRawData]);
+
+  useEffect(() => {
+    const handleSearchChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSearch(customEvent.detail);
+      }
+    };
+    window.addEventListener("search-param-change", handleSearchChange);
+    return () => {
+      window.removeEventListener("search-param-change", handleSearchChange);
+    };
+  }, []);
 
   const fetchData = () => {
     mutateJobs();
@@ -275,6 +301,9 @@ export default function RefillingDashboardPage() {
   }, [deliveredDate, amcYears]);
 
   const handleStatusChange = async (ticket: Job, newStatus: string) => {
+    if (!window.confirm(`Are you sure you want to change status of ${ticket.jobNumber} to "${newStatus}"?`)) {
+      return;
+    }
     try {
       const res = await fetch(`/api/jobs/${ticket.id}`, {
         method: "PUT",
@@ -413,8 +442,8 @@ export default function RefillingDashboardPage() {
                 +12% volume
               </span>
             </div>
-            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
-              {jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>refilling jobs</span>
+             <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {totalRefill || jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>refilling jobs</span>
             </div>
           </div>
 
@@ -422,21 +451,21 @@ export default function RefillingDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Active Production ({jobs.filter(j => !["Order Delivered", "Order Dropped"].includes(j.currentStatus)).length})</span>
-                <span style={{ color: "#c084fc" }}>55%</span>
+                <span>Active Production ({activeProd})</span>
+                <span style={{ color: "#c084fc" }}>{activePct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "55%", height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${activePct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Delivered & Verified ({jobs.filter(j => j.currentStatus === "Order Delivered").length})</span>
-                <span style={{ color: "#a3e635" }}>35%</span>
+                <span>Delivered & Verified ({deliveredRefill})</span>
+                <span style={{ color: "#a3e635" }}>{delPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "35%", height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${delPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>
@@ -843,9 +872,34 @@ export default function RefillingDashboardPage() {
           {/* Pagination Footer */}
           {!loading && totalItems > 0 && (
             <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="pagination-info" style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                <span className="pagination-info" style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Page Size:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      background: "rgba(18, 18, 26, 0.6)",
+                      border: "1px solid var(--border-glass)",
+                      borderRadius: "6px",
+                      color: "var(--text-primary)",
+                      padding: "4px 8px",
+                      fontSize: "12px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {[10, 20, 50, 100].map(sz => (
+                      <option key={sz} value={sz}>{sz}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="pagination-controls" style={{ display: "flex", gap: "5px" }}>
                 <button 
                   onClick={() => setCurrentPage(1)} 

@@ -65,6 +65,12 @@ export default function LoginPage() {
         body: JSON.stringify({ mobileNumber: username, password }),
       });
 
+      // Verify that the response is JSON before parsing to avoid parsing errors
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Unable to connect to the server. Please try again later.");
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -90,7 +96,21 @@ export default function LoginPage() {
         router.push("/technician/tasks");
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "An error occurred";
+      console.error("Login failure:", err);
+      let errorMsg = "An unexpected error occurred. Please try again.";
+      if (err instanceof Error) {
+        const msg = err.message.toLowerCase();
+        // If it's a technical JSON parsing/network error, show a clean message
+        if (
+          msg.includes("unexpected token") ||
+          msg.includes("is not valid json") ||
+          msg.includes("failed to fetch")
+        ) {
+          errorMsg = "Unable to connect to the server. Please try again later.";
+        } else {
+          errorMsg = err.message;
+        }
+      }
       setError(errorMsg);
     } finally {
       setLoading(false);

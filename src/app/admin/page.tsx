@@ -42,7 +42,7 @@ export default function AdminCentralOverviewPage() {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  const [stats, setStats] = useState({ enquiries: 0, refills: 0, services: 0, techs: 0 });
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -63,75 +63,58 @@ export default function AdminCentralOverviewPage() {
     fetchStats();
   }, []);
 
-  // Timeframe-Specific Datasets & KPIs
-  const timeframeData = {
+  const defaultTimeframeData = {
     today: {
-      enquiries: stats.enquiries,
-      refills: stats.refills,
-      services: stats.services,
-      techs: stats.techs,
-      leadConv: "+18.4%",
-      onTimeRate: "99.1%",
-      avgTurnaround: "1.2 hrs",
-      quoteRate: "88%",
-      refillRate: "95%",
-      inspectionRate: "98%",
+      enquiries: 0,
+      refills: 0,
+      services: 0,
+      techs: 0,
+      leadConv: "+0%",
+      onTimeRate: "100%",
+      avgTurnaround: "0.0 hrs",
+      quoteRate: "0%",
+      refillRate: "0%",
+      inspectionRate: "0%",
       chartSubtitle: "Hourly Dispatch & Fleet Capacity Breakdown",
-      bars: [
-        { label: "08:00 AM", target: "80%", actual: "75%", valTarget: 16, valActual: 15 },
-        { label: "10:00 AM", target: "90%", actual: "88%", valTarget: 22, valActual: 20 },
-        { label: "12:00 PM", target: "95%", actual: "92%", valTarget: 28, valActual: 26 },
-        { label: "02:00 PM ⚡", target: "100%", actual: "98%", valTarget: 34, valActual: 33, active: true },
-        { label: "04:00 PM", target: "85%", actual: "82%", valTarget: 24, valActual: 22 },
-        { label: "06:00 PM", target: "70%", actual: "68%", valTarget: 18, valActual: 17 },
-        { label: "08:00 PM", target: "50%", actual: "48%", valTarget: 10, valActual: 9 }
-      ]
+      bars: []
     },
     month: {
-      enquiries: stats.enquiries,
-      refills: stats.refills,
-      services: stats.services,
-      techs: stats.techs,
-      leadConv: "+14.2%",
-      onTimeRate: "98.4%",
-      avgTurnaround: "2.4 hrs",
-      quoteRate: "84%",
-      refillRate: "92%",
-      inspectionRate: "96%",
+      enquiries: 0,
+      refills: 0,
+      services: 0,
+      techs: 0,
+      leadConv: "+0%",
+      onTimeRate: "100%",
+      avgTurnaround: "0.0 hrs",
+      quoteRate: "0%",
+      refillRate: "0%",
+      inspectionRate: "0%",
       chartSubtitle: "Monthly Target SLA vs Actual Execution",
-      bars: [
-        { label: "Jun", target: "65%", actual: "58%", valTarget: 95, valActual: 82 },
-        { label: "Jul", target: "75%", actual: "70%", valTarget: 110, valActual: 102 },
-        { label: "Aug", target: "82%", actual: "79%", valTarget: 125, valActual: 118 },
-        { label: "Sept ↗", target: "95%", actual: "92%", valTarget: 148, valActual: 140, active: true },
-        { label: "Oct", target: "85%", actual: "80%", valTarget: 130, valActual: 122 },
-        { label: "Nov", target: "88%", actual: "84%", valTarget: 135, valActual: 128 },
-        { label: "Dec", target: "92%", actual: "89%", valTarget: 142, valActual: 136 }
-      ]
+      bars: []
     },
     year: {
-      enquiries: stats.enquiries,
-      refills: stats.refills,
-      services: stats.services,
-      techs: stats.techs,
-      leadConv: "+22.8%",
-      onTimeRate: "97.8%",
-      avgTurnaround: "2.1 hrs",
-      quoteRate: "86%",
-      refillRate: "94%",
-      inspectionRate: "97%",
+      enquiries: 0,
+      refills: 0,
+      services: 0,
+      techs: 0,
+      leadConv: "+0%",
+      onTimeRate: "100%",
+      avgTurnaround: "0.0 hrs",
+      quoteRate: "0%",
+      refillRate: "0%",
+      inspectionRate: "0%",
       chartSubtitle: "Quarterly Enterprise SLA & Capacity Performance",
-      bars: [
-        { label: "Q1 2025", target: "70%", actual: "66%", valTarget: 320, valActual: 305 },
-        { label: "Q2 2025", target: "80%", actual: "76%", valTarget: 380, valActual: 360 },
-        { label: "Q3 2025", target: "88%", actual: "85%", valTarget: 420, valActual: 405 },
-        { label: "Q4 2025 ↗", target: "98%", actual: "95%", valTarget: 480, valActual: 465, active: true },
-        { label: "Q1 2026", target: "90%", actual: "87%", valTarget: 440, valActual: 425 }
-      ]
+      bars: []
     }
   };
 
-  const currentDataset = timeframeData[timeframe];
+  const currentDataset = stats ? {
+    enquiries: stats.enquiries,
+    refills: stats.refills,
+    services: stats.services,
+    techs: stats.techs,
+    ...stats[timeframe]
+  } : defaultTimeframeData[timeframe];
 
   return (
     <div className="dashboard-content" style={{ padding: "var(--padding-container)", overflowY: "auto", minHeight: "100vh" }}>

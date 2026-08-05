@@ -130,225 +130,171 @@ async function main() {
     },
   });
 
-  // 6. Create Realistic Tickets with full histories and parameters
-  
-  // Ticket 1: Completed Refilling job
-  const ticket1 = await prisma.ticket.create({
-    data: {
-      ticketNumber: "EQ001",
-      customerId: customerE.id,
-      currentStage: "COMPLETED",
-      currentStatus: "Order Delivered",
-      requirementCategory: "Refilling",
-      enquirySource: "Existing Customers",
-      requirementDetails: "Refill 4.5kg CO2 Extinguisher (Lab Area)",
-      itemDescription: "CO2 Fire Extinguisher 4.5kg",
-      serialNumber: "CYL-2026-8941",
-      capacity: "4.5 Kg",
-      extinguisherType: "CO2",
-      createdAt: new Date("2026-03-01T10:00:00Z"),
-      deliveredDate: new Date("2026-03-04T12:00:00Z"),
-      amcYears: 1,
-      amcDate: new Date("2027-03-04T12:00:00Z"),
-      technicianNotes: "Hydrostatic test OK. Refilled 4.5kg gas. Replaced pressure valve seal.",
-      stageData: JSON.stringify({
-        pressureTestPassed: true,
-        refillMediumQty: 4.5,
-        tareWeight: 9.2,
-        grossWeight: 13.7
-      })
-    },
-  });
+  // 6. Generate ~70 Realistic Tickets distributed over the past year (up to Aug 4, 2026)
+  const now = new Date("2026-08-04T12:00:00Z");
+  const customers = [customerA, customerB, customerC, customerD, customerE];
+  const categories = ["Refilling", "New Fire Extinguisher", "Services", "CCTV"];
+  const sources = ["Existing Customers", "Phone Call", "Walk-in", "Social Media", "Website"];
+  const types = ["CO2", "DCP", "ABC Dry Powder", "Clean Agent", "Water"];
+  const capacities = ["2 Kg", "4.5 Kg", "6 Kg", "9 Kg"];
 
-  // Ticket 2: Active Refilling job
-  const ticket2 = await prisma.ticket.create({
-    data: {
-      ticketNumber: "EQ002",
-      customerId: customerD.id,
-      currentStage: "REFILLING",
-      currentStatus: "Refilling Order Received",
-      requirementCategory: "Refilling",
-      enquirySource: "Phone Call",
-      requirementDetails: "Refill 9kg DCP Cylinder (Malls East Wing)",
-      itemDescription: "DCP Fire Extinguisher 9kg",
-      serialNumber: "FE-9921-X4",
-      capacity: "9 Kg",
-      extinguisherType: "DCP",
-      createdAt: new Date("2026-07-20T14:30:00Z"),
-      scheduledVisitDate: new Date("2026-07-25T09:00:00Z"),
-      adminNotes: "Customer requested morning visit. Verify pressure valve safety clip.",
-    },
-  });
+  const TOTAL_TICKETS = 70;
+  const daysAgoList = Array.from({ length: TOTAL_TICKETS }, (_, idx) => Math.floor((idx / TOTAL_TICKETS) * 360));
+  // Deterministic shuffle using Math.sin
+  const shuffledDaysAgo = [...daysAgoList].sort((a, b) => Math.sin(a) - Math.sin(b));
 
-  // Ticket 3: New Enquiry
-  const ticket3 = await prisma.ticket.create({
-    data: {
-      ticketNumber: "EQ003",
-      customerId: customerC.id,
-      currentStage: "ENQUIRY",
-      currentStatus: "Enquiry Registered",
-      requirementCategory: "New Fire Extinguisher",
-      enquirySource: "Walk-in",
-      requirementDetails: "Quotation requested for 15 ABC Dry Powder extinguishers and 5 CO2 extinguishers for hotel lobby upgrade.",
-      createdAt: new Date("2026-07-23T09:15:00Z"),
-    },
-  });
+  for (let i = 1; i <= TOTAL_TICKETS; i++) {
+    const customer = customers[i % customers.length];
+    const category = categories[i % categories.length];
+    const source = sources[i % sources.length];
+    const extType = types[i % types.length];
+    const capacity = capacities[i % capacities.length];
 
-  // Ticket 4: Leaky cylinder transitioned from Refilling to Services
-  const ticket4 = await prisma.ticket.create({
-    data: {
-      ticketNumber: "EQ004",
-      customerId: customerB.id,
-      currentStage: "SERVICES",
-      currentStatus: "Pending Service",
-      requirementCategory: "Refilling",
-      itemDescription: "ABC Dry Powder Extinguisher 6kg",
-      serialNumber: "SAFE-5582-CO2",
-      capacity: "6 Kg",
-      extinguisherType: "ABC Dry Powder",
-      createdAt: new Date("2026-07-15T11:45:00Z"),
-      scheduledVisitDate: new Date("2026-07-24T10:00:00Z"),
-      adminNotes: "Urgent check: client noted crack on gauge dial.",
-      technicianNotes: "Observed faulty valve block causing slow leak. Replaced standard valve block and gauge.",
-    },
-  });
+    // Shuffled creation dates over the last 360 days
+    const daysAgo = shuffledDaysAgo[i - 1];
+    const createdAt = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
 
-  // Ticket 5: Active Refilling dispatch
-  const ticket5 = await prisma.ticket.create({
-    data: {
-      ticketNumber: "EQ005",
-      customerId: customerA.id,
-      currentStage: "REFILLING",
-      currentStatus: "Order Confirmed",
-      requirementCategory: "Refilling",
-      enquirySource: "Social Media",
-      requirementDetails: "Clean Agent Extinguisher refilling for server room.",
-      itemDescription: "Clean Agent Extinguisher 2kg",
-      serialNumber: "CYL-7740-ABC",
-      capacity: "2 Kg",
-      extinguisherType: "Clean Agent",
-      createdAt: new Date("2026-07-22T16:20:00Z"),
-      scheduledVisitDate: new Date("2026-07-23T14:00:00Z"),
-    },
-  });
-
-  // 7. Create Assignments (Technicians allocated to Tickets)
-  
-  // EQ001 Completed Assignment
-  await prisma.ticketAssignment.create({
-    data: {
-      ticketId: ticket1.id,
-      employeeId: tech1.id, // Alex Rivera
-      status: "COMPLETED",
-      completedAt: new Date("2026-03-04T11:30:00Z"),
-      notes: "Hydrostatic test passed. Checked valve mechanism, refilled and resealed.",
-      createdBy: admin.id
+    // Determine stage (25 Completed, 15 Services, 15 Refilling, 15 Enquiry)
+    let stage = "COMPLETED";
+    if (i > 55) {
+      stage = "ENQUIRY";
+    } else if (i > 40) {
+      stage = "REFILLING";
+    } else if (i > 25) {
+      stage = "SERVICES";
     }
-  });
 
-  // EQ002 Refilling Active Assignment
-  await prisma.ticketAssignment.create({
-    data: {
-      ticketId: ticket2.id,
-      employeeId: tech2.id, // Jane Smith
-      status: "ASSIGNED",
-      createdBy: admin.id
+    // Determine status based on stage
+    let status = "PENDING";
+    if (stage === "COMPLETED") {
+      status = "COMPLETED";
+    } else if (stage === "ENQUIRY") {
+      status = i % 2 === 0 ? "Enquiry Registered" : "Order Confirmed";
+    } else if (stage === "REFILLING") {
+      const refillStatuses = ["Refilling Order Received", "Quotation Sent", "Follow-up In Progress", "Order Confirmed"];
+      status = refillStatuses[i % refillStatuses.length];
+    } else if (stage === "SERVICES") {
+      const serviceStatuses = ["Pending Service", "Technician Dispatched", "Service In Progress"];
+      status = serviceStatuses[i % serviceStatuses.length];
     }
-  });
 
-  // EQ004 Services Active Assignment
-  await prisma.ticketAssignment.create({
-    data: {
-      ticketId: ticket4.id,
-      employeeId: tech2.id, // Jane Smith
-      status: "ASSIGNED",
-      createdBy: admin.id
+    // Scheduled visit date: 2 to 4 days after creation
+    const scheduledVisitDate = new Date(createdAt.getTime() + (2 + (i % 3)) * 24 * 60 * 60 * 1000);
+
+    // Delivered date: 3 to 6 days after creation (if completed)
+    // Introduce some delayed completions (20% of tickets) to show realistic SLA compliance
+    const isDelayed = i % 5 === 0;
+    const daysToComplete = isDelayed ? (5 + (i % 4)) : (2 + (i % 2));
+    const deliveredDate = stage === "COMPLETED"
+      ? new Date(createdAt.getTime() + daysToComplete * 24 * 60 * 60 * 1000)
+      : null;
+
+    const ticketNumber = `EQ${String(i).padStart(3, "0")}`;
+
+    const assignmentType = stage === "SERVICES" ? "SERVICE" : stage === "REFILLING" ? "REFILLING" : stage === "ENQUIRY" ? "ENQUIRY" : "DELIVERY";
+
+    const ticket = await prisma.ticket.create({
+      data: {
+        ticketNumber,
+        customerId: customer.id,
+        currentStage: stage,
+        currentStatus: status,
+        requirementCategory: category,
+        enquirySource: source,
+        requirementDetails: `${category} request for ${capacity} ${extType} cylinder.`,
+        itemDescription: `${extType} Extinguisher ${capacity}`,
+        serialNumber: `CYL-2026-${8000 + i}`,
+        capacity,
+        extinguisherType: extType,
+        createdAt,
+        scheduledVisitDate: stage !== "ENQUIRY" ? scheduledVisitDate : null,
+        deliveredDate,
+        amcYears: stage === "COMPLETED" ? 1 : null,
+        amcDate: stage === "COMPLETED" && deliveredDate ? new Date(deliveredDate.getTime() + 365 * 24 * 60 * 60 * 1000) : null,
+        adminNotes: `Admin notes for ${ticketNumber}.`,
+        technicianNotes: stage === "COMPLETED" ? `Job completed successfully for ${ticketNumber}.` : null,
+        assignmentType,
+      },
+    });
+
+    // Create Assignment if refilling, services, or completed
+    if (stage === "REFILLING" || stage === "SERVICES" || stage === "COMPLETED") {
+      const technician = i % 2 === 0 ? tech1 : tech2;
+      const completedAt = stage === "COMPLETED" ? deliveredDate : null;
+      const assignStatus = stage === "COMPLETED" ? "Completed" : "Pending";
+
+      await prisma.ticketAssignment.create({
+        data: {
+          ticketId: ticket.id,
+          employeeId: technician.id,
+          assignedAt: new Date(createdAt.getTime() + 1 * 24 * 60 * 60 * 1000), // Assigned 1 day after creation
+          completedAt,
+          status: assignStatus,
+          notes: stage === "COMPLETED" ? "Assigned technician finished task successfully." : "Please inspect client site.",
+          createdBy: admin.id,
+        },
+      });
     }
-  });
 
-  // EQ005 Refilling Active Assignment
-  await prisma.ticketAssignment.create({
-    data: {
-      ticketId: ticket5.id,
-      employeeId: tech1.id, // Alex Rivera
-      status: "ASSIGNED",
-      createdBy: admin.id
+    // Create history logs
+    await prisma.ticketHistory.create({
+      data: {
+        ticketId: ticket.id,
+        changedById: admin.id,
+        fromStage: null,
+        toStage: "ENQUIRY",
+        fromStatus: null,
+        toStatus: "PENDING",
+        remarks: "Ticket registered in system",
+        createdAt,
+      },
+    });
+
+    if (stage !== "ENQUIRY") {
+      await prisma.ticketHistory.create({
+        data: {
+          ticketId: ticket.id,
+          changedById: admin.id,
+          fromStage: "ENQUIRY",
+          toStage: stage === "COMPLETED" ? "REFILLING" : stage,
+          fromStatus: "PENDING",
+          toStatus: stage === "COMPLETED" ? "ASSIGNED" : status,
+          remarks: "Transitioned stage and status",
+          createdAt: new Date(createdAt.getTime() + 1 * 24 * 60 * 60 * 1000),
+        },
+      });
     }
-  });
 
-  // 8. Create Realistic Audit Log Entries (TicketHistory)
+    if (stage === "COMPLETED" && deliveredDate) {
+      await prisma.ticketHistory.create({
+        data: {
+          ticketId: ticket.id,
+          changedById: (i % 2 === 0 ? tech1 : tech2).id,
+          fromStage: "REFILLING",
+          toStage: "COMPLETED",
+          fromStatus: "ASSIGNED",
+          toStatus: "COMPLETED",
+          remarks: "Completed work and delivered order",
+          createdAt: deliveredDate,
+        },
+      });
+    }
 
-  // Audit Logs for EQ001 (Completed)
-  await prisma.ticketHistory.createMany({
-    data: [
-      {
-        ticketId: ticket1.id,
-        changedById: admin.id,
-        fromStage: "ENQUIRY",
-        toStage: "REFILLING",
-        fromStatus: "Enquiry Registered",
-        toStatus: "Order Confirmed",
-        remarks: "Enquiry approved. Quotation confirmed by client.",
-        createdAt: new Date("2026-03-02T10:00:00Z"),
-      },
-      {
-        ticketId: ticket1.id,
-        changedById: admin.id,
-        fromStage: "REFILLING",
-        toStage: "REFILLING",
-        fromStatus: "Order Confirmed",
-        toStatus: "Order Confirmed",
-        remarks: "Assigned technician Alex Rivera to refilling order.",
-        createdAt: new Date("2026-03-02T10:15:00Z"),
-      },
-      {
-        ticketId: ticket1.id,
-        changedById: tech1.id,
-        fromStage: "REFILLING",
-        toStage: "COMPLETED",
-        fromStatus: "Order Confirmed",
-        toStatus: "Order Delivered",
-        remarks: "Assignment status updated to 'Completed' by technician. Replaced pressure valve seal, refilled 4.5kg CO2.",
-        createdAt: new Date("2026-03-04T12:00:00Z"),
-      }
-    ]
-  });
-
-  // Audit Logs for EQ004 (Transitioned from Refilling to Service)
-  await prisma.ticketHistory.createMany({
-    data: [
-      {
-        ticketId: ticket4.id,
-        changedById: admin.id,
-        fromStage: "ENQUIRY",
-        toStage: "REFILLING",
-        fromStatus: "Enquiry Registered",
-        toStatus: "Order Confirmed",
-        remarks: "Order confirmed by Apollo maintenance team.",
-        createdAt: new Date("2026-07-16T09:00:00Z"),
-      },
-      {
-        ticketId: ticket4.id,
-        changedById: admin.id,
-        fromStage: "REFILLING",
-        toStage: "REFILLING",
-        fromStatus: "Order Confirmed",
-        toStatus: "Order Confirmed",
-        remarks: "Assigned technician Jane Smith to order.",
-        createdAt: new Date("2026-07-16T09:10:00Z"),
-      },
-      {
-        ticketId: ticket4.id,
-        changedById: tech2.id,
-        fromStage: "REFILLING",
-        toStage: "SERVICES",
-        fromStatus: "Order Confirmed",
-        toStatus: "Pending Service",
-        remarks: "Auto-transitioned: Technician set status to 'Assign For Service' after noting leaky discharge hose.",
-        createdAt: new Date("2026-07-24T10:15:00Z"),
-      }
-    ]
-  });
+    // 7. Create Invoices for completed tickets
+    if (stage === "COMPLETED" && deliveredDate) {
+      const invoiceNumber = `INV-2026-${String(i).padStart(3, "0")}`;
+      await prisma.invoice.create({
+        data: {
+          ticketId: ticket.id,
+          invoiceNumber,
+          totalAmount: 1500.0 + (i * 10),
+          status: "PAID",
+          dueDate: new Date(deliveredDate.getTime() + 30 * 24 * 60 * 60 * 1000),
+          createdAt: deliveredDate,
+        }
+      });
+    }
+  }
 
   console.log("Seeding completed successfully with new database models!");
   console.log("---------------------------------");

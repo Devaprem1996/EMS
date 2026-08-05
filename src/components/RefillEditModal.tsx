@@ -129,6 +129,10 @@ export default function RefillEditModal({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!window.confirm("Are you sure you want to save changes to this refilling ticket?")) {
+      return;
+    }
+
     try {
       const res = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",

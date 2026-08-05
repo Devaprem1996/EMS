@@ -22,7 +22,7 @@ import { useConfig } from "@/context/ConfigContext";
 interface Employee {
   id: string;
   mobileNumber: string;
-  role: "ADMIN" | "TECHNICIAN";
+  role: "ADMIN" | "TECHNICIAN" | "SUPER_ADMIN";
   fullName: string;
   contactPhone: string;
   employeeNumber: string;
@@ -38,6 +38,7 @@ export default function EmployeeMasterPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
+  const [stats, setStats] = useState<any>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,10 +93,24 @@ export default function EmployeeMasterPage() {
     }
   };
 
+  // Fetch stats
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/jobs/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Failed to load stats:", err);
+    }
+  };
+
   // Trigger fetch when search or filter changes
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchEmployees();
+      fetchStats();
       setCurrentPage(1); // Reset page on new filters
     }, 300);
 
@@ -132,7 +147,7 @@ export default function EmployeeMasterPage() {
     setPhone(emp.contactPhone || "");
     setEmail(emp.email || "");
     setPassword(""); // Leave empty for edit
-    setRole(emp.role);
+    setRole(emp.role === "SUPER_ADMIN" ? "ADMIN" : emp.role);
     setIsActive(emp.isActive);
     setFormError(null);
     setIsModalOpen(true);
@@ -194,7 +209,7 @@ export default function EmployeeMasterPage() {
   // Calculate KPI Summary Stats
   const activeCount = employees.filter(e => e.isActive).length;
   const technicianCount = employees.filter(e => e.role === "TECHNICIAN" && e.isActive).length;
-  const adminCount = employees.filter(e => e.role === "ADMIN" && e.isActive).length;
+  const adminCount = employees.filter(e => (e.role === "ADMIN" || e.role === "SUPER_ADMIN") && e.isActive).length;
   const inactiveCount = employees.filter(e => !e.isActive).length;
 
   return (
@@ -315,11 +330,15 @@ export default function EmployeeMasterPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
               <div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#10b981" }}>98.4%</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#10b981" }}>
+                  {stats?.month?.onTimeRate || "98.4%"}
+                </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Service Reliability</div>
               </div>
               <div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#a3e635" }}>14 Min</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#a3e635" }}>
+                  {stats?.month?.avgTurnaround || "14 Min"}
+                </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Avg Response Time</div>
               </div>
             </div>
@@ -327,24 +346,30 @@ export default function EmployeeMasterPage() {
 
           {/* Mini Sparkline Bar Viz */}
           <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "42px", paddingTop: "8px" }}>
-            {[
-              { month: "Jan", h1: "40%", h2: "60%", active: false },
-              { month: "Feb", h1: "55%", h2: "70%", active: false },
-              { month: "Mar", h1: "70%", h2: "85%", active: false },
-              { month: "Apr", h1: "60%", h2: "75%", active: false },
-              { month: "May", h1: "80%", h2: "90%", active: false },
-              { month: "Jun", h1: "95%", h2: "100%", active: true },
-            ].map((bar, i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" }}>
-                <div style={{ width: "100%", flex: 1, display: "flex", gap: "2px", alignItems: "flex-end" }}>
-                  <div style={{ flex: 1, height: bar.h1, background: bar.active ? "#a3e635" : "var(--border-glass)", borderRadius: "4px" }}></div>
-                  <div style={{ flex: 1, height: bar.h2, background: bar.active ? "#c084fc" : "var(--border-glass)", borderRadius: "4px" }}></div>
+            {(stats?.month?.bars || [
+              { label: "Jan", valTarget: 40, valActual: 60 },
+              { label: "Feb", valTarget: 55, valActual: 70 },
+              { label: "Mar", valTarget: 70, valActual: 85 },
+              { label: "Apr", valTarget: 60, valActual: 75 },
+              { label: "May", valTarget: 80, valActual: 90 },
+              { label: "Jun", valTarget: 95, valActual: 100 },
+            ]).map((bar: any, i: number, arr: any[]) => {
+              const maxVal = Math.max(...arr.map(b => Math.max(b.valTarget || 1, b.valActual || 1)));
+              const h1 = `${Math.round(((bar.valTarget || 0) / maxVal) * 100)}%`;
+              const h2 = `${Math.round(((bar.valActual || 0) / maxVal) * 100)}%`;
+              const isActive = i === arr.length - 1;
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" }}>
+                  <div style={{ width: "100%", flex: 1, display: "flex", gap: "2px", alignItems: "flex-end" }}>
+                    <div style={{ flex: 1, height: h1, background: isActive ? "#a3e635" : "var(--border-glass)", borderRadius: "4px" }}></div>
+                    <div style={{ flex: 1, height: h2, background: isActive ? "#c084fc" : "var(--border-glass)", borderRadius: "4px" }}></div>
+                  </div>
+                  <span style={{ fontSize: "0.68rem", color: isActive ? "#a3e635" : "var(--text-muted)", fontWeight: isActive ? "800" : "500" }}>
+                    {bar.label}
+                  </span>
                 </div>
-                <span style={{ fontSize: "0.68rem", color: bar.active ? "#a3e635" : "var(--text-muted)", fontWeight: bar.active ? "800" : "500" }}>
-                  {bar.month}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -517,10 +542,35 @@ export default function EmployeeMasterPage() {
 
       {/* Pagination Footer */}
       {!loading && totalItems > 0 && (
-        <div className="pagination-container" style={{ position: "relative", zIndex: 1 }}>
-          <span className="pagination-info">
-            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-          </span>
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <span className="pagination-info">
+              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Page Size:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  background: "rgba(18, 18, 26, 0.6)",
+                  border: "1px solid var(--border-glass)",
+                  borderRadius: "6px",
+                  color: "var(--text-primary)",
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  cursor: "pointer"
+                }}
+              >
+                {[10, 20, 50, 100].map(sz => (
+                  <option key={sz} value={sz}>{sz}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="pagination-controls">
             <button 
               onClick={() => setCurrentPage(1)} 

@@ -140,7 +140,9 @@ export default function TechnicianViewPage() {
     setCustomerLocation(asg.job.customerLocation || "");
     
     // Map initial ASSIGNED status to Pending for UI consistency
-    const currentAsgStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
+    const currentAsgStatus = (asg.status === "ASSIGNED" || asg.status?.toLowerCase() === "pending") ? "Pending" : 
+                             (asg.status === "COMPLETED" || asg.status?.toLowerCase() === "completed") ? "Completed" : 
+                             asg.status;
     setCompletedStatus(currentAsgStatus);
 
     let existingSign: string | null = null;
@@ -242,7 +244,7 @@ export default function TechnicianViewPage() {
   const paginatedAssignments = filteredAssignments.slice(startIndex, endIndex);
 
   const totalAsgs = filteredAssignments.length;
-  const completedAsgs = filteredAssignments.filter(a => a.status === "Completed").length;
+  const completedAsgs = filteredAssignments.filter(a => a.status?.toLowerCase() === "completed").length;
   const pendingAsgs = totalAsgs - completedAsgs;
 
   return (
@@ -432,7 +434,9 @@ export default function TechnicianViewPage() {
             <tbody>
               {paginatedAssignments.map((asg, index) => {
                 const siblingNames = asg.job.assignments.map(sa => sa.technician.fullName).join(", ");
-                const displayStatus = asg.status === "ASSIGNED" ? "Pending" : asg.status;
+                const displayStatus = (asg.status === "ASSIGNED" || asg.status?.toLowerCase() === "pending") ? "Pending" : 
+                                      (asg.status === "COMPLETED" || asg.status?.toLowerCase() === "completed") ? "Completed" : 
+                                      asg.status;
                 const locUrl = asg.job.customerLocation;
 
                 return (

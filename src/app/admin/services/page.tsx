@@ -180,6 +180,19 @@ export default function ServiceDashboardPage() {
     fetcher
   );
 
+  const { data: allJobsData } = useSWR(
+    `/api/jobs?stage=SERVICES&limit=1000`,
+    fetcher
+  );
+
+  const allServiceJobs = Array.isArray(allJobsData) ? allJobsData : (allJobsData?.data || []);
+  const totalService = allServiceJobs.length;
+  const pendingService = allServiceJobs.filter((j: any) => j.currentStatus?.toLowerCase() !== "completed").length;
+  const completedService = allServiceJobs.filter((j: any) => j.currentStatus?.toLowerCase() === "completed").length;
+  
+  const pendingPct = totalService > 0 ? Math.round((pendingService / totalService) * 100) : 0;
+  const completedPct = totalService > 0 ? Math.round((completedService / totalService) * 100) : 0;
+
   const { data: techRawData, mutate: mutateTechnicians } = useSWR(
     "/api/employees?status=active",
     fetcher
@@ -202,6 +215,19 @@ export default function ServiceDashboardPage() {
       setLoading(false);
     }
   }, [jobsData, techRawData]);
+
+  useEffect(() => {
+    const handleSearchChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSearch(customEvent.detail);
+      }
+    };
+    window.addEventListener("search-param-change", handleSearchChange);
+    return () => {
+      window.removeEventListener("search-param-change", handleSearchChange);
+    };
+  }, []);
 
   const fetchData = () => {
     mutateJobs();
@@ -253,6 +279,9 @@ export default function ServiceDashboardPage() {
   };
 
   const handleStatusChange = async (ticket: Job, newStatus: string) => {
+    if (!window.confirm(`Are you sure you want to change status of ${ticket.jobNumber} to "${newStatus}"?`)) {
+      return;
+    }
     try {
       const res = await fetch(`/api/jobs/${ticket.id}`, {
         method: "PUT",
@@ -381,8 +410,8 @@ export default function ServiceDashboardPage() {
                 +8% audited
               </span>
             </div>
-            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
-              {jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>service visits</span>
+             <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {totalService || jobs.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>service visits</span>
             </div>
           </div>
 
@@ -390,21 +419,21 @@ export default function ServiceDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Pending Services ({jobs.filter(j => j.currentStatus !== "Completed").length})</span>
-                <span style={{ color: "#c084fc" }}>40%</span>
+                <span>Pending Services ({pendingService})</span>
+                <span style={{ color: "#c084fc" }}>{pendingPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "40%", height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${pendingPct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Completed & Signed ({jobs.filter(j => j.currentStatus === "Completed").length})</span>
-                <span style={{ color: "#a3e635" }}>60%</span>
+                <span>Completed & Signed ({completedService})</span>
+                <span style={{ color: "#a3e635" }}>{completedPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "60%", height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${completedPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>
@@ -752,9 +781,34 @@ export default function ServiceDashboardPage() {
               {/* Pagination Footer */}
               {!loading && totalItems > 0 && (
                 <div className="pagination-container" style={{ position: "relative", zIndex: 1, marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                    Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                      Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Page Size:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        style={{
+                          background: "rgba(18, 18, 26, 0.6)",
+                          border: "1px solid var(--border-glass)",
+                          borderRadius: "6px",
+                          color: "var(--text-primary)",
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {[10, 20, 50, 100].map(sz => (
+                          <option key={sz} value={sz}>{sz}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                   <div style={{ display: "flex", gap: "5px" }}>
                     <button 
                       onClick={() => setCurrentPage(1)} 

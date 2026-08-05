@@ -522,7 +522,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           }}
                           onClick={() => {
                             setIsNotificationsOpen(false);
-                            router.push("/admin/services");
+                            router.push(`/admin/services?search=${encodeURIComponent(item.jobNumber)}`);
+                            window.dispatchEvent(new CustomEvent("search-param-change", { detail: item.jobNumber }));
                           }}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
@@ -634,8 +635,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </p>
               
               <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid var(--border-glass)", borderRadius: "12px", padding: "10px", background: "var(--bg-input)" }}>
-                {amcRenewals.map((item) => (
-                  <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", borderBottom: "1px solid var(--border-glass)", fontSize: "12.5px" }}>
+                 {amcRenewals.map((item) => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => {
+                      setShowFridayModal(false);
+                      router.push(`/admin/services?search=${encodeURIComponent(item.jobNumber)}`);
+                      window.dispatchEvent(new CustomEvent("search-param-change", { detail: item.jobNumber }));
+                    }}
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", borderBottom: "1px solid var(--border-glass)", fontSize: "12.5px", cursor: "pointer" }}
+                  >
                     <div style={{ textAlign: "left" }}>
                       <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{item.companyName}</div>
                       <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{item.itemDescription} ({item.jobNumber})</div>

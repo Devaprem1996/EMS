@@ -159,6 +159,10 @@ export default function EnquiryEditModal({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!window.confirm("Are you sure you want to save changes to this enquiry?")) {
+      return;
+    }
+
     if (requestedDeliveryDate && enquiryDate && new Date(requestedDeliveryDate) < new Date(enquiryDate)) {
       onError("Requested Delivery Date cannot be before the Enquiry Date");
       return;

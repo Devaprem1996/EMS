@@ -154,6 +154,21 @@ export default function EnquiryDashboardPage() {
     fetcher
   );
 
+  const { data: allEnqData } = useSWR(
+    `/api/jobs?stage=ENQUIRY&limit=1000`,
+    fetcher
+  );
+
+  const allEnquiries = Array.isArray(allEnqData) ? allEnqData : (allEnqData?.data || []);
+  const totalEnq = allEnquiries.length;
+  const registeredEnq = allEnquiries.filter((e: any) => e.currentStatus?.toLowerCase() === "enquiry registered").length;
+  const confirmedEnq = allEnquiries.filter((e: any) => e.currentStatus?.toLowerCase() === "order confirmed").length;
+  const deliveredEnq = allEnquiries.filter((e: any) => e.currentStatus?.toLowerCase() === "order delivered").length;
+  
+  const regPct = totalEnq > 0 ? Math.round((registeredEnq / totalEnq) * 100) : 0;
+  const confPct = totalEnq > 0 ? Math.round((confirmedEnq / totalEnq) * 100) : 0;
+  const delPct = totalEnq > 0 ? Math.round((deliveredEnq / totalEnq) * 100) : 0;
+
   const { data: techRawData, mutate: mutateTechnicians } = useSWR(
     "/api/employees?status=active",
     fetcher
@@ -265,6 +280,19 @@ export default function EnquiryDashboardPage() {
       setLoading(false);
     }
   }, [enqData, techRawData]);
+
+  useEffect(() => {
+    const handleSearchChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSearch(customEvent.detail);
+      }
+    };
+    window.addEventListener("search-param-change", handleSearchChange);
+    return () => {
+      window.removeEventListener("search-param-change", handleSearchChange);
+    };
+  }, []);
 
   const fetchData = () => {
     setSelectedJobIds([]);
@@ -427,6 +455,9 @@ export default function EnquiryDashboardPage() {
   };
 
   const handleStatusChange = async (ticket: Enquiry, newStatus: string) => {
+    if (!window.confirm(`Are you sure you want to change status of ${ticket.jobNumber} to "${newStatus}"?`)) {
+      return;
+    }
     try {
       const res = await fetch(`/api/jobs/${ticket.id}`, {
         method: "PUT",
@@ -451,6 +482,9 @@ export default function EnquiryDashboardPage() {
   const handleBulkTransitionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedJobIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to transition all ${selectedJobIds.length} selected ticket(s) to ${bulkTransitionStage}?`)) {
+      return;
+    }
 
     try {
       const res = await fetch("/api/jobs/bulk-transition", {
@@ -489,6 +523,9 @@ export default function EnquiryDashboardPage() {
   // Flow 2: Submit single-ticket transition
   const handleSingleTransitionSubmit = async () => {
     if (!singleTransitionEnquiry) return;
+    if (!window.confirm(`Are you sure you want to transition ${singleTransitionEnquiry.jobNumber} to Refilling?`)) {
+      return;
+    }
     setSingleTransitionLoading(true);
     try {
       const res = await fetch("/api/jobs/bulk-transition", {
@@ -817,8 +854,8 @@ export default function EnquiryDashboardPage() {
                 +5% today
               </span>
             </div>
-            <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
-              {enquiries.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>active leads</span>
+             <div style={{ fontSize: "2.4rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1.25rem" }}>
+              {totalEnq || enquiries.length} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "var(--text-muted)" }}>active leads</span>
             </div>
           </div>
 
@@ -826,31 +863,31 @@ export default function EnquiryDashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Registered Leads ({enquiries.filter(e => e.currentStatus === "Enquiry Registered").length})</span>
-                <span style={{ color: "#c084fc" }}>45%</span>
+                <span>Registered Leads ({registeredEnq})</span>
+                <span style={{ color: "#c084fc" }}>{regPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "45%", height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${regPct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Orders Confirmed ({enquiries.filter(e => e.currentStatus === "Order Confirmed").length})</span>
-                <span style={{ color: "var(--text-secondary)" }}>30%</span>
+                <span>Orders Confirmed ({confirmedEnq})</span>
+                <span style={{ color: "var(--text-secondary)" }}>{confPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "30%", height: "100%", background: "#52525b", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${confPct}%`, height: "100%", background: "#52525b", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
-                <span>Orders Delivered ({enquiries.filter(e => e.currentStatus === "Order Delivered").length})</span>
-                <span style={{ color: "#a3e635" }}>25%</span>
+                <span>Orders Delivered ({deliveredEnq})</span>
+                <span style={{ color: "#a3e635" }}>{delPct}%</span>
               </div>
               <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: "25%", height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${delPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>
@@ -1560,10 +1597,35 @@ export default function EnquiryDashboardPage() {
 
       {/* Pagination Footer */}
       {!loading && totalItems > 0 && (
-        <div className="pagination-container" style={{ position: "relative", zIndex: 1 }}>
-          <span className="pagination-info">
-            Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-          </span>
+        <div className="pagination-container" style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <span className="pagination-info">
+              Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Page Size:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  background: "rgba(18, 18, 26, 0.6)",
+                  border: "1px solid var(--border-glass)",
+                  borderRadius: "6px",
+                  color: "var(--text-primary)",
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  cursor: "pointer"
+                }}
+              >
+                {[10, 20, 50, 100].map(sz => (
+                  <option key={sz} value={sz}>{sz}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="pagination-controls">
             <button 
               onClick={() => setCurrentPage(1)} 

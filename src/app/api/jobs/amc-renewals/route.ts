@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       capacity: ticket.capacity || "",
       extinguisherType: ticket.extinguisherType || "",
       currentStatus: ticket.currentStatus,
+      currentStage: ticket.currentStage,
     }));
 
     return NextResponse.json(formattedRenewals);

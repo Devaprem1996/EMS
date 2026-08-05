@@ -148,6 +148,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
+  const handleNotificationClick = (item: any) => {
+    setIsNotificationsOpen(false);
+    setShowFridayModal(false);
+
+    // Dynamically route based on the ticket's currentStage
+    let targetPath = "/admin/services";
+    if (item.currentStage === "ENQUIRY") {
+      targetPath = "/admin/enquiry";
+    } else if (item.currentStage === "REFILLING") {
+      targetPath = "/admin/refilling";
+    }
+
+    router.push(`${targetPath}?search=${encodeURIComponent(item.jobNumber)}`);
+
+    // Dispatch the custom event to update search inputs in currently-active pages
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("search-param-change", { detail: item.jobNumber }));
+    }, 100);
+  };
+
   if (loading || configLoading) {
     return (
       <div className="login-wrapper" style={{ justifyContent: "center", alignItems: "center" }}>
@@ -546,11 +566,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             textAlign: "left",
                             transition: "all 0.2s ease"
                           }}
-                          onClick={() => {
-                            setIsNotificationsOpen(false);
-                            router.push(`/admin/services?search=${encodeURIComponent(item.jobNumber)}`);
-                            window.dispatchEvent(new CustomEvent("search-param-change", { detail: item.jobNumber }));
-                          }}
+                          onClick={() => handleNotificationClick(item)}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>
                             <span>{item.companyName}</span>
@@ -664,11 +680,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  {amcRenewals.map((item) => (
                   <div 
                     key={item.id} 
-                    onClick={() => {
-                      setShowFridayModal(false);
-                      router.push(`/admin/services?search=${encodeURIComponent(item.jobNumber)}`);
-                      window.dispatchEvent(new CustomEvent("search-param-change", { detail: item.jobNumber }));
-                    }}
+                    onClick={() => handleNotificationClick(item)}
                     style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px", borderBottom: "1px solid var(--border-glass)", fontSize: "12.5px", cursor: "pointer" }}
                   >
                     <div style={{ textAlign: "left" }}>

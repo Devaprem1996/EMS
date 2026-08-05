@@ -737,7 +737,7 @@ export default function EnquiryDashboardPage() {
   };
 
   return (
-    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+    <div style={{ padding: "20px", color: "var(--text-primary)", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
       <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "30%" }}></div>
       <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "10%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
@@ -745,8 +745,8 @@ export default function EnquiryDashboardPage() {
       {/* Page Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Enquiry Hub</h1>
-          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time telemetry, lead assignment, and dispatch pipeline</p>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Enquiry Hub</h1>
+          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>Real-time telemetry, lead assignment, and dispatch pipeline</p>
         </div>
         <button
           onClick={() => {
@@ -862,7 +862,7 @@ export default function EnquiryDashboardPage() {
           {/* Flux Horizontal Progress Bars */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Registered Leads ({registeredEnq})</span>
                 <span style={{ color: "var(--accent-purple)" }}>{regPct}%</span>
               </div>
@@ -872,17 +872,17 @@ export default function EnquiryDashboardPage() {
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Orders Confirmed ({confirmedEnq})</span>
-                <span style={{ color: "var(--text-secondary)" }}>{confPct}%</span>
+                <span style={{ color: "var(--accent-amber)" }}>{confPct}%</span>
               </div>
               <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${confPct}%`, height: "100%", background: "var(--text-muted)", borderRadius: "9999px" }}></div>
+                <div style={{ width: `${confPct}%`, height: "100%", background: "var(--accent-amber)", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Orders Delivered ({deliveredEnq})</span>
                 <span style={{ color: "var(--accent-green)" }}>{delPct}%</span>
               </div>

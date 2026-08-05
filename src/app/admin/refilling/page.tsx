@@ -370,7 +370,7 @@ export default function RefillingDashboardPage() {
   const paginatedJobs = jobs;
 
   return (
-    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+    <div style={{ padding: "20px", color: "var(--text-primary)", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
       <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "20%" }}></div>
       <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "5%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.02) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
@@ -378,10 +378,10 @@ export default function RefillingDashboardPage() {
       {/* Page Title & Subtitle */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             {config?.stages?.REFILLING?.displayName || "Refilling"} Control Center
           </h1>
-          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Manage high-pressure testing, gas refilling schedules, and compliance validation</p>
+          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>Manage high-pressure testing, gas refilling schedules, and compliance validation</p>
         </div>
       </div>
 
@@ -438,7 +438,7 @@ export default function RefillingDashboardPage() {
               <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
                 Total Refilling Volume
               </span>
-              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+              <span style={{ background: "var(--accent-green-glow)", color: "var(--accent-green)", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
                 +12% volume
               </span>
             </div>
@@ -450,22 +450,22 @@ export default function RefillingDashboardPage() {
           {/* Flux Horizontal Progress Bars */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Active Production ({activeProd})</span>
-                <span style={{ color: "#c084fc" }}>{activePct}%</span>
+                <span style={{ color: "var(--accent-purple)" }}>{activePct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${activePct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${activePct}%`, height: "100%", background: "var(--accent-purple)", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Delivered & Verified ({deliveredRefill})</span>
-                <span style={{ color: "#a3e635" }}>{delPct}%</span>
+                <span style={{ color: "var(--accent-green)" }}>{delPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${delPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${delPct}%`, height: "100%", background: "var(--accent-green)", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>

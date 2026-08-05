@@ -51,46 +51,76 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(cachedJobs);
     }
 
-    const whereClause: any = {
-      currentStage: stage,
-    };
+    const andFilters: any[] = [];
+
+    // Stage filters: include COMPLETED tickets under their corresponding categories
+    if (stage === "SERVICES") {
+      andFilters.push({
+        OR: [
+          { currentStage: "SERVICES" },
+          { currentStage: "COMPLETED", assignmentType: { in: ["SERVICE", "DELIVERY"] } }
+        ]
+      });
+    } else if (stage === "REFILLING") {
+      andFilters.push({
+        OR: [
+          { currentStage: "REFILLING" },
+          { currentStage: "COMPLETED", assignmentType: "REFILLING" }
+        ]
+      });
+    } else if (stage === "ENQUIRY") {
+      andFilters.push({
+        OR: [
+          { currentStage: "ENQUIRY" },
+          { currentStage: "COMPLETED", assignmentType: "ENQUIRY" }
+        ]
+      });
+    } else {
+      andFilters.push({ currentStage: stage });
+    }
 
     if (tenantId) {
-      whereClause.tenantId = tenantId;
+      andFilters.push({ tenantId });
     }
 
     if (status !== "all") {
-      whereClause.currentStatus = status;
+      andFilters.push({ currentStatus: status });
     }
 
     if (category !== "all") {
-      whereClause.requirementCategory = category;
+      andFilters.push({ requirementCategory: category });
     }
 
     if (year !== "all") {
       const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
       const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
-      whereClause.amcDate = {
-        gte: startOfYear,
-        lte: endOfYear,
-      };
+      andFilters.push({
+        amcDate: {
+          gte: startOfYear,
+          lte: endOfYear,
+        }
+      });
     }
 
     if (search) {
-      whereClause.OR = [
-        { ticketNumber: { contains: search } },
-        { requirementCategory: { contains: search } },
-        {
-          customer: {
-            OR: [
-              { companyName: { contains: search } },
-              { contactName: { contains: search } },
-              { primaryPhone: { contains: search } },
-            ],
+      andFilters.push({
+        OR: [
+          { ticketNumber: { contains: search } },
+          { requirementCategory: { contains: search } },
+          {
+            customer: {
+              OR: [
+                { companyName: { contains: search } },
+                { contactName: { contains: search } },
+                { primaryPhone: { contains: search } },
+              ],
+            },
           },
-        },
-      ];
+        ]
+      });
     }
+
+    const whereClause: any = andFilters.length > 0 ? { AND: andFilters } : {};
 
     // Fetch Total count for metadata if paginated
     const totalItems = isPaginated ? await prisma.ticket.count({ where: whereClause }) : 0;

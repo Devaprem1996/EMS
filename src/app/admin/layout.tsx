@@ -152,11 +152,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsNotificationsOpen(false);
     setShowFridayModal(false);
 
-    // Dynamically route based on the ticket's currentStage
+    // Dynamically route based on the ticket's currentStage / assignmentType
+    const activeStage = item.currentStage === "COMPLETED" ? item.assignmentType : item.currentStage;
     let targetPath = "/admin/services";
-    if (item.currentStage === "ENQUIRY") {
+    if (activeStage === "ENQUIRY") {
       targetPath = "/admin/enquiry";
-    } else if (item.currentStage === "REFILLING") {
+    } else if (activeStage === "REFILLING") {
       targetPath = "/admin/refilling";
     }
 

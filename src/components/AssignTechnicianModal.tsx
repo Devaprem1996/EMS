@@ -88,7 +88,7 @@ export default function AssignTechnicianModal({
 
   const handleTechToggle = (techId: string) => {
     setSelectedTechIds(prev =>
-      prev.includes(techId) ? prev.filter(id => id !== techId) : [...prev, techId]
+      prev.includes(techId) ? [] : [techId]
     );
   };
 
@@ -289,7 +289,7 @@ export default function AssignTechnicianModal({
                   filteredTechnicians.map(tech => (
                     <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer", color: "var(--text-primary)" }}>
                       <input
-                        type="checkbox"
+                        type="radio"
                         checked={selectedTechIds.includes(tech.id)}
                         onChange={() => handleTechToggle(tech.id)}
                         style={{ width: "15px", height: "15px", cursor: "pointer", accentColor: "var(--primary)" }}
@@ -299,9 +299,9 @@ export default function AssignTechnicianModal({
                   ))
                 )}
               </div>
-              <p style={{ fontSize: "10px", color: "#ff6c37", marginTop: "6px", lineHeight: "1.3", marginBlockEnd: 0 }}>
-                * Deselect existing technician (if any) for new assignment
-                <br />* Delete existing assignment from technician view screen
+              <p style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "6px", lineHeight: "1.3", marginBlockEnd: 0 }}>
+                * Selecting a technician will automatically deselect the previously assigned staff.
+                <br />* Click the &times; on the active badge or select them again to clear the assignment.
               </p>
             </div>
 

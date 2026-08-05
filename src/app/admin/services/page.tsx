@@ -338,7 +338,7 @@ export default function ServiceDashboardPage() {
   const paginatedJobs = jobs;
 
   return (
-    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+    <div style={{ padding: "20px", color: "var(--text-primary)", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
       <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "20%" }}></div>
       <div className="glow-spot-bg" style={{ width: "300px", height: "300px", bottom: "10%", right: "5%", background: "radial-gradient(circle, rgba(239, 68, 68, 0.02) 0%, rgba(0, 0, 0, 0) 70%)" }}></div>
@@ -346,10 +346,10 @@ export default function ServiceDashboardPage() {
       {/* Page Title & Subtitle */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             {config?.stages?.SERVICES?.displayName || "Service"} Dispatch
           </h1>
-          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time inspector tracking, annual visits schedules, and field inspection tasks</p>
+          <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>Real-time inspector tracking, annual visits schedules, and field inspection tasks</p>
         </div>
       </div>
 
@@ -406,7 +406,7 @@ export default function ServiceDashboardPage() {
               <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
                 Total Service Maintenance
               </span>
-              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+              <span style={{ background: "var(--accent-green-glow)", color: "var(--accent-green)", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
                 +8% audited
               </span>
             </div>
@@ -418,22 +418,22 @@ export default function ServiceDashboardPage() {
           {/* Flux Horizontal Progress Bars */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Pending Services ({pendingService})</span>
-                <span style={{ color: "#c084fc" }}>{pendingPct}%</span>
+                <span style={{ color: "var(--accent-purple)" }}>{pendingPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${pendingPct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${pendingPct}%`, height: "100%", background: "var(--accent-purple)", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem", color: "var(--text-secondary)" }}>
                 <span>Completed & Signed ({completedService})</span>
-                <span style={{ color: "#a3e635" }}>{completedPct}%</span>
+                <span style={{ color: "var(--accent-green)" }}>{completedPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${completedPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${completedPct}%`, height: "100%", background: "var(--accent-green)", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>
@@ -441,12 +441,12 @@ export default function ServiceDashboardPage() {
 
         {/* Flux Card 2: AMC Compliance & Maintenance Health Segmented Chart */}
         <div style={{
-          background: "#111116",
+          background: "var(--bg-card)",
           borderRadius: "24px",
           padding: "1.5rem",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          color: "#ffffff",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          color: "var(--text-primary)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between"
@@ -454,22 +454,22 @@ export default function ServiceDashboardPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
-                <span style={{ background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", padding: "6px", borderRadius: "8px" }}>🛠️</span>
+                <span style={{ background: "var(--accent-blue-glow)", color: "var(--accent-blue)", padding: "6px", borderRadius: "8px" }}>🛠️</span>
                 AMC Inspection Health & Compliance SLA
               </div>
-              <span style={{ fontSize: "0.78rem", color: "#38bdf8", background: "rgba(56, 189, 248, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+              <span style={{ fontSize: "0.78rem", color: "var(--accent-blue)", background: "var(--accent-blue-glow)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 100% Certified
               </span>
             </div>
 
             <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#38bdf8" }}>96.5%</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Compliance Standard</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent-blue)" }}>96.5%</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Compliance Standard</div>
               </div>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>45 mins</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Inspection Time</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent-green)" }}>45 mins</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Inspection Time</div>
               </div>
             </div>
           </div>
@@ -477,18 +477,18 @@ export default function ServiceDashboardPage() {
           {/* Horizontal Segmented SLA Stacked Bar */}
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "5px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
-              <span style={{ color: "#a3e635" }}>Compliant AMC (72%)</span>
-              <span style={{ color: "#c084fc" }}>Due for Inspection (20%)</span>
-              <span style={{ color: "#f43f5e" }}>Attention Required (8%)</span>
+              <span style={{ color: "var(--accent-green)" }}>Compliant AMC (72%)</span>
+              <span style={{ color: "var(--accent-purple)" }}>Due for Inspection (20%)</span>
+              <span style={{ color: "var(--accent-rose)" }}>Attention Required (8%)</span>
             </div>
             
             <div style={{ display: "flex", height: "14px", borderRadius: "9999px", overflow: "hidden", gap: "3px" }}>
-              <div style={{ width: "72%", background: "linear-gradient(90deg, #a3e635, #84cc16)", borderRadius: "9999px 0 0 9999px" }} title="72% Compliant"></div>
-              <div style={{ width: "20%", background: "linear-gradient(90deg, #c084fc, #a855f7)" }} title="20% Due Soon"></div>
-              <div style={{ width: "8%", background: "linear-gradient(90deg, #f43f5e, #e11d48)", borderRadius: "0 9999px 9999px 0" }} title="8% Overdue"></div>
+              <div style={{ width: "72%", background: "var(--accent-green)", borderRadius: "9999px 0 0 9999px" }} title="72% Compliant"></div>
+              <div style={{ width: "20%", background: "var(--accent-purple)" }} title="20% Due Soon"></div>
+              <div style={{ width: "8%", background: "var(--accent-rose)", borderRadius: "0 9999px 9999px 0" }} title="8% Overdue"></div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#71717a", marginTop: "4px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "var(--text-muted)", marginTop: "4px" }}>
               <span>Total Serviced: 240 Units</span>
               <span>Next Renewal Target: 100% SLA</span>
             </div>

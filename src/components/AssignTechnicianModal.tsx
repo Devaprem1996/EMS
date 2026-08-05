@@ -63,6 +63,7 @@ export default function AssignTechnicianModal({
   const [technicianInstructions, setTechnicianInstructions] = useState("");
   const [customerLocation, setCustomerLocation] = useState("");
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
+  const [techSearch, setTechSearch] = useState("");
 
   useEffect(() => {
     if (selectedJob) {
@@ -82,6 +83,7 @@ export default function AssignTechnicianModal({
       setCustomerLocation("");
       setSelectedTechIds([]);
     }
+    setTechSearch("");
   }, [selectedJob, isOpen]);
 
   const handleTechToggle = (techId: string) => {
@@ -89,6 +91,13 @@ export default function AssignTechnicianModal({
       prev.includes(techId) ? prev.filter(id => id !== techId) : [...prev, techId]
     );
   };
+
+  const filteredTechnicians = technicians.filter(tech => {
+    const term = techSearch.toLowerCase();
+    const name = (tech.fullName || "").toLowerCase();
+    const phoneNum = (tech.phone || tech.contactPhone || "").toLowerCase();
+    return name.includes(term) || phoneNum.includes(term);
+  });
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,11 +214,79 @@ export default function AssignTechnicianModal({
 
             <div>
               <label style={{ fontSize: "11px", color: "var(--accent)", display: "block", marginBottom: "6px", fontWeight: "bold" }}>Assign To (Technicians) *</label>
-              <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "8px", maxHeight: "120px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
-                {technicians.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-muted)", padding: "4px" }}>No active technicians found.</div>
+              
+              {/* Search Filter Input */}
+              <input
+                type="text"
+                placeholder="🔍 Search staff by name or phone..."
+                value={techSearch}
+                onChange={e => setTechSearch(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-glass)",
+                  borderRadius: "8px",
+                  color: "var(--text-primary)",
+                  fontSize: "13px",
+                  marginBottom: "8px",
+                  outline: "none"
+                }}
+              />
+
+              {/* Selected Staff Badge Pills */}
+              {selectedTechIds.length > 0 && (
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "8px" }}>
+                  {selectedTechIds.map(id => {
+                    const tech = technicians.find(t => t.id === id);
+                    if (!tech) return null;
+                    return (
+                      <span
+                        key={id}
+                        style={{
+                          fontSize: "11px",
+                          background: "var(--accent-green-glow)",
+                          color: "var(--accent)",
+                          border: "1px solid var(--border-glass)",
+                          padding: "3px 10px",
+                          borderRadius: "9999px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          fontWeight: "600"
+                        }}
+                      >
+                        {tech.fullName?.split(" ")[0]}
+                        <button
+                          type="button"
+                          onClick={() => handleTechToggle(id)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "var(--accent)",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center"
+                          }}
+                          title="Remove technician"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{ background: "var(--bg-input)", border: "1px solid var(--border-glass)", borderRadius: "8px", padding: "8px", maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {filteredTechnicians.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", padding: "4px" }}>
+                    {technicians.length === 0 ? "No active technicians found." : "No technicians match search filter."}
+                  </div>
                 ) : (
-                  technicians.map(tech => (
+                  filteredTechnicians.map(tech => (
                     <label key={tech.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", cursor: "pointer", color: "var(--text-primary)" }}>
                       <input
                         type="checkbox"

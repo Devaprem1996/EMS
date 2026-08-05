@@ -627,35 +627,31 @@ export default function EmployeeMasterPage() {
           justifyContent: "center",
           zIndex: 9999,
           padding: "20px"
-        }}>
-          <div style={{
-            background: "#121217",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            borderRadius: "24px",
+        }} onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
+          <div className="modal-card theme-modal-card" style={{
             width: "100%",
             maxWidth: "540px",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
+            boxShadow: "var(--shadow-glass)",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column"
           }}>
             
             {/* Modal Header */}
-            <div style={{
+            <div className="theme-modal-card-header" style={{
               padding: "20px 24px",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              background: "rgba(255,255,255,0.02)"
+              borderBottom: "1px solid var(--border-glass)"
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{
                   width: "40px",
                   height: "40px",
                   borderRadius: "9999px",
-                  background: role === "ADMIN" ? "rgba(192, 132, 252, 0.2)" : "rgba(163, 230, 53, 0.2)",
-                  color: role === "ADMIN" ? "#c084fc" : "#a3e635",
+                  background: role === "ADMIN" ? "var(--accent-purple-glow)" : "var(--accent-green-glow)",
+                  color: role === "ADMIN" ? "var(--accent-purple)" : "var(--accent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center"
@@ -663,7 +659,7 @@ export default function EmployeeMasterPage() {
                   {editingEmployee ? <Edit2 size={18} /> : <UserPlus size={18} />}
                 </div>
                 <div>
-                  <h2 style={{ fontSize: "18px", fontWeight: "800", margin: 0, color: "#ffffff" }}>
+                  <h2 style={{ fontSize: "18px", fontWeight: "800", margin: 0, color: "var(--text-primary)" }}>
                     {editingEmployee ? "Edit Employee Profile" : "Register New Employee"}
                   </h2>
                   <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
@@ -675,7 +671,7 @@ export default function EmployeeMasterPage() {
               <button
                 onClick={() => setIsModalOpen(false)}
                 style={{
-                  background: "rgba(255,255,255,0.06)",
+                  background: "var(--bg-input)",
                   border: "none",
                   color: "var(--text-muted)",
                   width: "32px",
@@ -696,9 +692,9 @@ export default function EmployeeMasterPage() {
             <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
               {formError && (
                 <div style={{
-                  background: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#ef4444",
+                  background: "var(--accent-rose-glow)",
+                  border: "1px solid var(--accent-rose)",
+                  color: "var(--accent-rose)",
                   padding: "10px 14px",
                   borderRadius: "12px",
                   fontSize: "13px",
@@ -725,9 +721,9 @@ export default function EmployeeMasterPage() {
                       padding: "12px",
                       borderRadius: "14px",
                       border: "1px solid",
-                      borderColor: role === "TECHNICIAN" ? "#a3e635" : "rgba(255,255,255,0.08)",
-                      background: role === "TECHNICIAN" ? "rgba(163, 230, 53, 0.12)" : "rgba(255,255,255,0.03)",
-                      color: role === "TECHNICIAN" ? "#a3e635" : "var(--text-secondary)",
+                      borderColor: role === "TECHNICIAN" ? "var(--accent)" : "var(--border-glass)",
+                      background: role === "TECHNICIAN" ? "var(--accent-green-glow)" : "var(--bg-input)",
+                      color: role === "TECHNICIAN" ? "var(--accent)" : "var(--text-secondary)",
                       cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
@@ -748,9 +744,9 @@ export default function EmployeeMasterPage() {
                       padding: "12px",
                       borderRadius: "14px",
                       border: "1px solid",
-                      borderColor: role === "ADMIN" ? "#c084fc" : "rgba(255,255,255,0.08)",
-                      background: role === "ADMIN" ? "rgba(192, 132, 252, 0.12)" : "rgba(255,255,255,0.03)",
-                      color: role === "ADMIN" ? "#c084fc" : "var(--text-secondary)",
+                      borderColor: role === "ADMIN" ? "var(--accent-purple)" : "var(--border-glass)",
+                      background: role === "ADMIN" ? "var(--accent-purple-glow)" : "var(--bg-input)",
+                      color: role === "ADMIN" ? "var(--accent-purple)" : "var(--text-secondary)",
                       cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
@@ -770,121 +766,113 @@ export default function EmployeeMasterPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
                 
                 {/* Full Name */}
-                <div style={{ gridColumn: "span 2" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                    Full Name *
-                  </label>
+                <div style={{ gridColumn: "span 2", position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Full Name *</span>
                   <input
                     type="text"
                     required
                     placeholder="e.g. John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    className="transparent-input"
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#ffffff",
-                      fontSize: "13.5px",
-                      outline: "none"
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: "14px",
+                      padding: "4px 0",
+                      color: "var(--text-primary)"
                     }}
                   />
                 </div>
 
                 {/* Employee ID */}
-                <div>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                    Employee Number *
-                  </label>
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Employee Number *</span>
                   <input
                     type="text"
                     required
                     placeholder="e.g. E001"
                     value={employeeNumber}
                     onChange={(e) => setEmployeeNumber(e.target.value)}
+                    className="transparent-input"
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#ffffff",
-                      fontSize: "13.5px",
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: "14px",
+                      padding: "4px 0",
                       fontFamily: "monospace",
-                      outline: "none"
+                      color: "var(--text-primary)"
                     }}
                   />
                 </div>
 
                 {/* Contact Phone */}
-                <div>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                    Mobile Number *
-                  </label>
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Mobile Number *</span>
                   <input
                     type="tel"
                     required
                     placeholder="e.g. 9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    className="transparent-input"
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#ffffff",
-                      fontSize: "13.5px",
-                      outline: "none"
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: "14px",
+                      padding: "4px 0",
+                      color: "var(--text-primary)"
                     }}
                   />
                 </div>
 
                 {/* Email */}
-                <div style={{ gridColumn: "span 2" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
-                    Email Address
-                  </label>
+                <div style={{ gridColumn: "span 2", position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Email Address</span>
                   <input
                     type="email"
                     placeholder="e.g. user@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="transparent-input"
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#ffffff",
-                      fontSize: "13.5px",
-                      outline: "none"
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: "14px",
+                      padding: "4px 0",
+                      color: "var(--text-primary)"
                     }}
                   />
                 </div>
 
                 {/* Password */}
-                <div style={{ gridColumn: "span 2" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
+                <div style={{ gridColumn: "span 2", position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>
                     {editingEmployee ? "New Password (Leave blank to keep current)" : "Account Password *"}
-                  </label>
+                  </span>
                   <input
                     type="text"
                     required={!editingEmployee}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="transparent-input"
                     style={{
                       width: "100%",
-                      padding: "11px 14px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "12px",
-                      color: "#ffffff",
-                      fontSize: "13.5px",
-                      outline: "none"
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: "14px",
+                      padding: "4px 0",
+                      color: "var(--text-primary)"
                     }}
                   />
                 </div>
@@ -896,9 +884,9 @@ export default function EmployeeMasterPage() {
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
-                      style={{ width: "18px", height: "18px", accentColor: "#a3e635" }}
+                      style={{ width: "18px", height: "18px", accentColor: "var(--primary)" }}
                     />
-                    <span style={{ fontSize: "13.5px", fontWeight: "700", color: "#ffffff" }}>
+                    <span style={{ fontSize: "13.5px", fontWeight: "700", color: "var(--text-primary)" }}>
                       Enable Active Account Access
                     </span>
                   </label>
@@ -907,7 +895,7 @@ export default function EmployeeMasterPage() {
               </div>
 
               {/* Modal Action Buttons */}
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "18px" }}>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", borderTop: "1px solid var(--border-glass)", paddingTop: "18px" }}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -915,9 +903,9 @@ export default function EmployeeMasterPage() {
                   style={{
                     padding: "10px 20px",
                     borderRadius: "9999px",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "var(--text-primary)",
+                    background: "transparent",
+                    border: "1px solid var(--border-glass)",
+                    color: "var(--text-secondary)",
                     fontSize: "13.5px",
                     fontWeight: "700",
                     cursor: "pointer"
@@ -932,13 +920,13 @@ export default function EmployeeMasterPage() {
                   style={{
                     padding: "10px 24px",
                     borderRadius: "9999px",
-                    background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)",
+                    background: "linear-gradient(135deg, var(--accent) 0%, #84cc16 100%)",
                     border: "none",
                     color: "#0f172a",
                     fontSize: "13.5px",
                     fontWeight: "800",
                     cursor: "pointer",
-                    boxShadow: "0 6px 20px rgba(163, 230, 53, 0.3)"
+                    boxShadow: "0 6px 20px rgba(163, 230, 53, 0.2)"
                   }}
                 >
                   {formLoading ? "Saving..." : editingEmployee ? "Update Profile" : "Create Profile"}

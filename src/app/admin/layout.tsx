@@ -57,6 +57,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showFridayModal, setShowFridayModal] = useState(false);
 
+  // Sidebar Badge Stats State
+  const [stats, setStats] = useState<{ enquiries: number; refills: number; services: number; activeTasks: number } | null>(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const res = await fetch("/api/jobs/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStats({
+            enquiries: data.enquiries || 0,
+            refills: data.refills || 0,
+            services: data.services || 0,
+            activeTasks: data.activeTasks || 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load sidebar stats:", err);
+      }
+    }
+    if (user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN")) {
+      loadStats();
+    }
+  }, [user, pathname]);
+
   useEffect(() => {
     async function loadNotifications() {
       try {
@@ -270,9 +295,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const Icon = item.icon;
             const isActive = pathname === item.path;
             const badgeCounts: { [key: string]: number } = {
-              "/admin/enquiry": 3,
-              "/admin/refilling": 4,
-              "/admin/tasks": 2
+              "/admin/enquiry": stats?.enquiries || 0,
+              "/admin/refilling": stats?.refills || 0,
+              "/admin/services": stats?.services || 0,
+              "/admin/tasks": stats?.activeTasks || 0
             };
             const badgeCount = badgeCounts[item.path];
 
@@ -303,7 +329,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Icon size={18} style={{ color: isActive ? "var(--nav-active-text)" : "var(--text-muted)" }} />
                   {!isCollapsed && <span>{item.name}</span>}
                 </div>
-                {!isCollapsed && badgeCount && (
+                {!isCollapsed && badgeCount > 0 && (
                   <span style={{
                     background: isActive ? "var(--accent)" : "rgba(163, 230, 53, 0.15)",
                     color: isActive ? "var(--text-on-accent, #0f172a)" : "var(--accent)",

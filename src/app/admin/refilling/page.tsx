@@ -473,12 +473,12 @@ export default function RefillingDashboardPage() {
 
         {/* Flux Card 2: Radial Donut & Gas Capacity Speedometer Gauge Widget */}
         <div style={{
-          background: "#111116",
+          background: "var(--bg-card)",
           borderRadius: "24px",
           padding: "1.5rem",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          color: "#ffffff",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glow)",
+          color: "var(--text-primary)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between"
@@ -486,7 +486,7 @@ export default function RefillingDashboardPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
-                <span style={{ background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", padding: "6px", borderRadius: "8px" }}>🎛️</span>
+                <span style={{ background: "var(--accent-purple-glow)", color: "var(--accent-purple)", padding: "6px", borderRadius: "8px" }}>🎛️</span>
                 <div style={{ padding: "0 10px" }}>
                   <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase" }}>
                     {config?.brand?.labels?.capacity || "Capacity"} & Purity Speedometer
@@ -494,19 +494,18 @@ export default function RefillingDashboardPage() {
                   <div style={{ marginTop: "10px", height: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", overflow: "hidden" }}></div>
                 </div>
               </div>
-              <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+              <span style={{ fontSize: "0.78rem", color: "var(--accent-purple)", background: "var(--accent-purple-glow)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 99.2% Quality Grade
               </span>
             </div>
-
             <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#c084fc" }}>99.2%</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hydro-Test Rate</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent-purple)" }}>99.2%</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hydro-Test Rate</div>
               </div>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>1.8 Days</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Plant Turnaround</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent)" }}>1.8 Days</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Plant Turnaround</div>
               </div>
             </div>
           </div>
@@ -515,33 +514,33 @@ export default function RefillingDashboardPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", padding: "10px 0" }}>
             <div style={{ position: "relative", width: "110px", height: "70px", display: "flex", justifyContent: "center" }}>
               <svg viewBox="0 0 100 60" style={{ width: "100%", height: "100%" }}>
-                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" strokeLinecap="round" />
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="var(--border-glass)" strokeWidth="10" strokeLinecap="round" />
                 <path d="M 10 50 A 40 40 0 0 1 78 20" fill="none" stroke="url(#refillRadialGrad)" strokeWidth="10" strokeLinecap="round" />
                 <defs>
                   <linearGradient id="refillRadialGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#c084fc" />
-                    <stop offset="100%" stopColor="#a3e635" />
+                    <stop offset="0%" stopColor="var(--accent-purple)" />
+                    <stop offset="100%" stopColor="var(--accent)" />
                   </linearGradient>
                 </defs>
               </svg>
               <div style={{ position: "absolute", bottom: "4px", textAlign: "center" }}>
-                <span style={{ fontSize: "14px", fontWeight: "800", color: "#ffffff" }}>94%</span>
-                <div style={{ fontSize: "9px", color: "#71717a" }}>Capacity</div>
+                <span style={{ fontSize: "14px", fontWeight: "800", color: "var(--text-primary)" }}>94%</span>
+                <div style={{ fontSize: "9px", color: "var(--text-muted)" }}>Capacity</div>
               </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c084fc" }}></span>
-                <span style={{ color: "#ffffff", fontWeight: "600" }}>CO2 & Foam (480 L)</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-purple)" }}></span>
+                <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>CO2 & Foam (480 L)</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a3e635" }}></span>
-                <span style={{ color: "#ffffff", fontWeight: "600" }}>ABC Powder (320 L)</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent)" }}></span>
+                <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>ABC Powder (320 L)</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }}></span>
-                <span style={{ color: "#ffffff", fontWeight: "600" }}>Clean Agent (150 L)</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-blue)" }}></span>
+                <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>Clean Agent (150 L)</span>
               </div>
             </div>
           </div>
@@ -773,8 +772,8 @@ export default function RefillingDashboardPage() {
                       <tr key={job.id}>
                         <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
                         <td style={{ fontFamily: "monospace", fontWeight: "700", color: "var(--accent)" }}>{job.jobNumber}</td>
-                        <td style={{ fontWeight: "600", color: "#fff" }}>{job.customer?.companyName || "N/A"}</td>
-                        <td style={{ fontFamily: "monospace", color: "#c084fc", fontWeight: "600" }}>{job.serialNumber || "N/A"}</td>
+                        <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{job.customer?.companyName || "N/A"}</td>
+                        <td style={{ fontFamily: "monospace", color: "var(--accent-purple)", fontWeight: "600" }}>{job.serialNumber || "N/A"}</td>
                         <td>{job.extinguisherType || "N/A"}</td>
                         <td>{job.capacity || "N/A"}</td>
                         <td>
@@ -801,12 +800,12 @@ export default function RefillingDashboardPage() {
                                   key={asg.id} 
                                   style={{
                                     fontSize: "10px",
-                                    background: "rgba(192, 132, 252, 0.15)",
-                                    color: "#c084fc",
+                                    background: "var(--accent-purple-glow)",
+                                    color: "var(--accent-purple)",
                                     padding: "2px 6px",
                                     borderRadius: "9999px",
                                     fontWeight: "600",
-                                    border: "1px solid rgba(192, 132, 252, 0.2)"
+                                    border: "1px solid var(--border-glass)"
                                   }}
                                   title={asg.technician?.phone}
                                 >

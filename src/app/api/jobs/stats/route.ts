@@ -158,6 +158,14 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const activeTasksCount = await prisma.ticketAssignment.count({
+      where: {
+        status: { in: ["ASSIGNED", "PENDING", "Pending"] },
+        deletedAt: null,
+        ticket: { ...whereBase, deletedAt: null },
+      },
+    });
+
     // 2. Determine timeframes
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -319,6 +327,7 @@ export async function GET(req: NextRequest) {
       refills: refillsCount,
       services: servicesCount,
       techs: techsCount,
+      activeTasks: activeTasksCount,
       today: {
         ...todayStats,
         leadConv: `+${todayStats.leadConv}%`,

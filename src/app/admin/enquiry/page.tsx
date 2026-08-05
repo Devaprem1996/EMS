@@ -850,7 +850,7 @@ export default function EnquiryDashboardPage() {
               <span style={{ fontSize: "0.82rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
                 Total Enquiries Pipeline
               </span>
-              <span style={{ background: "rgba(163, 230, 53, 0.18)", color: "#a3e635", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
+              <span style={{ background: "var(--accent-green-glow)", color: "var(--accent-green)", fontSize: "0.75rem", fontWeight: "800", padding: "3px 10px", borderRadius: "9999px" }}>
                 +5% today
               </span>
             </div>
@@ -864,10 +864,10 @@ export default function EnquiryDashboardPage() {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
                 <span>Registered Leads ({registeredEnq})</span>
-                <span style={{ color: "#c084fc" }}>{regPct}%</span>
+                <span style={{ color: "var(--accent-purple)" }}>{regPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${regPct}%`, height: "100%", background: "#c084fc", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${regPct}%`, height: "100%", background: "var(--accent-purple)", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
@@ -876,18 +876,18 @@ export default function EnquiryDashboardPage() {
                 <span>Orders Confirmed ({confirmedEnq})</span>
                 <span style={{ color: "var(--text-secondary)" }}>{confPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${confPct}%`, height: "100%", background: "#52525b", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${confPct}%`, height: "100%", background: "var(--text-muted)", borderRadius: "9999px" }}></div>
               </div>
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", marginBottom: "0.35rem" }}>
                 <span>Orders Delivered ({deliveredEnq})</span>
-                <span style={{ color: "#a3e635" }}>{delPct}%</span>
+                <span style={{ color: "var(--accent-green)" }}>{delPct}%</span>
               </div>
-              <div style={{ height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                <div style={{ width: `${delPct}%`, height: "100%", background: "#a3e635", borderRadius: "9999px" }}></div>
+              <div style={{ height: "8px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                <div style={{ width: `${delPct}%`, height: "100%", background: "var(--accent-green)", borderRadius: "9999px" }}></div>
               </div>
             </div>
           </div>
@@ -895,12 +895,12 @@ export default function EnquiryDashboardPage() {
 
         {/* Flux Card 2: Enquiry Lead Conversion & Area Trend Analytics Widget */}
         <div style={{
-          background: "#111116",
+          background: "var(--bg-card)",
           borderRadius: "24px",
           padding: "1.5rem",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          color: "#ffffff",
+          border: "1px solid var(--border-glass)",
+          boxShadow: "var(--shadow-glass)",
+          color: "var(--text-primary)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between"
@@ -908,22 +908,22 @@ export default function EnquiryDashboardPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", fontWeight: "700" }}>
-                <span style={{ background: "rgba(163, 230, 53, 0.15)", color: "#a3e635", padding: "6px", borderRadius: "8px" }}>📈</span>
+                <span style={{ background: "var(--accent-green-glow)", color: "var(--accent-green)", padding: "6px", borderRadius: "8px" }}>📈</span>
                 Enquiry Lead Conversion & Trend Curve
               </div>
-              <span style={{ fontSize: "0.78rem", color: "#a3e635", background: "rgba(163, 230, 53, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+              <span style={{ fontSize: "0.78rem", color: "var(--accent-green)", background: "var(--accent-green-glow)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 78.4% Win Rate
               </span>
             </div>
 
             <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#a3e635" }}>78.4%</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Quote Win Rate</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent-green)" }}>78.4%</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Quote Win Rate</div>
               </div>
               <div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#38bdf8" }}>3.2 Days</div>
-                <div style={{ fontSize: "0.72rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Sales Cycle</div>
+                <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "var(--accent-blue)" }}>3.2 Days</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Sales Cycle</div>
               </div>
             </div>
           </div>
@@ -933,8 +933,8 @@ export default function EnquiryDashboardPage() {
             <svg viewBox="0 0 300 80" style={{ width: "100%", height: "100%", overflow: "visible" }}>
               <defs>
                 <linearGradient id="enquiryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#a3e635" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#a3e635" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="var(--accent-green)" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="var(--accent-green)" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path 
@@ -944,21 +944,21 @@ export default function EnquiryDashboardPage() {
               <path 
                 d="M0 60 Q 50 40, 100 50 T 200 20 T 300 10" 
                 fill="none" 
-                stroke="#a3e635" 
+                stroke="var(--accent-green)" 
                 strokeWidth="3" 
                 strokeLinecap="round" 
               />
               {/* Data points */}
-              <circle cx="0" cy="60" r="4" fill="#a3e635" />
-              <circle cx="100" cy="50" r="4" fill="#a3e635" />
-              <circle cx="200" cy="20" r="4" fill="#a3e635" />
-              <circle cx="300" cy="10" r="6" fill="#ffffff" stroke="#a3e635" strokeWidth="3" />
+              <circle cx="0" cy="60" r="4" fill="var(--accent-green)" />
+              <circle cx="100" cy="50" r="4" fill="var(--accent-green)" />
+              <circle cx="200" cy="20" r="4" fill="var(--accent-green)" />
+              <circle cx="300" cy="10" r="6" fill="var(--bg-card)" stroke="var(--accent-green)" strokeWidth="3" />
             </svg>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#71717a", marginTop: "4px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "4px" }}>
               <span>Registered</span>
               <span>Quoted</span>
               <span>Confirmed</span>
-              <span style={{ color: "#a3e635", fontWeight: "700" }}>Delivered ↗</span>
+              <span style={{ color: "var(--accent-green)", fontWeight: "700" }}>Delivered ↗</span>
             </div>
           </div>
         </div>

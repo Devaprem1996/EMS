@@ -131,8 +131,8 @@ export default function AdminCentralOverviewPage() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
             <span style={{
-              background: "rgba(163, 230, 53, 0.15)",
-              color: "var(--accent)",
+              background: "var(--accent-green-glow)",
+              color: "var(--accent-green)",
               fontSize: "var(--font-xs)",
               fontWeight: "800",
               padding: "4px 12px",
@@ -167,52 +167,19 @@ export default function AdminCentralOverviewPage() {
         }}>
           <button
             onClick={() => setTimeframe("today")}
-            style={{
-              padding: "6px 16px",
-              borderRadius: "9999px",
-              border: "none",
-              background: timeframe === "today" ? "var(--accent)" : "transparent",
-              color: timeframe === "today" ? "var(--text-on-accent, #0f172a)" : "var(--text-secondary)",
-              fontSize: "var(--font-xs)",
-              fontWeight: "800",
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: timeframe === "today" ? "0 4px 12px rgba(163, 230, 53, 0.3)" : "none"
-            }}
+            className={`timeframe-btn ${timeframe === "today" ? "active-today" : ""}`}
           >
             📅 Date-wise
           </button>
           <button
             onClick={() => setTimeframe("month")}
-            style={{
-              padding: "6px 16px",
-              borderRadius: "9999px",
-              border: "none",
-              background: timeframe === "month" ? "#c084fc" : "transparent",
-              color: timeframe === "month" ? "#000000" : "var(--text-secondary)",
-              fontSize: "var(--font-xs)",
-              fontWeight: "800",
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: timeframe === "month" ? "0 4px 12px rgba(192, 132, 252, 0.3)" : "none"
-            }}
+            className={`timeframe-btn ${timeframe === "month" ? "active-month" : ""}`}
           >
             📊 Month-wise
           </button>
           <button
             onClick={() => setTimeframe("year")}
-            style={{
-              padding: "6px 16px",
-              borderRadius: "9999px",
-              border: "none",
-              background: timeframe === "year" ? "#38bdf8" : "transparent",
-              color: timeframe === "year" ? "#000000" : "var(--text-secondary)",
-              fontSize: "var(--font-xs)",
-              fontWeight: "800",
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: timeframe === "year" ? "0 4px 12px rgba(56, 189, 248, 0.3)" : "none"
-            }}
+            className={`timeframe-btn ${timeframe === "year" ? "active-year" : ""}`}
           >
             📈 Year-wise
           </button>
@@ -237,14 +204,14 @@ export default function AdminCentralOverviewPage() {
             cursor: "pointer",
             boxShadow: "var(--shadow-glass)"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-green)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {config?.stages?.ENQUIRY?.displayName || "Client Enquiries"}
               </span>
-              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(163, 230, 53, 0.15)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "var(--accent-green-glow)", color: "var(--accent-green)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <FileText size={18} />
               </div>
             </div>
@@ -252,7 +219,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.enquiries}
             </div>
             <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
-            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent-green)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <TrendingUp size={13} /> {currentDataset.leadConv} Lead Conversion Rate
             </div>
           </div>
@@ -269,14 +236,14 @@ export default function AdminCentralOverviewPage() {
             cursor: "pointer",
             boxShadow: "var(--shadow-glass)"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c084fc"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-purple)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {config?.stages?.REFILLING?.displayName || "Refilling Operations"}
               </span>
-              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(192, 132, 252, 0.15)", color: "#c084fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "var(--accent-purple-glow)", color: "var(--accent-purple)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <RotateCcw size={18} />
               </div>
             </div>
@@ -284,7 +251,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.refills}
             </div>
             <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
-            <div style={{ fontSize: "var(--font-xs)", color: "#c084fc", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent-purple)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <Zap size={13} /> {currentDataset.onTimeRate} Dispatch Efficiency
             </div>
           </div>
@@ -301,14 +268,14 @@ export default function AdminCentralOverviewPage() {
             cursor: "pointer",
             boxShadow: "var(--shadow-glass)"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#38bdf8"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-blue)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {config?.stages?.SERVICES?.displayName || "Maintenance & AMC"}
               </span>
-              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "var(--accent-blue-glow)", color: "var(--accent-blue)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Wrench size={18} />
               </div>
             </div>
@@ -316,7 +283,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.services}
             </div>
             <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
-            <div style={{ fontSize: "var(--font-xs)", color: "#38bdf8", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent-blue)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <CheckCircle2 size={13} /> 94.8% Completion Rate
             </div>
           </div>
@@ -333,14 +300,14 @@ export default function AdminCentralOverviewPage() {
             cursor: "pointer",
             boxShadow: "var(--shadow-glass)"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#f43f5e"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-rose)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-glass)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
               <span style={{ fontSize: "var(--font-xs)", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Field Staff
               </span>
-              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(244, 63, 94, 0.15)", color: "#f43f5e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "var(--accent-rose-glow)", color: "var(--accent-rose)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Users size={18} />
               </div>
             </div>
@@ -348,7 +315,7 @@ export default function AdminCentralOverviewPage() {
               {currentDataset.techs}
             </div>
             <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "4px" }}>All-Time Total</div>
-            <div style={{ fontSize: "var(--font-xs)", color: "#f43f5e", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
+            <div style={{ fontSize: "var(--font-xs)", color: "var(--accent-rose)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "700" }}>
               <Activity size={13} /> Active Staff Assigned
             </div>
           </div>
@@ -376,29 +343,29 @@ export default function AdminCentralOverviewPage() {
         }}>
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-primary, #ffffff)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Zap size={18} style={{ color: "#a3e635" }} /> Dispatch Analysis & Pipeline
+              <h3 style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Zap size={18} style={{ color: "var(--accent-green)" }} /> Dispatch Analysis & Pipeline
               </h3>
-              <span style={{ fontSize: "11px", fontWeight: "800", color: "#a3e635", background: "rgba(163, 230, 53, 0.15)", padding: "4px 10px", borderRadius: "9999px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "800", color: "var(--accent-green)", background: "var(--accent-green-glow)", padding: "4px 10px", borderRadius: "9999px" }}>
                 Real-Time Telemetry
               </span>
             </div>
 
             <div style={{ display: "flex", gap: "2rem", marginBottom: "1.5rem", marginTop: "1rem" }}>
               <div>
-                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#a3e635", lineHeight: "1" }}>
+                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--accent-green)", lineHeight: "1" }}>
                   {currentDataset.onTimeRate}
                 </div>
-                <div style={{ fontSize: "12px", color: "var(--text-secondary, #a1a1aa)", marginTop: "4px", fontWeight: "600" }}>
+                <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px", fontWeight: "600" }}>
                   On-Time Dispatch Rate
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#c084fc", lineHeight: "1" }}>
+                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--accent-purple)", lineHeight: "1" }}>
                   {currentDataset.avgTurnaround}
                 </div>
-                <div style={{ fontSize: "12px", color: "var(--text-secondary, #a1a1aa)", marginTop: "4px", fontWeight: "600" }}>
+                <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px", fontWeight: "600" }}>
                   Avg Turnaround Time
                 </div>
               </div>
@@ -409,31 +376,31 @@ export default function AdminCentralOverviewPage() {
               
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Enquiry to Conversion</span>
-                  <span style={{ color: "#a3e635", fontWeight: "800" }}>{currentDataset.quoteRate}</span>
+                  <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>Enquiry to Conversion</span>
+                  <span style={{ color: "var(--accent-green)", fontWeight: "800" }}>{currentDataset.quoteRate}</span>
                 </div>
-                <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                  <div style={{ width: currentDataset.quoteRate, height: "100%", background: "linear-gradient(90deg, #a3e635, #84cc16)", borderRadius: "9999px" }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>{config?.stages?.REFILLING?.displayName || "Refilling"} Dispatches</span>
-                  <span style={{ color: "#c084fc", fontWeight: "800" }}>{currentDataset.refillRate}</span>
-                </div>
-                <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                  <div style={{ width: currentDataset.refillRate, height: "100%", background: "linear-gradient(90deg, #c084fc, #a855f7)", borderRadius: "9999px" }}></div>
+                <div style={{ width: "100%", height: "9px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div style={{ width: currentDataset.quoteRate, height: "100%", background: "var(--accent-green)", borderRadius: "9999px" }}></div>
                 </div>
               </div>
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--text-primary, #ffffff)", fontWeight: "600" }}>Task Completion Rate</span>
-                  <span style={{ color: "#38bdf8", fontWeight: "800" }}>{currentDataset.inspectionRate}</span>
+                  <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{config?.stages?.REFILLING?.displayName || "Refilling"} Dispatches</span>
+                  <span style={{ color: "var(--accent-purple)", fontWeight: "800" }}>{currentDataset.refillRate}</span>
                 </div>
-                <div style={{ width: "100%", height: "9px", background: "rgba(255,255,255,0.06)", borderRadius: "9999px", overflow: "hidden" }}>
-                  <div style={{ width: currentDataset.inspectionRate, height: "100%", background: "linear-gradient(90deg, #38bdf8, #0284c7)", borderRadius: "9999px" }}></div>
+                <div style={{ width: "100%", height: "9px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div style={{ width: currentDataset.refillRate, height: "100%", background: "var(--accent-purple)", borderRadius: "9999px" }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}>
+                  <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>Task Completion Rate</span>
+                  <span style={{ color: "var(--accent-blue)", fontWeight: "800" }}>{currentDataset.inspectionRate}</span>
+                </div>
+                <div style={{ width: "100%", height: "9px", background: "var(--progress-bg)", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div style={{ width: currentDataset.inspectionRate, height: "100%", background: "var(--accent-blue)", borderRadius: "9999px" }}></div>
                 </div>
               </div>
 
@@ -443,11 +410,11 @@ export default function AdminCentralOverviewPage() {
 
         {/* Dynamic Dual-Bar Interactive Analytics Chart Widget */}
         <div style={{
-          background: "var(--card-bg, #111116)",
-          border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border-glass)",
           borderRadius: "24px",
           padding: "1.75rem",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+          boxShadow: "var(--shadow-glass)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between"
@@ -455,14 +422,14 @@ export default function AdminCentralOverviewPage() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-primary, #ffffff)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <BarChart3 size={18} style={{ color: "#c084fc" }} /> Dispatch & Capacity Analytics
+                <h3 style={{ fontSize: "16px", fontWeight: "800", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <BarChart3 size={18} style={{ color: "var(--accent-purple)" }} /> Dispatch & Capacity Analytics
                 </h3>
-                <p style={{ fontSize: "12px", color: "var(--text-secondary, #a1a1aa)", margin: "2px 0 0 0" }}>
+                <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: "2px 0 0 0" }}>
                   {currentDataset.chartSubtitle}
                 </p>
               </div>
-              <span style={{ fontSize: "0.78rem", color: "#c084fc", background: "rgba(192, 132, 252, 0.12)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
+              <span style={{ fontSize: "0.78rem", color: "var(--accent-purple)", background: "var(--accent-purple-glow)", padding: "4px 10px", borderRadius: "9999px", fontWeight: "700" }}>
                 {timeframe === "today" ? "Hourly View" : timeframe === "month" ? "Monthly View" : "Quarterly View"}
               </span>
             </div>
@@ -474,7 +441,7 @@ export default function AdminCentralOverviewPage() {
                     data={currentDataset.bars}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-glass)" />
                     <XAxis 
                       dataKey="label" 
                       tick={{ fill: 'var(--text-secondary)', fontSize: 10, fontWeight: 600 }}
@@ -488,31 +455,31 @@ export default function AdminCentralOverviewPage() {
                     />
                     <Tooltip
                       contentStyle={{
-                        background: '#09090b',
-                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-glass)',
                         borderRadius: '8px',
                         fontSize: '11px',
-                        color: '#ffffff'
+                        color: 'var(--text-primary)'
                       }}
-                      itemStyle={{ color: '#ffffff' }}
-                      cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                      itemStyle={{ color: 'var(--text-primary)' }}
+                      cursor={{ fill: 'var(--primary-glow)' }}
                     />
                     <Bar 
                       dataKey="valTarget" 
                       name="SLA Target" 
-                      fill="#38bdf8" 
+                      fill="var(--accent-blue)" 
                       radius={[4, 4, 0, 0]} 
                     />
                     <Bar 
                       dataKey="valActual" 
                       name="Actual" 
-                      fill="#a3e635" 
+                      fill="var(--accent-green)" 
                       radius={[4, 4, 0, 0]} 
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ height: "100%", width: "100%", background: "rgba(255,255,255,0.02)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: "12px" }}>
+                <div style={{ height: "100%", width: "100%", background: "var(--progress-bg)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)", fontSize: "12px" }}>
                   Loading telemetry visualizer...
                 </div>
               )}
@@ -521,12 +488,12 @@ export default function AdminCentralOverviewPage() {
             {/* Chart Legend */}
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", fontSize: "11px", justifyContent: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }}></span>
-                <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Target SLA Volume</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-blue)" }}></span>
+                <span style={{ color: "var(--text-secondary)" }}>Target SLA Volume</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a3e635" }}></span>
-                <span style={{ color: "var(--text-secondary, #a1a1aa)" }}>Actual Execution</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-green)" }}></span>
+                <span style={{ color: "var(--text-secondary)" }}>Actual Execution</span>
               </div>
             </div>
           </div>
@@ -536,8 +503,8 @@ export default function AdminCentralOverviewPage() {
 
       {/* Quick Action Pill Buttons Row */}
       <div style={{
-        background: "var(--card-bg, #111116)",
-        border: "1px solid var(--border-glass, rgba(255, 255, 255, 0.1))",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-glass)",
         borderRadius: "20px",
         padding: "1.25rem 1.5rem",
         display: "flex",
@@ -545,11 +512,11 @@ export default function AdminCentralOverviewPage() {
         justifyContent: "space-between",
         flexWrap: "wrap",
         gap: "1rem",
-        boxShadow: "0 15px 30px rgba(0,0,0,0.3)"
+        boxShadow: "var(--shadow-glass)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Sparkles size={18} style={{ color: "#a3e635" }} />
-          <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary, #ffffff)" }}>
+          <Sparkles size={18} style={{ color: "var(--accent-green)" }} />
+          <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
             Operational Quick Actions:
           </span>
         </div>

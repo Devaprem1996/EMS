@@ -248,55 +248,55 @@ export default function TechnicianViewPage() {
   const pendingAsgs = totalAsgs - completedAsgs;
 
   return (
-    <div style={{ padding: "20px", color: "#e2e8f0", position: "relative", minHeight: "100%" }}>
+    <div style={{ padding: "20px", color: "var(--text-primary)", position: "relative", minHeight: "100%" }}>
       {/* Background Accent Glow Spots */}
       <div className="glow-spot-bg" style={{ width: "400px", height: "400px", top: "-10%", left: "20%" }}></div>
 
       {/* Page Title & Subtitle */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", position: "relative", zIndex: 1 }}>
         <div>
-          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, #fff 40%, #cbd5e1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <h1 style={{ fontSize: "26px", fontWeight: "800", margin: 0, letterSpacing: "-0.03em", background: "linear-gradient(to right, var(--text-primary) 40%, var(--text-secondary) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Technician Task Monitor
           </h1>
-          <p style={{ fontSize: "13.5px", color: "#94a3b8", margin: "4px 0 0 0" }}>Real-time field operations oversight, technician dispatches, and work order completion logs</p>
+          <p style={{ fontSize: "13.5px", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Real-time field operations oversight, technician dispatches, and work order completion logs</p>
         </div>
       </div>
 
       {/* KPI Summary Cards */}
       <div className="kpi-grid" style={{ marginBottom: "25px" }}>
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #3b82f6" }}>
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid var(--accent-blue)" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Assignments</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{totalAsgs}</div>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>Active Dispatch Work Orders</div>
           </div>
-          <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+          <div style={{ background: "var(--accent-blue-glow)", padding: "10px", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
             <span style={{ fontSize: "20px" }}>📋</span>
           </div>
         </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #f59e0b" }}>
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid var(--accent-amber)" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
-            <div style={{ fontSize: "11px", color: "#f59e0b", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pending Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{pendingAsgs}</div>
+            <div style={{ fontSize: "11px", color: "var(--accent-amber)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
               <span className="status-pulse-dot pulse-amber" style={{ margin: 0 }}></span> In Progress / Pending Field Visit
             </div>
           </div>
-          <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+          <div style={{ background: "var(--accent-amber-glow)", padding: "10px", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
             <span style={{ fontSize: "20px" }}>⚡</span>
           </div>
         </div>
 
-        <div className="kpi-card-glass" style={{ borderLeft: "4px solid #10b981" }}>
+        <div className="kpi-card-glass" style={{ borderLeft: "4px solid var(--accent-green)" }}>
           <div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
-            <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
-            <div style={{ fontSize: "11px", color: "#10b981", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed Tasks</div>
+            <div style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", marginTop: "6px", fontFamily: "monospace" }}>{completedAsgs}</div>
+            <div style={{ fontSize: "11px", color: "var(--accent-green)", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
               <span className="status-pulse-dot pulse-green" style={{ margin: 0 }}></span> Verified & Signed Off
             </div>
           </div>
-          <div style={{ background: "rgba(16, 185, 129, 0.15)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+          <div style={{ background: "var(--accent-green-glow)", padding: "10px", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
             <span style={{ fontSize: "20px" }}>🚛</span>
           </div>
         </div>
@@ -304,13 +304,13 @@ export default function TechnicianViewPage() {
 
       {/* Notifications */}
       {successMsg && (
-        <div style={{ padding: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid #10b981", borderRadius: "8px", color: "#10b981", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ padding: "12px", background: "var(--accent-green-glow)", border: "1px solid var(--accent-green)", borderRadius: "8px", color: "var(--accent-green)", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
           <Check size={18} />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", borderRadius: "8px", color: "#ef4444", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
+        <div style={{ padding: "12px", background: "var(--accent-rose-glow)", border: "1px solid var(--accent-rose)", borderRadius: "8px", color: "var(--accent-rose)", marginBottom: "15px", display: "flex", gap: "8px", alignItems: "center" }}>
           <AlertCircle size={18} />
           <span>{errorMsg}</span>
         </div>
@@ -388,7 +388,7 @@ export default function TechnicianViewPage() {
               borderRadius: "20px",
               border: "1px solid " + (selectedType === tab.key ? "var(--primary)" : "rgba(255,255,255,0.06)"),
               background: selectedType === tab.key ? "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)" : "rgba(18, 18, 26, 0.4)",
-              color: selectedType === tab.key ? "#fff" : "#94a3b8",
+              color: selectedType === tab.key ? "#fff" : "var(--text-muted)",
               cursor: "pointer",
               fontSize: "12.5px",
               fontWeight: "600",
@@ -442,8 +442,8 @@ export default function TechnicianViewPage() {
                 return (
                   <tr key={asg.id}>
                     <td style={{ color: "#64748b", fontWeight: "600" }}>{startIndex + index + 1}</td>
-                    <td style={{ fontWeight: "600", color: "#fff" }}>{asg.job.customer?.companyName || "N/A"}</td>
-                    <td style={{ fontFamily: "monospace", color: "#94a3b8" }}>{asg.job.customer?.phone}</td>
+                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{asg.job.customer?.companyName || "N/A"}</td>
+                    <td style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{asg.job.customer?.phone}</td>
                     <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{asg.technician.fullName}</td>
                     <td>
                       <span className={`pill-badge ${
@@ -458,10 +458,10 @@ export default function TechnicianViewPage() {
                       </span>
                     </td>
                     <td style={{ padding: "15px" }}>{siblingNames || "N/A"}</td>
-                    <td style={{ padding: "15px", fontWeight: "600", color: "var(--accent, #a3e635)" }}>
+                    <td style={{ padding: "15px", fontWeight: "600", color: "var(--accent)" }}>
                       {(!asg.assignedBy || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(asg.assignedBy) || (asg.assignedBy.length >= 32 && asg.assignedBy.includes("-") && !asg.assignedBy.includes(" "))) ? "Admin User" : asg.assignedBy}
                     </td>
-                    <td style={{ padding: "15px", fontWeight: "bold", color: "#a0aec0" }}>{asg.job.assignFor || "DELIVERY"}</td>
+                    <td style={{ padding: "15px", fontWeight: "bold", color: "var(--text-muted)" }}>{asg.job.assignFor || "DELIVERY"}</td>
                     <td style={{ padding: "15px" }}>
                       {locUrl ? (
                         <a 
@@ -473,7 +473,7 @@ export default function TechnicianViewPage() {
                           View Location <ExternalLink size={12} />
                         </a>
                       ) : (
-                        <span style={{ color: "#718096" }}>-</span>
+                        <span style={{ color: "var(--text-muted)" }}>-</span>
                       )}
                     </td>
                     <td style={{ padding: "15px" }}>{formatDate(asg.assignedAt)}</td>
@@ -481,17 +481,27 @@ export default function TechnicianViewPage() {
                       <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
                         <button
                           onClick={() => handleOpenEdit(asg)}
-                          style={{ background: "#ff4d80", border: "none", color: "#fff", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            color: "var(--text-secondary)",
+                            padding: "7px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(220, 38, 38, 0.15)"; e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.3)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"; }}
                           title="Task Details"
                         >
-                          <Edit2 size={14} />
+                          <Edit2 size={13} />
                         </button>
                         <button
                           onClick={() => handleDelete(asg.id)}
-                          style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid #ef4444", color: "#ef4444", padding: "6px", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                          style={{ background: "rgba(239, 68, 68, 0.2)", border: "1px solid #ef4444", color: "#ef4444", padding: "7px", borderRadius: "8px", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
                           title="Delete Assignment"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>
@@ -553,72 +563,74 @@ export default function TechnicianViewPage() {
 
       {/* Task View Modal */}
       {isModalOpen && selectedAsg && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "15px" }} onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}>
           <div className="modal-card theme-modal-card" style={{ width: "100%", maxWidth: "650px", maxHeight: "95%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             
             <div className="modal-header theme-modal-card-header" style={{ padding: "15px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", margin: 0 }}>Task View</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+              <h2 style={{ fontSize: "18px", margin: 0, fontWeight: "700", color: "var(--text-primary)" }}>Task Details</h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "inline-flex" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ padding: "20px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px" }}>
                 
-                {/* Client / Contact Person / Phone */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Client Name*</label>
-                    <input type="text" value={selectedAsg.job.customer?.companyName || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
+                {/* Client / Contact Person */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Client Name*</span>
+                    <input type="text" value={selectedAsg.job.customer?.companyName || ""} readOnly className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Person*</label>
-                    <input type="text" value={selectedAsg.job.customer?.contactPerson || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Contact Number*</label>
-                    <input type="text" value={selectedAsg.job.customer?.phone || ""} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Visit/Service Date*</label>
-                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Contact Person*</span>
+                    <input type="text" value={selectedAsg.job.customer?.contactPerson || ""} readOnly className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
                 </div>
 
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Address</label>
-                  <textarea value={selectedAsg.job.customer?.address || ""} readOnly rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed", resize: "none" }} />
+                {/* Contact Number / Visit Date */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Contact Number*</span>
+                    <input type="text" value={selectedAsg.job.customer?.phone || ""} readOnly className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
+                  </div>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Visit/Service Date*</span>
+                    <input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} required className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", cursor: "pointer" }} />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Address</span>
+                  <textarea value={selectedAsg.job.customer?.address || ""} readOnly rows={2} className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed", resize: "none", fontFamily: "inherit" }} />
                 </div>
 
                 {/* Instructions */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Admin Instructions</label>
-                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Admin Instructions</span>
+                    <textarea value={adminInstructions} onChange={e => setAdminInstructions(e.target.value)} rows={2} className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                   </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Technician Instructions</label>
-                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff", resize: "none" }} />
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Technician Instructions</span>
+                    <textarea value={technicianInstructions} onChange={e => setTechnicianInstructions(e.target.value)} rows={2} className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", resize: "none", fontFamily: "inherit" }} />
                   </div>
                 </div>
 
                 {/* Customer Location */}
-                <div>
-                  <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Location</label>
-                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Maps link or coordinates..." style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }} />
+                <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                  <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Customer Location</span>
+                  <input type="text" value={customerLocation} onChange={e => setCustomerLocation(e.target.value)} placeholder="Maps link or coordinates..." className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)" }} />
                 </div>
 
                 {/* Assigned For & Completed Status */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Assigned For*</label>
-                    <input type="text" value={selectedAsg.job.assignFor || "DELIVERY"} readOnly style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#718096", cursor: "not-allowed" }} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-input)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-input)", padding: "0 4px", fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600" }}>Assigned For*</span>
+                    <input type="text" value={selectedAsg.job.assignFor || "DELIVERY"} readOnly className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-secondary)", cursor: "not-allowed" }} />
                   </div>
-                  <div>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Completed Status*</label>
-                    <select value={completedStatus} onChange={e => setCompletedStatus(e.target.value)} required style={{ width: "100%", padding: "8px", background: "#111116", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#fff" }}>
+                  <div style={{ position: "relative", border: "1px solid var(--border-glass)", borderRadius: "6px", padding: "6px 12px", background: "var(--bg-card)" }}>
+                    <span style={{ position: "absolute", top: "-8px", left: "10px", background: "var(--bg-card)", padding: "0 4px", fontSize: "11px", color: "var(--accent)", fontWeight: "600" }}>Completed Status*</span>
+                    <select value={completedStatus} onChange={e => setCompletedStatus(e.target.value)} required className="transparent-input" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontSize: "14px", padding: "4px 0", color: "var(--text-primary)", cursor: "pointer" }}>
                       {getStatusOptions(selectedAsg.job.assignFor).map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
@@ -629,8 +641,8 @@ export default function TechnicianViewPage() {
                 {/* Dynamic Signature Block */}
                 {existingSignature && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <label style={{ fontSize: "12px", color: "#a0aec0", display: "block", marginBottom: "4px" }}>Customer Signature Preview</label>
-                    <div style={{ padding: "10px", background: "#0c0c10", borderRadius: "8px", border: "1px dashed #2d2d3a", display: "flex", justifyContent: "center" }}>
+                    <label style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>Customer Signature Preview</label>
+                    <div style={{ padding: "10px", background: "#0c0c10", borderRadius: "8px", border: "1px dashed var(--border-glass)", display: "flex", justifyContent: "center" }}>
                       <img src={existingSignature} alt="Customer Signature" style={{ maxHeight: "100px", maxWidth: "100%", objectFit: "contain" }} />
                     </div>
                   </div>
@@ -639,9 +651,9 @@ export default function TechnicianViewPage() {
               </div>
 
               {/* Modal Footer */}
-              <div style={{ padding: "15px 20px", borderTop: "1px solid #2d2d3a", display: "flex", justifyContent: "flex-end", gap: "10px", background: "#14141c" }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #2d2d3a", borderRadius: "6px", color: "#a0aec0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 16px", background: "#ff4d80", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>Update</button>
+              <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border-glass)", display: "flex", justifyContent: "flex-end", gap: "10px", background: "var(--bg-input)" }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "8px 16px", background: "transparent", border: "1px solid var(--border-glass)", borderRadius: "6px", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Cancel</button>
+                <button type="submit" style={{ padding: "8px 16px", background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)", border: "none", borderRadius: "6px", color: "#ffffff", cursor: "pointer", fontWeight: "500", fontSize: "13px" }}>Update</button>
               </div>
             </form>
           </div>
